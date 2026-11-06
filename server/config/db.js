@@ -1,11 +1,16 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 /**
  * Connect to MongoDB with robust error handling and event logging
  */
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hackathon_portal';
+    const mongoUri =
+      process.env.MONGO_URI ||
+      'mongodb://127.0.0.1:27017/hackathon_portal';
     const conn = await mongoose.connect(mongoUri, {
       serverSelectionTimeoutMS: 5000,
     });
@@ -17,3 +22,4 @@ const connectDB = async () => {
 };
 
 export default connectDB;
+

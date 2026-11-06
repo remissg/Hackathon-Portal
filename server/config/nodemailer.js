@@ -1,14 +1,18 @@
-import nodemailer from 'dotenv';
-import nodemailerPackage from 'nodemailer';
+import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
+
+dotenv.config();
 
 /**
  * Configure Nodemailer Transporter
- * Strict rule: Sender must always be 'MatruCare AI' <matrucareai@gmail.com>
+ * Authenticates with your personal Gmail + Google App Password,
+ * while formatting the sender as 'MatruCare AI' <matrucareai@gmail.com>
+ * as required by the assignment guidelines.
  */
-const transporter = nodemailerPackage.createTransport({
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || 'matrucareai@gmail.com',
+    user: process.env.EMAIL_USER || '',
     pass: process.env.EMAIL_PASS || '',
   },
 });
@@ -17,8 +21,12 @@ const transporter = nodemailerPackage.createTransport({
  * Send an email with automatic fallback in development if credentials are empty
  */
 export const sendMail = async ({ to, subject, html, text }) => {
+  const fromAddress = process.env.EMAIL_FROM || 'matrucareai@gmail.com';
+  
   const mailOptions = {
-    from: `"MatruCare AI" <${process.env.EMAIL_USER || 'matrucareai@gmail.com'}>`,
+    from: `"MatruCare AI" <${fromAddress}>`,
+    sender: fromAddress,
+    replyTo: 'matrucareai@gmail.com',
     to,
     subject,
     html,
@@ -59,3 +67,4 @@ export const sendMail = async ({ to, subject, html, text }) => {
 };
 
 export default transporter;
+

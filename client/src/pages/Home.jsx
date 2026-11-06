@@ -51,28 +51,28 @@ const Home = () => {
     {
       phase: 'Phase 01',
       title: 'Registration & Team Formation',
-      date: 'May 24 – June 10, 2026',
+      date: 'November 06 – November 25, 2026',
       desc: 'Sign up on the portal, verify via OTP, assemble your team (1-5 members), and submit project outlines.',
       completed: true,
     },
     {
       phase: 'Phase 02',
       title: 'Prototype Submission & PPT',
-      date: 'June 11 – June 20, 2026',
+      date: 'November 26 – December 10, 2026',
       desc: 'Submit your GitHub repo, live demo prototype link, and slide deck presentation.',
       completed: false,
     },
     {
       phase: 'Phase 03',
       title: 'Mentorship & Review',
-      date: 'June 21 – June 25, 2026',
+      date: 'December 11 – December 20, 2026',
       desc: 'Shortlisted teams undergo technical screening and mentor code reviews by senior engineers.',
       completed: false,
     },
     {
       phase: 'Phase 04',
       title: 'Grand Finale & Results',
-      date: 'June 30, 2026',
+      date: 'December 28, 2026',
       desc: 'Live virtual demo day presentations, winners announcement, and internship offers.',
       completed: false,
     },
@@ -369,3 +369,4 @@ const Home = () => {
 };
 
 export default Home;
+
