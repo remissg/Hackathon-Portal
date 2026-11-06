@@ -5,15 +5,19 @@ dotenv.config();
 
 /**
  * Configure Nodemailer Transporter
- * Authenticates with your personal Gmail + Google App Password,
- * while formatting the sender as 'MatruCare AI' <matrucareai@gmail.com>
- * as required by the assignment guidelines.
+ * Strict rule from assignment:
+ * - Always use MatruCare AI as sender name
+ * - Always use matrucareai@gmail.com as the from address
+ * - Authenticate via Gmail App Passwords for SMTP
  */
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.EMAIL_USER || '',
-    pass: process.env.EMAIL_PASS || '',
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
@@ -21,12 +25,8 @@ const transporter = nodemailer.createTransport({
  * Send an email with automatic fallback in development if credentials are empty
  */
 export const sendMail = async ({ to, subject, html, text }) => {
-  const fromAddress = process.env.EMAIL_FROM || 'matrucareai@gmail.com';
-  
   const mailOptions = {
-    from: `"MatruCare AI" <${fromAddress}>`,
-    sender: fromAddress,
-    replyTo: 'matrucareai@gmail.com',
+    from: '"MatruCare AI" <matrucareai@gmail.com>',
     to,
     subject,
     html,
