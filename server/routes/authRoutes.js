@@ -14,3 +14,4 @@ router.post('/resend-otp', resendOtp);
 router.post('/login', login);
 
 export default router;
+

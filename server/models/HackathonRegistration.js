@@ -128,3 +128,4 @@ const HackathonRegistration = mongoose.model(
 );
 
 export default HackathonRegistration;
+

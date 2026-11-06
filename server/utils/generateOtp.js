@@ -10,3 +10,4 @@ export const generateOtp = () => {
 };
 
 export default generateOtp;
+

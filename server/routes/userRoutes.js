@@ -8,3 +8,4 @@ router.get('/me', protect, getMe);
 router.put('/update', protect, updateProfile);
 
 export default router;
+

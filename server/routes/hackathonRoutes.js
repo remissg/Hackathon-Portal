@@ -15,3 +15,4 @@ router.put('/:id', protect, updateEntry);
 router.delete('/:id', protect, deleteEntry);
 
 export default router;
+

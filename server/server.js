@@ -55,3 +55,4 @@ app.listen(PORT, () => {
   console.log(`[MatruCare AI Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   console.log(`[MatruCare AI Server] Health check available at: http://localhost:${PORT}/api/health`);
 });
+
