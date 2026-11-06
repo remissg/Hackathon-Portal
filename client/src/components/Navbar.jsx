@@ -65,6 +65,18 @@ const Navbar = () => {
             >
               Prizes
             </a>
+            <a
+              href="/#evaluation"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-colors"
+            >
+              Evaluation
+            </a>
+            <a
+              href="/#faq"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-colors"
+            >
+              FAQ
+            </a>
             <Link
               to="/contact"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -166,6 +178,20 @@ const Navbar = () => {
             className="block px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800"
           >
             Prizes
+          </a>
+          <a
+            href="/#evaluation"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            Evaluation
+          </a>
+          <a
+            href="/#faq"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            FAQ
           </a>
           <Link
             to="/contact"
