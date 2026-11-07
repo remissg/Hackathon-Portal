@@ -11,7 +11,14 @@ server/node_modules/
 .env.test.local
 .env.production.local
 server/.env
+server/.env.*
 client/.env
+client/.env.local
+client/.env.development.local
+
+# Allow public client production environment config in git
+!client/.env.production
+!client/.env.example
 
 # Local files
 cred.txt

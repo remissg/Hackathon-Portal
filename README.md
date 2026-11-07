@@ -429,7 +429,7 @@ For seamless evaluation, pre-configured accounts are available:
 2. Link your repository in [Vercel](https://vercel.com).
 3. Set **Root Directory** to `client`.
 4. Add Environment Variable:
-   - `VITE_API_BASE_URL` = `https://your-backend.onrender.com/api`
+   - `VITE_API_BASE_URL` = `https://hackathon-portal-production-9f3f.up.railway.app/api`
 5. Click **Deploy**.
 
 ### Backend Deployment (Render / Railway)

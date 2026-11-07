@@ -3,8 +3,12 @@ import axios from 'axios';
 // Bulletproof API Base URL Sanitizer
 // Handles typos like "https://https//", "https//", preserves http:// for localhost
 const getBaseUrl = () => {
-  const raw = import.meta.env.VITE_API_BASE_URL;
-  if (!raw) return '/api';
+  let raw = import.meta.env.VITE_API_BASE_URL;
+
+  // If missing or still pointing to deprecated Render backend, redirect directly to active Railway backend
+  if (!raw || raw.includes('onrender.com')) {
+    raw = 'https://hackathon-portal-production-9f3f.up.railway.app/api';
+  }
 
   let url = raw.trim();
   if (url.startsWith('/')) return url.replace(/\/+$/, '');
