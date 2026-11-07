@@ -236,6 +236,18 @@ Per the assignment specifications:
 
 ---
 
+## 🔑 Demo Access & Evaluation Credentials
+
+For seamless evaluation, pre-configured accounts are available:
+
+| Role | Email Address | Password | Permissions |
+| :--- | :--- | :--- | :--- |
+| **Official Admin** | `matrucareai@gmail.com` | `MatruCare@2026` | Full Admin Console (`/admin`), Status updates, CSV export |
+| **Developer Admin**| `maitijoydip888@gmail.com`| *(Your password)* | Full Admin Console & Participant Dashboard |
+| **Participant** | Any user email via Signup | Created at signup | Participant Dashboard (`/dashboard`), Team Registration |
+
+---
+
 ## 📡 REST API Documentation
 
 ### 1. Authentication Endpoints (`/api/auth`)

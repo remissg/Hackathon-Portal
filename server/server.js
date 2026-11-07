@@ -11,12 +11,15 @@ import contactRoutes from './routes/contactRoutes.js';
 
 // Middleware imports
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import { seedAdmin } from './utils/seedAdmin.js';
 
 // Load environment variables
 dotenv.config();
 
-// Initialize MongoDB connection
-connectDB();
+// Initialize MongoDB connection & ensure admin account exists
+connectDB().then(() => {
+  seedAdmin();
+});
 
 const app = express();
 
