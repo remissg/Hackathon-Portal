@@ -73,6 +73,20 @@ const HackathonRegister = () => {
   const standardBranches = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'AIDS', 'AIML'];
   const standardCourses = ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'B.Sc', 'M.Sc'];
 
+  // Check if candidate already has an active registration
+  useEffect(() => {
+    if (!editEntry) {
+      api
+        .get('/hackathon/my-entry')
+        .then((res) => {
+          if (res.data.success && res.data.entry) {
+            navigate('/dashboard?already_registered=true', { replace: true });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [editEntry, navigate]);
+
   // Prepopulate if user or editEntry changes
   useEffect(() => {
     if (editEntry) {

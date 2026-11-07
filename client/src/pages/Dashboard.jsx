@@ -81,7 +81,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchMyEntry();
-  }, []);
+    if (searchParams.get('already_registered') === 'true') {
+      setNotification('You already have an active hackathon registration. You can edit or manage your submission below.');
+    }
+  }, [searchParams]);
 
   const handleEdit = () => {
     navigate('/register-hackathon', { state: { editEntry: entry } });
