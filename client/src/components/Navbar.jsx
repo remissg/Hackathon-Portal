@@ -25,9 +25,7 @@ const Navbar = () => {
 
   const isAdmin =
     user?.role === 'admin' ||
-    ['matrucareai@gmail.com', 'maitijoydip888@gmail.com', 'wishtory.in@gmail.com'].includes(
-      user?.email?.toLowerCase()
-    );
+    user?.email?.toLowerCase() === 'matrucareai@gmail.com';
 
   // Close dropdown on click outside
   useEffect(() => {

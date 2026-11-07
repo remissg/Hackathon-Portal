@@ -320,9 +320,7 @@ export const deleteEntry = async (req, res) => {
     // Verify ownership or admin privileges
     const isAdmin =
       req.user.role === 'admin' ||
-      ['matrucareai@gmail.com', 'maitijoydip888@gmail.com', 'wishtory.in@gmail.com'].includes(
-        req.user.email?.toLowerCase()
-      );
+      req.user.email?.toLowerCase() === 'matrucareai@gmail.com';
 
     if (entry.userId.toString() !== req.user._id.toString() && !isAdmin) {
       return res.status(403).json({

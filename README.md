@@ -243,8 +243,7 @@ For seamless evaluation, pre-configured accounts are available:
 | Role | Email Address | Access Passkey | Permissions |
 | :--- | :--- | :--- | :--- |
 | **Official Admin** | `matrucareai@gmail.com` | Configured via `ADMIN_DEFAULT_PASSWORD` (default: `Admin2026`) | Full Admin Console (`/admin`), Status updates, CSV export |
-| **Developer Admin**| `maitijoydip888@gmail.com`| Set during signup | Full Admin Console & Participant Dashboard |
-| **Participant** | Any user email via Signup | Created at signup | Participant Dashboard (`/dashboard`), Team Registration |
+| **Participant (Candidate)** | `maitijoydip888@gmail.com` / Any Signup | Set during signup | Participant Dashboard (`/dashboard`), Team Registration |
 
 ---
 

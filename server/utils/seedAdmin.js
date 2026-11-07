@@ -44,14 +44,13 @@ export const seedAdmin = async () => {
       }
     }
 
-    // 2. Ensure candidate developer email has admin privileges if exists
+    // 2. Ensure Joydip's account is a standard participant (user role)
     const candidateEmail = 'maitijoydip888@gmail.com';
     const candidateUser = await User.findOne({ email: candidateEmail });
-    if (candidateUser && candidateUser.role !== 'admin') {
-      candidateUser.role = 'admin';
-      candidateUser.isVerified = true;
+    if (candidateUser && candidateUser.role !== 'user') {
+      candidateUser.role = 'user';
       await candidateUser.save();
-      console.log(`[Seed Admin] Granted admin role to developer account: ${candidateEmail}`);
+      console.log(`[Seed Admin] Reset developer account ${candidateEmail} to standard participant role`);
     }
   } catch (error) {
     console.error('[Seed Admin Error]:', error.message);

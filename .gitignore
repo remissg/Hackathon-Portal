@@ -13,6 +13,9 @@ server/node_modules/
 server/.env
 client/.env
 
+# Local files
+cred.txt
+
 # Production Builds
 dist/
 dist-ssr/
