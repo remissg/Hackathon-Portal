@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+// Normalize API Base URL (prevents double slashes like /api//auth/login)
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) return '/api';
+  return envUrl.replace(/\/+$/, '');
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
