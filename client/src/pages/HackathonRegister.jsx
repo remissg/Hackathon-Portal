@@ -51,7 +51,7 @@ const HackathonRegister = () => {
     fullName: user?.fullName || '',
     email: user?.email || '',
     mobileNumber: '',
-    collegeName: collegesList[0],
+    collegeName: '',
     course: 'B.Tech',
     branch: 'CSE',
     yearOfStudy: '3rd Year',
@@ -64,20 +64,28 @@ const HackathonRegister = () => {
     teamMembers: [],
   });
 
+  const [otherBranch, setOtherBranch] = useState('');
+  const [otherCourse, setOtherCourse] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const standardBranches = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'AIDS', 'AIML'];
+  const standardCourses = ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'B.Sc', 'M.Sc'];
+
   // Prepopulate if user or editEntry changes
   useEffect(() => {
     if (editEntry) {
+      const isCustomBranch = !standardBranches.includes(editEntry.branch);
+      const isCustomCourse = !standardCourses.includes(editEntry.course);
+
       setFormData({
         fullName: editEntry.fullName || user?.fullName || '',
         email: editEntry.email || user?.email || '',
         mobileNumber: editEntry.mobileNumber || '',
-        collegeName: editEntry.collegeName || collegesList[0],
-        course: editEntry.course || 'B.Tech',
-        branch: editEntry.branch || 'CSE',
+        collegeName: editEntry.collegeName || '',
+        course: isCustomCourse ? 'Other' : (editEntry.course || 'B.Tech'),
+        branch: isCustomBranch ? 'Other' : (editEntry.branch || 'CSE'),
         yearOfStudy: editEntry.yearOfStudy || '3rd Year',
         domain: editEntry.domain || 'AI/ML',
         projectName: editEntry.projectName || '',
@@ -87,6 +95,9 @@ const HackathonRegister = () => {
         teamSize: editEntry.teamSize || 1,
         teamMembers: editEntry.teamMembers || [],
       });
+
+      if (isCustomBranch) setOtherBranch(editEntry.branch);
+      if (isCustomCourse) setOtherCourse(editEntry.course);
     } else if (user) {
       setFormData((prev) => ({
         ...prev,
@@ -197,19 +208,36 @@ const HackathonRegister = () => {
       }
     }
 
+    if (formData.course === 'Other' && !otherCourse.trim()) {
+      setError('Please specify your course / degree');
+      return;
+    }
+
+    if (formData.branch === 'Other' && !otherBranch.trim()) {
+      setError('Please specify your branch / discipline');
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      collegeName: formData.collegeName.trim(),
+      course: formData.course === 'Other' ? otherCourse.trim() : formData.course,
+      branch: formData.branch === 'Other' ? otherBranch.trim() : formData.branch,
+    };
+
     try {
       setLoading(true);
 
       if (editEntry) {
         // PUT update
-        const res = await api.put(`/hackathon/${editEntry._id}`, formData);
+        const res = await api.put(`/hackathon/${editEntry._id}`, payload);
         if (res.data.success) {
           setSuccess('Hackathon registration successfully updated!');
           setTimeout(() => navigate('/dashboard'), 1200);
         }
       } else {
         // POST create
-        const res = await api.post('/hackathon/register', formData);
+        const res = await api.post('/hackathon/register', payload);
         if (res.data.success) {
           setSuccess('Registration submitted! Confirmation email sent via Nodemailer.');
           setTimeout(() => navigate('/dashboard?registered=true'), 1500);
@@ -325,19 +353,21 @@ const HackathonRegister = () => {
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">
                     College / University <span className="text-rose-400">*</span>
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="collegeName"
                     required
+                    list="colleges-list"
                     value={formData.collegeName}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
-                  >
+                    placeholder="Enter your college or university name"
+                    className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500"
+                  />
+                  <datalist id="colleges-list">
                     {collegesList.map((col, idx) => (
-                      <option key={idx} value={col}>
-                        {col}
-                      </option>
+                      <option key={idx} value={col} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
             </div>
@@ -368,6 +398,22 @@ const HackathonRegister = () => {
                     <option value="M.Sc">M.Sc</option>
                     <option value="Other">Other</option>
                   </select>
+
+                  {formData.course === 'Other' && (
+                    <div className="mt-2.5">
+                      <input
+                        type="text"
+                        required
+                        value={otherCourse}
+                        onChange={(e) => {
+                          setOtherCourse(e.target.value);
+                          if (error) setError('');
+                        }}
+                        placeholder="Specify your course / degree"
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-sky-600 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -390,6 +436,22 @@ const HackathonRegister = () => {
                     <option value="CE">Civil (CE)</option>
                     <option value="Other">Other</option>
                   </select>
+
+                  {formData.branch === 'Other' && (
+                    <div className="mt-2.5">
+                      <input
+                        type="text"
+                        required
+                        value={otherBranch}
+                        onChange={(e) => {
+                          setOtherBranch(e.target.value);
+                          if (error) setError('');
+                        }}
+                        placeholder="Specify your branch / discipline"
+                        className="w-full px-3.5 py-2 bg-slate-950 border border-sky-600 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-400"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>

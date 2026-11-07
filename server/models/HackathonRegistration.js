@@ -53,13 +53,13 @@ const hackathonRegistrationSchema = new mongoose.Schema(
     course: {
       type: String,
       required: [true, 'Course is required'],
-      enum: ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'B.Sc', 'M.Sc', 'Other'],
+      trim: true,
       default: 'B.Tech',
     },
     branch: {
       type: String,
       required: [true, 'Branch is required'],
-      enum: ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'AIDS', 'AIML', 'Other'],
+      trim: true,
       default: 'CSE',
     },
     yearOfStudy: {
