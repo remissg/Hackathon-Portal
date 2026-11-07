@@ -47,3 +47,27 @@ export const protect = async (req, res, next) => {
   }
 };
 
+/**
+ * Middleware to restrict access to Admins only
+ */
+export const adminProtect = async (req, res, next) => {
+  const adminEmails = [
+    'matrucareai@gmail.com',
+    'maitijoydip888@gmail.com',
+    'wishtory.in@gmail.com',
+  ];
+
+  if (
+    req.user &&
+    (req.user.role === 'admin' || adminEmails.includes(req.user.email?.toLowerCase()))
+  ) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: 'Access restricted: Administrator privileges required',
+    });
+  }
+};
+
+

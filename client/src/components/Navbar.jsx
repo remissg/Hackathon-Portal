@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Menu, X, Sparkles, User, LogOut, LayoutDashboard, PlusCircle, Mail } from 'lucide-react';
+import { Menu, X, Sparkles, User, LogOut, LayoutDashboard, PlusCircle, Mail, ShieldAlert } from 'lucide-react';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isAdmin =
+    user?.role === 'admin' ||
+    ['matrucareai@gmail.com', 'maitijoydip888@gmail.com', 'wishtory.in@gmail.com'].includes(
+      user?.email?.toLowerCase()
+    );
 
   const handleLogout = () => {
     logout();
@@ -102,6 +108,20 @@ const Navbar = () => {
                   <LayoutDashboard className="w-4 h-4" />
                   <span>Dashboard</span>
                 </Link>
+
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      isActive('/admin')
+                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
+                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
+                    }`}
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Admin Portal</span>
+                  </Link>
+                )}
 
                 <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-medium">
@@ -215,6 +235,16 @@ const Navbar = () => {
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
                 </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium bg-rose-600 text-white shadow-md shadow-rose-600/30"
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    Admin Portal
+                  </Link>
+                )}
                 <Link
                   to="/register-hackathon"
                   onClick={() => setMobileMenuOpen(false)}

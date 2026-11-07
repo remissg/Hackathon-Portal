@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import HackathonRegister from './pages/HackathonRegister';
 import Contact from './pages/Contact';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -45,6 +46,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <HackathonRegister />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />

@@ -317,8 +317,14 @@ export const deleteEntry = async (req, res) => {
       });
     }
 
-    // Verify ownership
-    if (entry.userId.toString() !== req.user._id.toString()) {
+    // Verify ownership or admin privileges
+    const isAdmin =
+      req.user.role === 'admin' ||
+      ['matrucareai@gmail.com', 'maitijoydip888@gmail.com', 'wishtory.in@gmail.com'].includes(
+        req.user.email?.toLowerCase()
+      );
+
+    if (entry.userId.toString() !== req.user._id.toString() && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to delete this entry',
@@ -329,13 +335,160 @@ export const deleteEntry = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Hackathon registration entry successfully withdrawn',
+      message: 'Hackathon registration entry successfully removed',
     });
   } catch (error) {
     console.error('[Delete Entry Error]:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Failed to delete entry',
+    });
+  }
+};
+
+/**
+ * @desc    Get all hackathon registrations (Admin Only)
+ * @route   GET /api/hackathon/admin/all
+ * @access  Private / Admin
+ */
+export const getAllRegistrations = async (req, res) => {
+  try {
+    const { search, domain, status } = req.query;
+    let query = {};
+
+    if (search && search.trim()) {
+      const searchRegex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { fullName: searchRegex },
+        { projectName: searchRegex },
+        { collegeName: searchRegex },
+        { email: searchRegex },
+      ];
+    }
+
+    if (domain && domain !== 'All') {
+      query.domain = domain;
+    }
+
+    if (status && status !== 'All') {
+      query.status = status;
+    }
+
+    const registrations = await HackathonRegistration.find(query).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: registrations.length,
+      registrations,
+    });
+  } catch (error) {
+    console.error('[Admin Get All Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch registrations',
+    });
+  }
+};
+
+/**
+ * @desc    Get Admin Dashboard Analytics / Stats
+ * @route   GET /api/hackathon/admin/stats
+ * @access  Private / Admin
+ */
+export const getAdminStats = async (req, res) => {
+  try {
+    const all = await HackathonRegistration.find();
+
+    const totalRegistrations = all.length;
+    let totalParticipants = 0;
+    let soloCount = 0;
+    let teamCount = 0;
+
+    const domainCounts = {};
+    const statusCounts = {
+      Submitted: 0,
+      'Under Review': 0,
+      Shortlisted: 0,
+      Finalist: 0,
+      Rejected: 0,
+    };
+
+    all.forEach((entry) => {
+      const size = entry.teamSize || 1;
+      totalParticipants += size;
+      if (size === 1) {
+        soloCount++;
+      } else {
+        teamCount++;
+      }
+
+      // Domain stats
+      const d = entry.domain || 'Unspecified';
+      domainCounts[d] = (domainCounts[d] || 0) + 1;
+
+      // Status stats
+      const s = entry.status || 'Submitted';
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalRegistrations,
+        totalParticipants,
+        soloCount,
+        teamCount,
+        domainCounts,
+        statusCounts,
+      },
+    });
+  } catch (error) {
+    console.error('[Admin Stats Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch analytics',
+    });
+  }
+};
+
+/**
+ * @desc    Update candidate registration status (Admin Only)
+ * @route   PATCH /api/hackathon/admin/:id/status
+ * @access  Private / Admin
+ */
+export const updateRegistrationStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['Submitted', 'Under Review', 'Shortlisted', 'Finalist', 'Rejected'];
+
+    if (!allowed.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${allowed.join(', ')}`,
+      });
+    }
+
+    const entry = await HackathonRegistration.findById(req.params.id);
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registration entry not found',
+      });
+    }
+
+    entry.status = status;
+    const updated = await entry.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Project status updated to "${status}"`,
+      entry: updated,
+    });
+  } catch (error) {
+    console.error('[Admin Update Status Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update status',
     });
   }
 };

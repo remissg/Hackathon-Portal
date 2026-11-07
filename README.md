@@ -366,12 +366,30 @@ Per the assignment specifications:
 - **Response (200 OK)**: Updates user's hackathon registration details.
 
 #### `DELETE /api/hackathon/:id`
-- **Access**: Private (Bearer JWT)
-- **Response (200 OK)**: Withdraws registration entry.
+- **Access**: Private (Bearer JWT / Admin)
+- **Response (200 OK)**: Withdraws registration entry (Participants delete their own entry; Admins can delete any).
 
 ---
 
-### 4. Contact Inquiries (`/api/contact`)
+### 4. Admin Management Endpoints (`/api/hackathon/admin/*`)
+
+#### `GET /api/hackathon/admin/all`
+- **Access**: Private (Admin Only)
+- **Query Params**: `search`, `domain`, `status`
+- **Response (200 OK)**: Returns all hackathon registrations with search and filtering.
+
+#### `GET /api/hackathon/admin/stats`
+- **Access**: Private (Admin Only)
+- **Response (200 OK)**: Returns KPI metrics (total registrations, total participants, solo/team count, domain distribution, status breakdown).
+
+#### `PATCH /api/hackathon/admin/:id/status`
+- **Access**: Private (Admin Only)
+- **Body**: `{ "status": "Under Review" }` (Allowed: `Submitted`, `Under Review`, `Shortlisted`, `Finalist`, `Rejected`)
+- **Response (200 OK)**: Updates evaluation status in real-time, synchronizing with the candidate's dashboard evaluation stepper.
+
+---
+
+### 5. Contact Inquiries (`/api/contact`)
 
 #### `POST /api/contact`
 - **Access**: Public
