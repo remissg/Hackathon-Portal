@@ -172,7 +172,7 @@ export const registerHackathon = async (req, res) => {
     });
 
     // Send confirmation email via Nodemailer
-    const emailHtml = generateRegistrationEmailTemplate({
+    const regEmail = generateRegistrationEmailTemplate({
       participantName: registration.fullName,
       eventName: 'MatruCare AI National Innovation Hackathon 2026',
       domain: registration.domain,
@@ -187,7 +187,8 @@ export const registerHackathon = async (req, res) => {
     const leadMailRes = await sendMail({
       to: registration.email,
       subject: `Registration Confirmed: ${registration.projectName} — MatruCare AI Hackathon`,
-      html: emailHtml,
+      html: regEmail.html,
+      text: regEmail.text,
     });
     console.log(`[Registration] Lead email dispatched to ${registration.email}:`, leadMailRes);
 
@@ -198,7 +199,7 @@ export const registerHackathon = async (req, res) => {
         .filter((member) => member && member.email)
         .map(async (member) => {
           try {
-            const inviteHtml = generateTeammateInviteEmailTemplate({
+            const inviteEmail = generateTeammateInviteEmailTemplate({
               memberName: member.name,
               teamLeadName: registration.fullName,
               teamLeadEmail: registration.email,
@@ -210,7 +211,8 @@ export const registerHackathon = async (req, res) => {
             const inviteRes = await sendMail({
               to: member.email,
               subject: `You've been added to Team "${registration.projectName}" — MatruCare AI Hackathon 2026`,
-              html: inviteHtml,
+              html: inviteEmail.html,
+              text: inviteEmail.text,
             });
             console.log(`[Teammate Invite] Email dispatched to ${member.email}:`, inviteRes);
             return inviteRes;

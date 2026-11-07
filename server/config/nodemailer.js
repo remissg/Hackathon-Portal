@@ -56,12 +56,29 @@ export const sendMail = async ({ to, subject, html, text }) => {
   const userPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
   const userEmail = (process.env.EMAIL_USER || '').trim();
 
+  // Unpack { html, text } if passed as an object
+  let finalHtml = html;
+  let finalText = text;
+  if (typeof html === 'object' && html !== null) {
+    finalHtml = html.html || '';
+    finalText = text || html.text || '';
+  }
+
+  // Ensure plain-text alternative is always present to maximize inbox delivery & prevent spam flagging
+  if (!finalText && typeof finalHtml === 'string') {
+    finalText = finalHtml
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   const mailOptions = {
     from: '"MatruCare AI" <matrucareai@gmail.com>',
     to,
     subject,
-    html,
-    text: text || '',
+    html: finalHtml,
+    text: finalText || '',
   };
 
   const isConfigured = userPass && userPass.length > 0;

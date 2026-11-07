@@ -87,11 +87,12 @@ export const signup = async (req, res) => {
     });
 
     // Send OTP via Nodemailer
-    const emailHtml = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
+    const otpEmail = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
     const mailResult = await sendMail({
       to: normalizedEmail,
       subject: 'MatruCare AI — Your 6-Digit Verification Code',
-      html: emailHtml,
+      html: otpEmail.html,
+      text: otpEmail.text,
     });
 
     console.log(`[AUTH] Mail dispatch status:`, mailResult.success ? 'Delivered' : `Failed: ${mailResult.error}`);
@@ -218,11 +219,12 @@ export const resendOtp = async (req, res) => {
     });
 
     // Send email
-    const emailHtml = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
+    const otpEmail = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
     await sendMail({
       to: normalizedEmail,
       subject: 'MatruCare AI — New Verification Code',
-      html: emailHtml,
+      html: otpEmail.html,
+      text: otpEmail.text,
     });
 
     return res.status(200).json({
