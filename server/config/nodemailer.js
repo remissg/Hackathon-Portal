@@ -15,10 +15,15 @@ const userPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
  * - Authenticate via Gmail App Passwords for SMTP
  */
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // port 587 with STARTTLS
   auth: {
     user: userEmail,
     pass: userPass,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
   connectionTimeout: 8000, // 8s timeout
   greetingTimeout: 8000,
