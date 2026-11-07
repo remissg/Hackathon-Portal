@@ -47,6 +47,13 @@ const Dashboard = () => {
   
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+
+  const handleCopyId = (id) => {
+    navigator.clipboard.writeText(id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2500);
+  };
   
   // Profile edit form state
   const [newFullName, setNewFullName] = useState(user?.fullName || '');
@@ -247,9 +254,19 @@ const Dashboard = () => {
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Status: {entry.status}
                   </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 text-slate-300">
-                    ID: {ticketId}
-                  </span>
+                  <button
+                    onClick={() => handleCopyId(ticketId)}
+                    className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer group"
+                    title="Click to copy registration ID"
+                  >
+                    <span>ID: {ticketId}</span>
+                    {copiedId ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-slate-400 group-hover:text-sky-300" />
+                    )}
+                    {copiedId && <span className="text-[10px] text-emerald-400 font-sans font-semibold">Copied!</span>}
+                  </button>
                 </div>
                 <h2 className="text-2xl font-extrabold text-white">{entry.projectName}</h2>
               </div>
@@ -501,7 +518,18 @@ const Dashboard = () => {
               <div className="flex justify-between items-center p-3 bg-slate-950 rounded-xl border border-slate-800 print:bg-gray-100 print:border-gray-200">
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-semibold">Pass / Ticket ID</span>
-                  <p className="font-mono font-bold text-sky-400 text-sm print:text-sky-800">{ticketId}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono font-bold text-sky-400 text-sm print:text-sky-800">{ticketId}</p>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyId(ticketId)}
+                      className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors print:hidden"
+                      title="Copy Pass ID"
+                    >
+                      {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                    {copiedId && <span className="text-[10px] text-emerald-400 print:hidden">Copied!</span>}
+                  </div>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-slate-500 uppercase font-semibold">Track</span>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -23,11 +23,14 @@ import {
   KeyRound,
   Send,
   AlertTriangle,
+  Search,
+  X,
 } from 'lucide-react';
 
 const Home = () => {
   const { isAuthenticated } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
+  const [faqSearch, setFaqSearch] = useState('');
 
   // Live countdown to Phase 01 deadline (November 25, 2026 23:59:59)
   const [timeLeft, setTimeLeft] = useState({
@@ -202,6 +205,14 @@ const Home = () => {
       a: 'Yes! From your personal Dashboard, you can review your registered team details, update project links or member information, or withdraw your entry if needed.',
     },
   ];
+
+  const filteredFaqs = useMemo(() => {
+    if (!faqSearch.trim()) return faqs;
+    const term = faqSearch.toLowerCase().trim();
+    return faqs.filter(
+      (f) => f.q.toLowerCase().includes(term) || f.a.toLowerCase().includes(term)
+    );
+  }, [faqSearch, faqs]);
 
   const toggleFaq = (idx) => {
     setOpenFaq(openFaq === idx ? null : idx);
@@ -506,7 +517,7 @@ const Home = () => {
       {/* NEW: Frequently Asked Questions (FAQ) Accordion */}
       <section id="faq" className="py-20 bg-slate-900/60 border-y border-slate-800/80">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Questions & Answers</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Frequently Asked Questions
@@ -516,8 +527,29 @@ const Home = () => {
             </p>
           </div>
 
+          {/* Interactive FAQ Search Bar */}
+          <div className="relative max-w-md mx-auto mb-8">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={faqSearch}
+              onChange={(e) => setFaqSearch(e.target.value)}
+              placeholder="Search questions (e.g. team size, presentation, deadline)..."
+              className="w-full pl-10 pr-10 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500 transition-colors"
+            />
+            {faqSearch && (
+              <button
+                onClick={() => setFaqSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
           <div className="space-y-4">
-            {faqs.map((faq, idx) => {
+            {filteredFaqs.map((faq, idx) => {
               const isOpen = openFaq === idx;
               return (
                 <div
@@ -543,6 +575,12 @@ const Home = () => {
                 </div>
               );
             })}
+
+            {filteredFaqs.length === 0 && (
+              <div className="text-center py-8 text-slate-400 text-sm bg-slate-900/40 rounded-2xl border border-slate-800/60">
+                No questions found matching "{faqSearch}". Try searching for keywords like "team", "eligibility", or "OTP".
+              </div>
+            )}
           </div>
 
           <div className="mt-10 text-center">
