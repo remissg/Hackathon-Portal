@@ -48,6 +48,24 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root Welcome / Health Probe Endpoint (Used by Render & Browsers)
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    organization: 'MatruCare AI',
+    service: 'Hackathon Registration Portal Backend API',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      user: '/api/user',
+      hackathon: '/api/hackathon',
+      contact: '/api/contact',
+    },
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // API Health Check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
