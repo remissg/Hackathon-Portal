@@ -184,35 +184,43 @@ export const registerHackathon = async (req, res) => {
       demoVideoLink: registration.demoVideoLink,
     });
 
-    await sendMail({
+    const leadMailRes = await sendMail({
       to: registration.email,
       subject: `Registration Confirmed: ${registration.projectName} — MatruCare AI Hackathon`,
       html: emailHtml,
     });
+    console.log(`[Registration] Lead email dispatched to ${registration.email}:`, leadMailRes);
 
-    // Send teammate invitation emails if additional members are present
+    // Send teammate invitation emails if additional members are present (properly awaited)
     if (Array.isArray(cleanTeamMembers) && cleanTeamMembers.length > 0) {
       const ticketId = `MCAI-2026-${registration._id.toString().slice(-4).toUpperCase()}`;
-      for (const member of cleanTeamMembers) {
-        if (member.email) {
-          const inviteHtml = generateTeammateInviteEmailTemplate({
-            memberName: member.name,
-            teamLeadName: registration.fullName,
-            teamLeadEmail: registration.email,
-            domain: registration.domain,
-            projectName: registration.projectName,
-            ticketId,
-          });
+      const invitePromises = cleanTeamMembers
+        .filter((member) => member && member.email)
+        .map(async (member) => {
+          try {
+            const inviteHtml = generateTeammateInviteEmailTemplate({
+              memberName: member.name,
+              teamLeadName: registration.fullName,
+              teamLeadEmail: registration.email,
+              domain: registration.domain,
+              projectName: registration.projectName,
+              ticketId,
+            });
 
-          sendMail({
-            to: member.email,
-            subject: `You've been added to Team "${registration.projectName}" — MatruCare AI Hackathon 2026`,
-            html: inviteHtml,
-          }).catch((err) =>
-            console.error(`[Teammate Notification Email Error to ${member.email}]:`, err.message)
-          );
-        }
-      }
+            const inviteRes = await sendMail({
+              to: member.email,
+              subject: `You've been added to Team "${registration.projectName}" — MatruCare AI Hackathon 2026`,
+              html: inviteHtml,
+            });
+            console.log(`[Teammate Invite] Email dispatched to ${member.email}:`, inviteRes);
+            return inviteRes;
+          } catch (err) {
+            console.error(`[Teammate Notification Email Error to ${member.email}]:`, err.message);
+            return { success: false, error: err.message };
+          }
+        });
+
+      await Promise.allSettled(invitePromises);
     }
 
     return res.status(201).json({

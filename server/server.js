@@ -61,11 +61,20 @@ app.get('/', (req, res) => {
 
 // API Health Check
 app.get('/api/health', (req, res) => {
+  const emailUser = (process.env.EMAIL_USER || '').trim();
+  const emailPass = (process.env.EMAIL_PASS || '').trim();
+
   res.status(200).json({
     status: 'online',
     timestamp: new Date().toISOString(),
     organization: 'MatruCare AI',
     service: 'Hackathon Registration Portal Backend API',
+    emailConfig: {
+      hasUser: Boolean(emailUser),
+      user: emailUser ? emailUser.replace(/(?<=.{3}).(?=.*@)/g, '*') : 'NOT_SET',
+      hasPass: Boolean(emailPass && emailPass.length > 0),
+      passLength: emailPass.length,
+    },
   });
 });
 
