@@ -5,11 +5,14 @@ import User from '../models/User.js';
  */
 export const seedAdmin = async () => {
   try {
-    // 1. Ensure official MatruCare AI admin account exists
     const officialAdminEmail = 'matrucareai@gmail.com';
-    const officialAdmin = await User.findOne({ email: officialAdminEmail });
+    const defaultSecret = process.env.ADMIN_DEFAULT_PASSWORD;
 
-    const defaultSecret = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin2026';
+    if (!defaultSecret) {
+      return;
+    }
+
+    const officialAdmin = await User.findOne({ email: officialAdminEmail });
 
     if (!officialAdmin) {
       await User.create({
