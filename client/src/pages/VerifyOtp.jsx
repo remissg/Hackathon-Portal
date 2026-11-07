@@ -6,6 +6,7 @@ import { Sparkles, KeyRound, AlertCircle, CheckCircle2, RotateCw, ArrowRight } f
 const VerifyOtp = () => {
   const [searchParams] = useSearchParams();
   const emailParam = searchParams.get('email') || '';
+  const redirectParam = searchParams.get('redirect') || '';
   const [email, setEmail] = useState(emailParam);
 
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
@@ -86,7 +87,9 @@ const VerifyOtp = () => {
       if (res.success) {
         setSuccess('Email verified successfully! Redirecting to login...');
         setTimeout(() => {
-          navigate('/login?verified=true');
+          const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
+          const emailQuery = email ? `&email=${encodeURIComponent(email)}` : '';
+          navigate(`/login?verified=true${emailQuery}${redirectQuery}`);
         }, 1500);
       } else {
         setError(res.message || 'OTP verification failed');

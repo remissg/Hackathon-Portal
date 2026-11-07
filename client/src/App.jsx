@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 import HackathonRegister from './pages/HackathonRegister';
 import Contact from './pages/Contact';
 import AdminDashboard from './pages/AdminDashboard';
+import TeamInviteAcceptance from './pages/TeamInviteAcceptance';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path="/verify-otp" element={<VerifyOtp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/team-invite" element={<TeamInviteAcceptance />} />
 
               {/* Protected Routes (JWT Protected) */}
               <Route

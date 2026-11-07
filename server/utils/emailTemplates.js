@@ -150,6 +150,7 @@ matrucareai@gmail.com`;
  */
 export const generateTeammateInviteEmailTemplate = ({
   memberName,
+  memberEmail = '',
   teamLeadName,
   teamLeadEmail,
   eventName = 'MatruCare AI National Innovation Hackathon 2026',
@@ -158,6 +159,8 @@ export const generateTeammateInviteEmailTemplate = ({
   ticketId,
   portalUrl = 'https://client-seven-gold-99.vercel.app',
 }) => {
+  const inviteUrl = `${portalUrl}/team-invite?passId=${ticketId}${memberEmail ? `&email=${encodeURIComponent(memberEmail)}` : ''}`;
+
   const text = `MatruCare AI Hackathon — Team Invitation
 
 Hello ${memberName},
@@ -170,8 +173,10 @@ Project Details:
 - Pass ID: ${ticketId}
 - Team Lead: ${teamLeadName} (${teamLeadEmail})
 
-You do not need to register again. You can sign in to the hackathon portal at any time using your email to view your team's live status and admission pass:
-${portalUrl}
+Click the link below to accept your invitation, confirm your spot, and claim your admission pass:
+${inviteUrl}
+
+(If you do not have an account yet, you will be prompted to create one with this email address.)
 
 Best regards,
 MatruCare AI Organizing Committee
@@ -189,7 +194,7 @@ matrucareai@gmail.com`;
         <strong>${teamLeadName}</strong> (<a href="mailto:${teamLeadEmail}" style="color: #0284c7; text-decoration: none;">${teamLeadEmail}</a>) has registered your project team for the <strong>${eventName}</strong>.
       </p>
 
-      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; margin-bottom: 18px;">
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px; margin-bottom: 20px;">
         <p style="margin: 4px 0; font-size: 14px;"><strong>Project:</strong> ${projectName}</p>
         <p style="margin: 4px 0; font-size: 14px;"><strong>Track:</strong> <span style="color: #0284c7; font-weight: 600;">${domain}</span></p>
         <p style="margin: 4px 0; font-size: 14px;"><strong>Pass ID:</strong> <span style="font-family: monospace; font-weight: 700; color: #0284c7;">${ticketId}</span></p>
@@ -197,9 +202,18 @@ matrucareai@gmail.com`;
       </div>
 
       <p style="font-size: 14px; line-height: 1.5; color: #475569; margin: 0 0 16px 0;">
-        You do not need to register again. You can log in or create an account with this email on the portal anytime to view your team pass:
-        <br/>
-        <a href="${portalUrl}" style="color: #0284c7; font-weight: 600; text-decoration: none;">Open Hackathon Portal →</a>
+        Please click below to review and accept your spot on the team:
+      </p>
+
+      <div style="margin: 20px 0;">
+        <a href="${inviteUrl}" style="background-color: #0284c7; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+          Accept Team Invitation & Claim Pass →
+        </a>
+      </div>
+
+      <p style="font-size: 12px; color: #64748b; margin: 12px 0 0 0;">
+        Or paste this link in your browser: <br/>
+        <a href="${inviteUrl}" style="color: #0284c7; word-break: break-all;">${inviteUrl}</a>
       </p>
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />

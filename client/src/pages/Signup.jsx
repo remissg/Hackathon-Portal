@@ -1,12 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, Mail, Lock, User, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const emailParam = searchParams.get('email') || '';
+  const redirectParam = searchParams.get('redirect') || '';
+
   const [formData, setFormData] = useState({
     fullName: '',
-    email: '',
+    email: emailParam,
     password: '',
     confirmPassword: '',
   });
@@ -74,8 +78,9 @@ const Signup = () => {
       setLoading(true);
       const res = await signup(formData);
       if (res.success) {
-        // Redirect to OTP verification with email query
-        navigate(`/verify-otp?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`);
+        // Redirect to OTP verification with email and redirect queries
+        const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
+        navigate(`/verify-otp?email=${encodeURIComponent(formData.email.trim().toLowerCase())}${redirectQuery}`);
       } else {
         setError(res.message || 'Signup failed');
       }

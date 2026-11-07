@@ -15,6 +15,15 @@ const teamMemberSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, 'Invalid email address for team member'],
     },
+    status: {
+      type: String,
+      enum: ['Pending', 'Accepted', 'Declined'],
+      default: 'Pending',
+    },
+    acceptedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { _id: false }
 );
@@ -111,6 +120,11 @@ const hackathonRegistrationSchema = new mongoose.Schema(
       default: 1,
     },
     teamMembers: [teamMemberSchema],
+    ticketId: {
+      type: String,
+      index: true,
+      trim: true,
+    },
     status: {
       type: String,
       enum: ['Submitted', 'Under Review', 'Shortlisted', 'Finalist'],
@@ -121,6 +135,14 @@ const hackathonRegistrationSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Pre-save hook to ensure ticketId is always present
+hackathonRegistrationSchema.pre('save', function (next) {
+  if (!this.ticketId && this._id) {
+    this.ticketId = `MCAI-2026-${this._id.toString().slice(-4).toUpperCase()}`;
+  }
+  next();
+});
 
 const HackathonRegistration = mongoose.model(
   'HackathonRegistration',

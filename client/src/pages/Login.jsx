@@ -4,23 +4,25 @@ import { useAuth } from '../context/AuthContext';
 import { Sparkles, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
+  const isJustVerified = searchParams.get('verified') === 'true';
+  const isExpired = searchParams.get('expired') === 'true';
+  const emailParam = searchParams.get('email') || '';
+  const redirectParam = searchParams.get('redirect') || '';
+
   const [formData, setFormData] = useState({
-    email: '',
+    email: emailParam,
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [searchParams] = useSearchParams();
-  const isJustVerified = searchParams.get('verified') === 'true';
-  const isExpired = searchParams.get('expired') === 'true';
-
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = redirectParam || location.state?.from?.pathname || '/dashboard';
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

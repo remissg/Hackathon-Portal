@@ -37,6 +37,8 @@ const Dashboard = () => {
   const isJustRegistered = searchParams.get('registered') === 'true';
 
   const [entry, setEntry] = useState(null);
+  const [isLeadRole, setIsLeadRole] = useState(true);
+  const [memberStatus, setMemberStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -70,6 +72,8 @@ const Dashboard = () => {
       const res = await api.get('/hackathon/my-entry');
       if (res.data.success) {
         setEntry(res.data.entry);
+        setIsLeadRole(res.data.isTeamLead);
+        setMemberStatus(res.data.memberStatus);
       }
     } catch (err) {
       console.error(err);
@@ -163,6 +167,27 @@ const Dashboard = () => {
             >
               Dismiss
             </button>
+          </div>
+        )}
+
+        {/* Pending Teammate Invitation Action Banner */}
+        {entry && !isLeadRole && memberStatus === 'Pending' && (
+          <div className="p-5 rounded-2xl bg-cyan-950/60 border border-cyan-800 text-cyan-200 text-sm flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <Users className="w-6 h-6 text-cyan-400 shrink-0" />
+              <div>
+                <p className="font-bold text-white text-base">You have a Pending Team Invitation!</p>
+                <p className="text-slate-300 text-xs sm:text-sm">
+                  {entry.fullName} invited you to join Team "{entry.projectName}". Accept to activate your official admission pass.
+                </p>
+              </div>
+            </div>
+            <Link
+              to={`/team-invite?passId=${entry.ticketId || ticketId}&email=${encodeURIComponent(user?.email || '')}`}
+              className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs sm:text-sm whitespace-nowrap transition shadow-lg shadow-cyan-500/20"
+            >
+              Review &amp; Accept Invitation →
+            </Link>
           </div>
         )}
 
@@ -488,7 +513,18 @@ const Dashboard = () => {
 
                   {/* Additional Members */}
                   {entry.teamMembers?.map((m, idx) => (
-                    <div key={idx} className="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl">
+                    <div key={idx} className="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl relative">
+                      <span
+                        className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          m.status === 'Accepted'
+                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                            : m.status === 'Declined'
+                            ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                            : 'bg-amber-950 text-amber-400 border border-amber-800'
+                        }`}
+                      >
+                        {m.status || 'Pending'}
+                      </span>
                       <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
                         Member #{idx + 2}
                       </span>

@@ -7,14 +7,20 @@ import {
   getAllRegistrations,
   getAdminStats,
   updateRegistrationStatus,
+  getInvitationDetails,
+  respondToInvitation,
 } from '../controllers/hackathonController.js';
 import { protect, adminProtect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Public Invitation Lookup
+router.get('/invite/:passId', getInvitationDetails);
+
 // Participant Endpoints
 router.post('/register', protect, registerHackathon);
 router.get('/my-entry', protect, getMyEntry);
+router.post('/respond-invite', protect, respondToInvitation);
 router.put('/:id', protect, updateEntry);
 router.delete('/:id', protect, deleteEntry);
 

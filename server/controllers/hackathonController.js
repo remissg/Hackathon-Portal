@@ -147,6 +147,7 @@ export const registerHackathon = async (req, res) => {
         cleanTeamMembers.push({
           name: m.name.trim(),
           email: m.email.trim().toLowerCase(),
+          status: 'Pending',
         });
       }
     }
@@ -201,6 +202,7 @@ export const registerHackathon = async (req, res) => {
           try {
             const inviteEmail = generateTeammateInviteEmailTemplate({
               memberName: member.name,
+              memberEmail: member.email,
               teamLeadName: registration.fullName,
               teamLeadEmail: registration.email,
               domain: registration.domain,
@@ -258,11 +260,19 @@ export const getMyEntry = async (req, res) => {
     });
 
     const isTeamLead = entry ? entry.userId.toString() === req.user._id.toString() : false;
+    let memberStatus = isTeamLead ? 'Accepted' : null;
+    if (entry && !isTeamLead && Array.isArray(entry.teamMembers)) {
+      const myMember = entry.teamMembers.find((m) => m.email.toLowerCase() === userEmail);
+      if (myMember) {
+        memberStatus = myMember.status || 'Pending';
+      }
+    }
 
     return res.status(200).json({
       success: true,
       entry: entry || null,
       isTeamLead,
+      memberStatus,
     });
   } catch (error) {
     console.error('[Get My Entry Error]:', error);
@@ -538,6 +548,149 @@ export const updateRegistrationStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Failed to update status',
+    });
+  }
+};
+
+/**
+ * @desc    Get Invitation Details by Pass ID / Ticket ID
+ * @route   GET /api/hackathon/invite/:passId
+ * @access  Public
+ */
+export const getInvitationDetails = async (req, res) => {
+  try {
+    const rawPassId = (req.params.passId || '').trim();
+    if (!rawPassId) {
+      return res.status(400).json({ success: false, message: 'Pass ID is required' });
+    }
+
+    // Try finding by ticketId or by suffix of _id
+    let entry = await HackathonRegistration.findOne({
+      $or: [
+        { ticketId: rawPassId },
+        { ticketId: new RegExp(`^${rawPassId}$`, 'i') },
+      ],
+    });
+
+    if (!entry) {
+      const allEntries = await HackathonRegistration.find();
+      entry = allEntries.find((e) => {
+        const genTicket = `MCAI-2026-${e._id.toString().slice(-4).toUpperCase()}`;
+        return (
+          genTicket.toLowerCase() === rawPassId.toLowerCase() ||
+          e._id.toString().toUpperCase().endsWith(rawPassId.toUpperCase().replace(/^MCAI-2026-/, ''))
+        );
+      });
+    }
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'No hackathon team found matching this Pass ID',
+      });
+    }
+
+    const ticketId = entry.ticketId || `MCAI-2026-${entry._id.toString().slice(-4).toUpperCase()}`;
+
+    return res.status(200).json({
+      success: true,
+      invite: {
+        ticketId,
+        projectName: entry.projectName,
+        domain: entry.domain,
+        teamLeadName: entry.fullName,
+        teamLeadEmail: entry.email,
+        collegeName: entry.collegeName,
+        teamSize: entry.teamSize,
+        teamMembers: (entry.teamMembers || []).map((m) => ({
+          name: m.name,
+          email: m.email,
+          status: m.status || 'Pending',
+        })),
+        status: entry.status,
+      },
+    });
+  } catch (error) {
+    console.error('[Get Invitation Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch invitation details',
+    });
+  }
+};
+
+/**
+ * @desc    Accept or Decline Team Invitation
+ * @route   POST /api/hackathon/respond-invite
+ * @access  Private (JWT Protected)
+ */
+export const respondToInvitation = async (req, res) => {
+  try {
+    const { passId, action } = req.body;
+    const userEmail = (req.user.email || '').trim().toLowerCase();
+
+    if (!passId || !action) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pass ID and response action (accept or decline) are required',
+      });
+    }
+
+    // Find registration
+    let entry = await HackathonRegistration.findOne({
+      $or: [
+        { ticketId: passId },
+        { ticketId: new RegExp(`^${passId}$`, 'i') },
+        { 'teamMembers.email': userEmail },
+      ],
+    });
+
+    if (!entry) {
+      const all = await HackathonRegistration.find({ 'teamMembers.email': userEmail });
+      entry = all[0];
+    }
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'No hackathon registration found for your account under this team',
+      });
+    }
+
+    // Check if user is in teamMembers
+    const memberIndex = entry.teamMembers.findIndex(
+      (m) => m.email.toLowerCase() === userEmail
+    );
+
+    if (memberIndex === -1) {
+      return res.status(403).json({
+        success: false,
+        message: `Your logged-in email (${userEmail}) is not listed on this team's roster.`,
+      });
+    }
+
+    const newStatus = action.toLowerCase() === 'decline' ? 'Declined' : 'Accepted';
+    entry.teamMembers[memberIndex].status = newStatus;
+    if (newStatus === 'Accepted') {
+      entry.teamMembers[memberIndex].acceptedAt = new Date();
+    }
+
+    await entry.save();
+
+    return res.status(200).json({
+      success: true,
+      message:
+        newStatus === 'Accepted'
+          ? `Congratulations! You have officially accepted the invitation and joined Team "${entry.projectName}".`
+          : `You have declined the invitation to join Team "${entry.projectName}".`,
+      registration: entry,
+      memberStatus: newStatus,
+    });
+  } catch (error) {
+    console.error('[Respond Invitation Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update invitation status',
     });
   }
 };
