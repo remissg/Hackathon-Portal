@@ -20,29 +20,13 @@ connectDB();
 
 const app = express();
 
-// Middlewares
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  process.env.CLIENT_URL,
-].filter(Boolean);
-
+// Middlewares - Fully permissive CORS with credentials for production & preview domains
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-      if (!origin) return callback(null, true);
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.netlify.app') ||
-        process.env.NODE_ENV !== 'production'
-      ) {
-        return callback(null, true);
-      }
-      return callback(null, true); // Permissive for production grading
-    },
+    origin: true, // Automatically reflects any calling origin (e.g. *.vercel.app, localhost)
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   })
 );
 app.use(express.json());
