@@ -9,15 +9,17 @@ export const seedAdmin = async () => {
     const officialAdminEmail = 'matrucareai@gmail.com';
     const officialAdmin = await User.findOne({ email: officialAdminEmail });
 
+    const defaultSecret = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin2026';
+
     if (!officialAdmin) {
       await User.create({
         fullName: 'MatruCare AI Admin',
         email: officialAdminEmail,
-        password: process.env.ADMIN_DEFAULT_PASSWORD || 'MatruCare@2026',
+        password: defaultSecret,
         isVerified: true,
         role: 'admin',
       });
-      console.log(`[Seed Admin] Initialized official admin account: ${officialAdminEmail} / MatruCare@2026`);
+      console.log(`[Seed Admin] Initialized official admin account: ${officialAdminEmail}`);
     } else {
       let needsSave = false;
       if (!officialAdmin.isVerified) {
@@ -30,10 +32,9 @@ export const seedAdmin = async () => {
       }
 
       // Ensure password is synchronized with default admin password
-      const targetPass = process.env.ADMIN_DEFAULT_PASSWORD || 'MatruCare@2026';
-      const isMatch = await officialAdmin.matchPassword(targetPass);
+      const isMatch = await officialAdmin.matchPassword(defaultSecret);
       if (!isMatch) {
-        officialAdmin.password = targetPass;
+        officialAdmin.password = defaultSecret;
         needsSave = true;
       }
 

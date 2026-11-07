@@ -240,10 +240,10 @@ Per the assignment specifications:
 
 For seamless evaluation, pre-configured accounts are available:
 
-| Role | Email Address | Password | Permissions |
+| Role | Email Address | Access Passkey | Permissions |
 | :--- | :--- | :--- | :--- |
-| **Official Admin** | `matrucareai@gmail.com` | `MatruCare@2026` | Full Admin Console (`/admin`), Status updates, CSV export |
-| **Developer Admin**| `maitijoydip888@gmail.com`| *(Your password)* | Full Admin Console & Participant Dashboard |
+| **Official Admin** | `matrucareai@gmail.com` | Configured via `ADMIN_DEFAULT_PASSWORD` (default: `Admin2026`) | Full Admin Console (`/admin`), Status updates, CSV export |
+| **Developer Admin**| `maitijoydip888@gmail.com`| Set during signup | Full Admin Console & Participant Dashboard |
 | **Participant** | Any user email via Signup | Created at signup | Participant Dashboard (`/dashboard`), Team Registration |
 
 ---
