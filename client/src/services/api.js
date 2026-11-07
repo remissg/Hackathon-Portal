@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Bulletproof API Base URL Sanitizer
-// Handles typos like "https://https//", "https//", missing "https://", or trailing slashes
+// Handles typos like "https://https//", "https//", preserves http:// for localhost
 const getBaseUrl = () => {
   const raw = import.meta.env.VITE_API_BASE_URL;
   if (!raw) return '/api';
@@ -9,9 +9,16 @@ const getBaseUrl = () => {
   let url = raw.trim();
   if (url.startsWith('/')) return url.replace(/\/+$/, '');
 
-  // Strip duplicate or broken protocols (e.g., "https://https//", "https//")
+  const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1');
+
+  // Strip duplicate or broken protocols (e.g., "https://https//", "http//")
   url = url.replace(/^(https?:?\/*)+/i, '');
-  url = 'https://' + url;
+
+  if (isLocalhost) {
+    url = 'http://' + url;
+  } else {
+    url = 'https://' + url;
+  }
 
   // Ensure /api suffix is present
   if (!url.endsWith('/api') && !url.includes('/api/')) {
