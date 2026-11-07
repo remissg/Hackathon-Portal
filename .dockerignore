@@ -1,0 +1,8 @@
+node_modules
+client/
+.git
+.env
+dist/
+dist-ssr/
+*.log
+cred.txt
