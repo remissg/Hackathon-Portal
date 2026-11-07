@@ -1,10 +1,24 @@
 import axios from 'axios';
 
-// Normalize API Base URL (prevents double slashes like /api//auth/login)
+// Bulletproof API Base URL Sanitizer
+// Handles typos like "https://https//", "https//", missing "https://", or trailing slashes
 const getBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (!envUrl) return '/api';
-  return envUrl.replace(/\/+$/, '');
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (!raw) return '/api';
+
+  let url = raw.trim();
+  if (url.startsWith('/')) return url.replace(/\/+$/, '');
+
+  // Strip duplicate or broken protocols (e.g., "https://https//", "https//")
+  url = url.replace(/^(https?:?\/*)+/i, '');
+  url = 'https://' + url;
+
+  // Ensure /api suffix is present
+  if (!url.endsWith('/api') && !url.includes('/api/')) {
+    url = url.replace(/\/+$/, '') + '/api';
+  }
+
+  return url.replace(/\/+$/, '');
 };
 
 const api = axios.create({
