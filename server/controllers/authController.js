@@ -24,6 +24,7 @@ const generateToken = (id) => {
 export const signup = async (req, res) => {
   try {
     const { fullName, email, password, confirmPassword } = req.body;
+    console.log(`[AUTH] Incoming signup request for: ${email}`);
 
     // Validation
     if (!fullName || !email || !password) {
@@ -74,6 +75,7 @@ export const signup = async (req, res) => {
 
     // Generate 6-digit OTP
     const otpCode = generateOtp();
+    console.log(`[AUTH] Created OTP: ${otpCode} for user: ${normalizedEmail}`);
 
     // Invalidate existing OTPs for this email
     await Otp.deleteMany({ email: normalizedEmail });
@@ -86,11 +88,13 @@ export const signup = async (req, res) => {
 
     // Send OTP via Nodemailer
     const emailHtml = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
-    await sendMail({
+    const mailResult = await sendMail({
       to: normalizedEmail,
       subject: 'MatruCare AI — Your 6-Digit Verification Code',
       html: emailHtml,
     });
+
+    console.log(`[AUTH] Mail dispatch status:`, mailResult.success ? 'Delivered' : `Failed: ${mailResult.error}`);
 
     return res.status(201).json({
       success: true,

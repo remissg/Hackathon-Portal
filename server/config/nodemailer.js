@@ -3,6 +3,10 @@ import nodemailer from 'nodemailer';
 
 dotenv.config();
 
+const userEmail = (process.env.EMAIL_USER || '').trim();
+// Remove spaces if user copied 16-char app password in groups like 'abcd efgh ijkl mnop'
+const userPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
+
 /**
  * Configure Nodemailer Transporter
  * Strict rule from assignment:
@@ -12,17 +16,17 @@ dotenv.config();
  */
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: userEmail,
+    pass: userPass,
   },
+  connectionTimeout: 8000, // 8s timeout
+  greetingTimeout: 8000,
+  socketTimeout: 10000,
 });
 
 /**
- * Send an email with automatic fallback in development if credentials are empty
+ * Send an email with automatic fallback and logging
  */
 export const sendMail = async ({ to, subject, html, text }) => {
   const mailOptions = {
@@ -34,37 +38,40 @@ export const sendMail = async ({ to, subject, html, text }) => {
   };
 
   const isConfigured =
-    process.env.EMAIL_PASS &&
-    process.env.EMAIL_PASS !== 'your_gmail_app_password_here' &&
-    process.env.EMAIL_PASS.trim().length > 0;
+    userPass &&
+    userPass !== 'your_gmail_app_password_here' &&
+    userPass.length > 0;
 
   if (!isConfigured) {
-    console.log('\n======================================================');
-    console.log(`[NODEMAILER DEV LOG] - From: ${mailOptions.from}`);
-    console.log(`[NODEMAILER DEV LOG] - To: ${mailOptions.to}`);
-    console.log(`[NODEMAILER DEV LOG] - Subject: ${mailOptions.subject}`);
-    console.log('------------------------------------------------------');
-    if (html.includes('Verification Code') || subject.includes('Verification Code')) {
-      // Extract OTP if present in HTML
-      const match = html.match(/letter-spacing:\s*8px;[^>]*>(\d{6})</);
-      if (match) {
-        console.log(`🔑 >>> [OTP CODE FOR TESTING]: ${match[1]} <<<`);
-      }
+    console.log(`\n[NODEMAILER DEV LOG] Credentials not configured. Simulated send:`);
+    console.log(`[NODEMAILER DEV LOG] To: ${to} | Subject: ${subject}`);
+    const match = html.match(/letter-spacing:\s*8px;[^>]*>(\d{6})</);
+    if (match) {
+      console.log(`🔑 >>> [OTP CODE]: ${match[1]} <<<`);
     }
-    console.log('======================================================\n');
     return { success: true, messageId: 'mock-dev-id-' + Date.now() };
   }
 
+  console.log(`[NODEMAILER] Dispatching email to: ${to} | Subject: "${subject}"...`);
+
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`[Email Sent] Message ID: ${info.messageId} to ${to}`);
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('SMTP connection timed out after 8 seconds')), 8000)
+    );
+
+    const info = await Promise.race([sendPromise, timeoutPromise]);
+    console.log(`[NODEMAILER] Email sent successfully! MessageId: ${info.messageId} to ${to}`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[Email Error] Failed to send email to ${to}: ${error.message}`);
-    // In dev mode, return success so testing continues smoothly
+    console.error(`[NODEMAILER ERROR] Failed to send email to ${to}: ${error.message}`);
+    // Extract OTP if present so it's always readable in Render logs
+    const match = html.match(/letter-spacing:\s*8px;[^>]*>(\d{6})</);
+    if (match) {
+      console.log(`🔑 >>> [OTP CODE FOR TESTING]: ${match[1]} <<<`);
+    }
     return { success: false, error: error.message };
   }
 };
 
 export default transporter;
-

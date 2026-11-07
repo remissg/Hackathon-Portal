@@ -32,6 +32,12 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request Logger (Prints immediately in Render logs for every incoming request)
+app.use((req, res, next) => {
+  console.log(`[HTTP Request] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Root Welcome / Health Probe Endpoint (Used by Render & Browsers)
 app.get('/', (req, res) => {
   res.status(200).json({
