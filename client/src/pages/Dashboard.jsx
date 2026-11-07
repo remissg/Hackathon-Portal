@@ -141,6 +141,10 @@ const Dashboard = () => {
   };
 
   const ticketId = entry ? `MCAI-2026-${entry._id.slice(-6).toUpperCase()}` : '';
+  const isLead =
+    !entry ||
+    entry.userId?.toString() === user?.id ||
+    entry.email?.toLowerCase() === user?.email?.toLowerCase();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
@@ -257,6 +261,12 @@ const Dashboard = () => {
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Status: {entry.status}
                   </span>
+                  {!isLead && (
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-950 text-indigo-300 border border-indigo-800 flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" />
+                      Team Member
+                    </span>
+                  )}
                   <button
                     onClick={() => handleCopyId(ticketId)}
                     className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 hover:bg-slate-700 text-sky-400 hover:text-white border border-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer group"
@@ -284,20 +294,28 @@ const Dashboard = () => {
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
                   <span>{copied ? 'Copied' : 'Share'}</span>
                 </button>
-                <button
-                  onClick={handleEdit}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
-                >
-                  <Edit3 className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={() => setDeleteModalOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs font-semibold flex items-center gap-1.5 border border-rose-800/80 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Withdraw</span>
-                </button>
+                {isLead ? (
+                  <>
+                    <button
+                      onClick={handleEdit}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => setDeleteModalOpen(true)}
+                      className="px-4 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs font-semibold flex items-center gap-1.5 border border-rose-800/80 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Withdraw</span>
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-xs text-slate-500 italic px-3 py-1.5 bg-slate-950/60 rounded-xl border border-slate-800">
+                    Lead: {entry.fullName}
+                  </span>
+                )}
               </div>
             </div>
 

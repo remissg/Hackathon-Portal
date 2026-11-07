@@ -202,3 +202,97 @@ export const generateRegistrationEmailTemplate = ({
   `;
 };
 
+/**
+ * Teammate Invitation / Notification Email Template
+ */
+export const generateTeammateInviteEmailTemplate = ({
+  memberName,
+  teamLeadName,
+  teamLeadEmail,
+  eventName = 'MatruCare AI National Innovation Hackathon 2026',
+  domain,
+  projectName,
+  ticketId,
+  portalUrl = 'https://client-seven-gold-99.vercel.app',
+}) => {
+  return `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You've Been Added to Team ${projectName}</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #1e293b;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 40px 10px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" style="max-width: 580px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+            <!-- Header -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%); padding: 32px 30px; text-align: center;">
+                <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #ffffff;">MatruCare AI</h1>
+                <p style="margin: 6px 0 0; color: #38bdf8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;">Teammate Invitation Notification</p>
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding: 36px 32px 28px;">
+                <h2 style="margin: 0 0 16px; color: #0f172a; font-size: 20px; font-weight: 600;">You've Been Added to a Hackathon Team!</h2>
+                <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.6; color: #475569;">
+                  Hello <strong>${memberName}</strong>,<br/><br/>
+                  Great news! <strong>${teamLeadName}</strong> (<a href="mailto:${teamLeadEmail}" style="color: #0284c7; text-decoration: none;">${teamLeadEmail}</a>) has registered your project team for the <strong>${eventName}</strong>.
+                </p>
+
+                <!-- Project Card Box -->
+                <div style="background-color: #f8fafc; border-radius: 10px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                    <tr>
+                      <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 140px;"><strong>Project Title:</strong></td>
+                      <td style="padding: 6px 0; font-size: 14px; font-weight: 700; color: #0f172a;">${projectName}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Innovation Track:</strong></td>
+                      <td style="padding: 6px 0; font-size: 13px; font-weight: 600; color: #0284c7;">${domain}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Entry Pass ID:</strong></td>
+                      <td style="padding: 6px 0; font-size: 13px; font-family: monospace; font-weight: 700; color: #0284c7;">${ticketId}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Team Lead:</strong></td>
+                      <td style="padding: 6px 0; font-size: 13px; color: #334155;">${teamLeadName} (${teamLeadEmail})</td>
+                    </tr>
+                  </table>
+                </div>
+
+                <p style="margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #475569;">
+                  You do not need to register again. You can create an account or sign in with your email at any time to view your team's live evaluation progress and admission pass on your personal dashboard!
+                </p>
+
+                <div style="text-align: center; margin-top: 24px; margin-bottom: 12px;">
+                  <a href="${portalUrl}" style="background-color: #0284c7; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-block;">
+                    Open Hackathon Portal
+                  </a>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f8fafc; padding: 20px 30px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
+                <p style="margin: 0 0 4px; font-weight: 600; color: #334155;">MatruCare AI • Full Stack Developer Internship</p>
+                <p style="margin: 0; color: #94a3b8;">Official Inquiries: <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a></p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>
+  `;
+};
+
+

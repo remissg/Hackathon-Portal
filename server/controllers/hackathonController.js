@@ -1,6 +1,9 @@
 import HackathonRegistration from '../models/HackathonRegistration.js';
 import { sendMail } from '../config/nodemailer.js';
-import { generateRegistrationEmailTemplate } from '../utils/emailTemplates.js';
+import {
+  generateRegistrationEmailTemplate,
+  generateTeammateInviteEmailTemplate,
+} from '../utils/emailTemplates.js';
 
 /**
  * Validate URL helper
@@ -187,6 +190,31 @@ export const registerHackathon = async (req, res) => {
       html: emailHtml,
     });
 
+    // Send teammate invitation emails if additional members are present
+    if (Array.isArray(cleanTeamMembers) && cleanTeamMembers.length > 0) {
+      const ticketId = `MCAI-2026-${registration._id.toString().slice(-4).toUpperCase()}`;
+      for (const member of cleanTeamMembers) {
+        if (member.email) {
+          const inviteHtml = generateTeammateInviteEmailTemplate({
+            memberName: member.name,
+            teamLeadName: registration.fullName,
+            teamLeadEmail: registration.email,
+            domain: registration.domain,
+            projectName: registration.projectName,
+            ticketId,
+          });
+
+          sendMail({
+            to: member.email,
+            subject: `You've been added to Team "${registration.projectName}" — MatruCare AI Hackathon 2026`,
+            html: inviteHtml,
+          }).catch((err) =>
+            console.error(`[Teammate Notification Email Error to ${member.email}]:`, err.message)
+          );
+        }
+      }
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Hackathon registration submitted successfully! A confirmation email has been sent.',
@@ -208,10 +236,23 @@ export const registerHackathon = async (req, res) => {
  */
 export const getMyEntry = async (req, res) => {
   try {
-    const entry = await HackathonRegistration.findOne({ userId: req.user._id });
+    const userEmail = req.user.email ? req.user.email.toLowerCase().trim() : '';
+
+    // Match if user is the Team Lead OR listed as a dynamic Team Member
+    const entry = await HackathonRegistration.findOne({
+      $or: [
+        { userId: req.user._id },
+        { email: userEmail },
+        { 'teamMembers.email': userEmail },
+      ],
+    });
+
+    const isTeamLead = entry ? entry.userId.toString() === req.user._id.toString() : false;
+
     return res.status(200).json({
       success: true,
       entry: entry || null,
+      isTeamLead,
     });
   } catch (error) {
     console.error('[Get My Entry Error]:', error);
