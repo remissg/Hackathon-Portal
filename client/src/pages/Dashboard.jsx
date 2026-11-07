@@ -21,10 +21,17 @@ import {
   GraduationCap,
   Clock,
   AlertTriangle,
+  Printer,
+  Copy,
+  Check,
+  X,
+  UserCheck,
+  Award,
+  QrCode,
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isJustRegistered = searchParams.get('registered') === 'true';
@@ -32,8 +39,20 @@ const Dashboard = () => {
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Modals state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [passModalOpen, setPassModalOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
+  
+  // Profile edit form state
+  const [newFullName, setNewFullName] = useState(user?.fullName || '');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [profileMessage, setProfileMessage] = useState('');
+
   const [notification, setNotification] = useState(
     isJustRegistered ? 'Congratulations! Your hackathon registration has been confirmed and emailed.' : ''
   );
@@ -78,11 +97,46 @@ const Dashboard = () => {
     }
   };
 
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!newFullName.trim() || newFullName.trim().length < 3) {
+      setProfileMessage('Full name must be at least 3 characters');
+      return;
+    }
+    try {
+      setUpdatingProfile(true);
+      const res = await api.put('/user/update', { fullName: newFullName.trim() });
+      if (res.data.success) {
+        updateUser(res.data.user);
+        setEditProfileOpen(false);
+        setNotification('Profile details updated successfully!');
+      }
+    } catch (err) {
+      setProfileMessage(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
+  const copyDetailsToClipboard = () => {
+    if (!entry) return;
+    const textToCopy = `Project: ${entry.projectName}\nTrack: ${entry.domain}\nTeam Size: ${entry.teamSize}\nLeader: ${entry.fullName} (${entry.email})\nPPT: ${entry.pptLink}\nPrototype: ${entry.prototypeLink}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const triggerPrintPass = () => {
+    window.print();
+  };
+
+  const ticketId = entry ? `MCAI-2026-${entry._id.slice(-6).toUpperCase()}` : '';
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-8">
         
-        {/* Banner Alert if just registered */}
+        {/* Banner Alert if just registered or updated */}
         {notification && (
           <div className="p-4 rounded-2xl bg-emerald-950/70 border border-emerald-800 text-emerald-200 text-sm flex items-center justify-between shadow-lg">
             <div className="flex items-center gap-3">
@@ -113,6 +167,17 @@ const Dashboard = () => {
                     Verified Candidate
                   </span>
                 )}
+                <button
+                  onClick={() => {
+                    setNewFullName(user?.fullName || '');
+                    setProfileMessage('');
+                    setEditProfileOpen(true);
+                  }}
+                  className="p-1 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition-colors"
+                  title="Edit Profile Name"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
               </div>
               <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
                 <Mail className="w-4 h-4 text-slate-500" />
@@ -130,6 +195,15 @@ const Dashboard = () => {
                 <PlusCircle className="w-4 h-4" />
                 <span>Register Project Now</span>
               </Link>
+            )}
+            {entry && (
+              <button
+                onClick={() => setPassModalOpen(true)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
+              >
+                <Printer className="w-4 h-4 text-sky-400" />
+                <span>Print Entry Pass</span>
+              </button>
             )}
           </div>
         </div>
@@ -165,7 +239,7 @@ const Dashboard = () => {
             {/* Card Header */}
             <div className="p-6 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
                   <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-sky-950 text-sky-400 border border-sky-800">
                     {entry.domain}
                   </span>
@@ -173,26 +247,85 @@ const Dashboard = () => {
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     Status: {entry.status}
                   </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 text-slate-300">
+                    ID: {ticketId}
+                  </span>
                 </div>
                 <h2 className="text-2xl font-extrabold text-white">{entry.projectName}</h2>
               </div>
 
-              {/* Action Buttons: Edit / Withdraw */}
-              <div className="flex items-center gap-2 self-stretch sm:self-auto">
+              {/* Action Buttons: Copy / Edit / Withdraw */}
+              <div className="flex items-center gap-2 self-stretch sm:self-auto flex-wrap">
+                <button
+                  onClick={copyDetailsToClipboard}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
+                  title="Copy details"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                  <span>{copied ? 'Copied' : 'Share'}</span>
+                </button>
                 <button
                   onClick={handleEdit}
-                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-700 transition-colors"
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition-colors"
                 >
                   <Edit3 className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Edit Submission</span>
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => setDeleteModalOpen(true)}
-                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs font-semibold flex items-center justify-center gap-2 border border-rose-800/80 transition-colors"
+                  className="px-4 py-2 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 text-xs font-semibold flex items-center gap-1.5 border border-rose-800/80 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Withdraw</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Visual Submission Progress Stepper */}
+            <div className="px-6 sm:px-8 py-6 bg-slate-950/60 border-b border-slate-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-4">
+                Evaluation Stage Progress
+              </span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-emerald-900/60">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                    ✓
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">1. Submitted</p>
+                    <p className="text-[10px] text-emerald-400">Verified & Confirmed</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-sky-900/60 animate-pulse">
+                  <div className="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">
+                    2
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-white">2. Technical Review</p>
+                    <p className="text-[10px] text-sky-400">Under Review</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-slate-500">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs">
+                    3
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400">3. Mentorship</p>
+                    <p className="text-[10px] text-slate-500">Dec 11 – 20</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-slate-500">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs">
+                    4
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400">4. Grand Finale</p>
+                    <p className="text-[10px] text-slate-500">Dec 28, 2026</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -306,7 +439,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {/* Lead Member (The Authenticated User) */}
+                  {/* Lead Member */}
                   <div className="p-4 bg-slate-950/80 border border-sky-800/60 rounded-2xl relative">
                     <span className="absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-950 text-sky-400 border border-sky-800">
                       Team Leader
@@ -341,7 +474,143 @@ const Dashboard = () => {
 
       </div>
 
-      {/* Delete / Withdraw Confirmation Modal */}
+      {/* MODAL 1: Official Printable Registration Pass */}
+      {passModalOpen && entry && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 print:p-0 print:bg-white">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative print:bg-white print:text-black print:border-none print:shadow-none">
+            <button
+              onClick={() => setPassModalOpen(false)}
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white print:hidden"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Ticket Header */}
+            <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-5 print:border-gray-300">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white print:bg-sky-600">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white print:text-black">MatruCare AI Hackathon 2026</h3>
+                <p className="text-xs text-sky-400 print:text-sky-700">Official Candidate Entry Pass</p>
+              </div>
+            </div>
+
+            {/* Ticket Body */}
+            <div className="space-y-4 text-xs">
+              <div className="flex justify-between items-center p-3 bg-slate-950 rounded-xl border border-slate-800 print:bg-gray-100 print:border-gray-200">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Pass / Ticket ID</span>
+                  <p className="font-mono font-bold text-sky-400 text-sm print:text-sky-800">{ticketId}</p>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Track</span>
+                  <p className="font-bold text-white print:text-black">{entry.domain}</p>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold">Project Title</span>
+                <p className="text-sm font-bold text-white print:text-black">{entry.projectName}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Lead Candidate</span>
+                  <p className="font-medium text-slate-200 print:text-gray-800">{entry.fullName}</p>
+                  <p className="text-slate-400 print:text-gray-600 text-[11px]">{entry.email}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">College</span>
+                  <p className="font-medium text-slate-200 print:text-gray-800 truncate">{entry.collegeName}</p>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase font-semibold">Team Size & Members</span>
+                <p className="font-medium text-slate-200 print:text-gray-800">
+                  {entry.teamSize} Member(s): {entry.fullName}
+                  {entry.teamMembers?.map((m) => `, ${m.name}`)}
+                </p>
+              </div>
+
+              <div className="p-3 bg-emerald-950/50 border border-emerald-800/80 rounded-xl text-emerald-300 text-[11px] print:bg-emerald-50 print:text-emerald-900 print:border-emerald-200">
+                ✓ Verified & Registered via OTP Auth • MatruCare AI Full Stack Track
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="mt-6 pt-4 border-t border-slate-800 flex justify-end gap-3 print:hidden">
+              <button
+                type="button"
+                onClick={() => setPassModalOpen(false)}
+                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={triggerPrintPass}
+                className="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Pass / PDF</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Edit Profile Name */}
+      {editProfileOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-2">Update Candidate Profile</h3>
+            <p className="text-xs text-slate-400 mb-5">Modify your account display name</p>
+
+            {profileMessage && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-200 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <span>{profileMessage}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newFullName}
+                  onChange={(e) => setNewFullName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setEditProfileOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingProfile}
+                  className="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20 disabled:opacity-50"
+                >
+                  {updatingProfile ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Delete / Withdraw Confirmation Modal */}
       {deleteModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
@@ -378,4 +647,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
