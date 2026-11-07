@@ -357,17 +357,11 @@ const HackathonRegister = () => {
                     type="text"
                     name="collegeName"
                     required
-                    list="colleges-list"
                     value={formData.collegeName}
                     onChange={handleChange}
                     placeholder="Enter your college or university name"
                     className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500"
                   />
-                  <datalist id="colleges-list">
-                    {collegesList.map((col, idx) => (
-                      <option key={idx} value={col} />
-                    ))}
-                  </datalist>
                 </div>
               </div>
             </div>
