@@ -10,14 +10,30 @@ dotenv.config();
  * - Always use matrucareai@gmail.com as the from address
  * - Authenticate via Gmail App Passwords for SMTP
  */
-const getTransporter = (preferDirectSsl = true) => {
-  const userEmail = (process.env.EMAIL_USER || '').trim();
-  const userPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
+let primaryTransporter = null;
+let fallbackTransporter = null;
 
-  if (preferDirectSsl) {
-    // Port 465 direct SSL - most reliable on cloud container environments
-    return nodemailer.createTransport({
-      service: 'gmail',
+/**
+ * Dynamically create and configure Nodemailer Transporter with Persistent Connection Pooling & IPv4
+ * Strict rule from assignment:
+ * - Always use MatruCare AI as sender name
+ * - Always use matrucareai@gmail.com as the from address
+ * - Authenticate via Gmail App Passwords for SMTP
+ */
+const getPrimaryTransporter = () => {
+  if (!primaryTransporter) {
+    const userEmail = (process.env.EMAIL_USER || '').trim();
+    const userPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
+
+    // Port 465 direct SSL with connection pooling & explicit IPv4
+    primaryTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
+      family: 4, // Force IPv4 to eliminate 15-30s IPv6 resolution hangs on cloud containers
       auth: {
         user: userEmail,
         pass: userPass,
@@ -25,28 +41,38 @@ const getTransporter = (preferDirectSsl = true) => {
       tls: {
         rejectUnauthorized: false,
       },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 20000,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
     });
   }
+  return primaryTransporter;
+};
 
-  // Fallback: Port 587 with STARTTLS
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: userEmail,
-      pass: userPass,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 20000,
-  });
+const getFallbackTransporter = () => {
+  if (!fallbackTransporter) {
+    const userEmail = (process.env.EMAIL_USER || '').trim();
+    const userPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
+
+    // Fallback: Port 587 with STARTTLS & IPv4
+    fallbackTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      family: 4,
+      auth: {
+        user: userEmail,
+        pass: userPass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
+    });
+  }
+  return fallbackTransporter;
 };
 
 /**
@@ -95,9 +121,9 @@ export const sendMail = async ({ to, subject, html, text }) => {
 
   console.log(`[NODEMAILER] Dispatching email to: ${to} | From: "MatruCare AI" <matrucareai@gmail.com> | User: ${userEmail}...`);
 
-  // Attempt 1: Direct SSL (service: 'gmail' / port 465)
+  // Attempt 1: Direct SSL (Port 465 with Connection Pooling & IPv4)
   try {
-    const transporter = getTransporter(true);
+    const transporter = getPrimaryTransporter();
     const info = await transporter.sendMail(mailOptions);
     console.log(`[NODEMAILER] Email sent successfully via Port 465! MessageId: ${info.messageId} to ${to}`);
     return { success: true, messageId: info.messageId, transport: 'port465' };
@@ -106,7 +132,7 @@ export const sendMail = async ({ to, subject, html, text }) => {
 
     // Attempt 2: Fallback to Port 587 STARTTLS
     try {
-      const fallbackTransporter = getTransporter(false);
+      const fallbackTransporter = getFallbackTransporter();
       const info = await fallbackTransporter.sendMail(mailOptions);
       console.log(`[NODEMAILER] Email sent successfully via Port 587! MessageId: ${info.messageId} to ${to}`);
       return { success: true, messageId: info.messageId, transport: 'port587' };

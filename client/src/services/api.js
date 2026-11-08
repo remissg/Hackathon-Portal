@@ -34,7 +34,7 @@ const getBaseUrl = () => {
 
 const api = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 15000, // 15s timeout prevents infinite spinners
+  timeout: 45000, // 45s timeout ensures cloud cold starts and SMTP operations complete reliably
   headers: {
     'Content-Type': 'application/json',
   },

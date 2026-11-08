@@ -86,7 +86,11 @@ const Signup = () => {
       }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to complete registration. Please try again.');
+      if (err.code === 'ECONNABORTED' || err.message?.toLowerCase().includes('timeout')) {
+        setError('Server request timed out while sending your verification code. Please check your connection and try again.');
+      } else {
+        setError(err.response?.data?.message || 'Failed to complete registration. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
