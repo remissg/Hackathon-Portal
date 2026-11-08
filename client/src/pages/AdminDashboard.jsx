@@ -185,6 +185,8 @@ const AdminDashboard = () => {
       'Team Size',
       'Team Members Count',
       'Team Members Detail',
+      'Venue Gate Check-In',
+      'Check-In Timestamp',
       'PPT Link',
       'Prototype Link',
       'Demo Video Link',
@@ -197,6 +199,8 @@ const AdminDashboard = () => {
         Array.isArray(r.teamMembers) && r.teamMembers.length > 0
           ? r.teamMembers.map((m, idx) => `[M${idx + 2}: ${m.name} (${m.email})]`).join('; ')
           : 'None (Solo)';
+      const checkInStatus = r.isCheckedIn ? 'Admitted' : 'Pending';
+      const checkInTime = r.checkedInAt ? new Date(r.checkedInAt).toLocaleString('en-IN') : 'N/A';
 
       return [
         `"${regId}"`,
@@ -214,6 +218,8 @@ const AdminDashboard = () => {
         r.teamSize || 1,
         Array.isArray(r.teamMembers) ? r.teamMembers.length : 0,
         `"${membersText.replace(/"/g, '""')}"`,
+        `"${checkInStatus}"`,
+        `"${checkInTime}"`,
         `"${r.pptLink || ''}"`,
         `"${r.prototypeLink || ''}"`,
         `"${r.demoVideoLink || ''}"`,
@@ -498,6 +504,7 @@ const AdminDashboard = () => {
                     <th scope="col" className="px-5 py-3.5">Institution</th>
                     <th scope="col" className="px-5 py-3.5">Team Size</th>
                     <th scope="col" className="px-5 py-3.5">Links</th>
+                    <th scope="col" className="px-5 py-3.5">Venue Gate</th>
                     <th scope="col" className="px-5 py-3.5">Evaluation Status</th>
                     <th scope="col" className="px-5 py-3.5 text-right">Actions</th>
                   </tr>
@@ -608,6 +615,29 @@ const AdminDashboard = () => {
                           </div>
                         </td>
 
+                        {/* Venue Gate Check-In Status */}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          {entry.isCheckedIn ? (
+                            <div className="flex flex-col">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 w-fit">
+                                ✓ Admitted
+                              </span>
+                              {entry.checkedInAt && (
+                                <span className="text-[10px] text-slate-500 mt-0.5 font-mono">
+                                  {new Date(entry.checkedInAt).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800/80 text-slate-400 border border-slate-700 w-fit">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+
                         {/* Evaluation Status Dropdown */}
                         <td className="px-5 py-4 whitespace-nowrap">
                           <select
@@ -685,6 +715,16 @@ const AdminDashboard = () => {
                   <div>
                     <span className="text-xs text-slate-400 block">Innovation Track</span>
                     <span className="text-sm font-semibold text-sky-400">{activeModalEntry.domain}</span>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400 block">Venue Admission</span>
+                    {activeModalEntry.isCheckedIn ? (
+                      <span className="text-xs font-semibold text-emerald-400">
+                        ✓ Admitted {activeModalEntry.checkedInAt ? `(${new Date(activeModalEntry.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-slate-400">Pending Gate Check-In</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-slate-400">Current Status:</span>

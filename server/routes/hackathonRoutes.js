@@ -10,6 +10,7 @@ import {
   getInvitationDetails,
   respondToInvitation,
   verifyPass,
+  checkInPass,
 } from '../controllers/hackathonController.js';
 import { protect, adminProtect } from '../middleware/authMiddleware.js';
 
@@ -30,6 +31,7 @@ router.delete('/:id', protect, deleteEntry);
 router.get('/admin/all', protect, adminProtect, getAllRegistrations);
 router.get('/admin/stats', protect, adminProtect, getAdminStats);
 router.patch('/admin/:id/status', protect, adminProtect, updateRegistrationStatus);
+router.post('/admin/check-in', protect, adminProtect, checkInPass);
 
 export default router;
 

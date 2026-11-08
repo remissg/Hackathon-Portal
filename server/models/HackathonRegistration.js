@@ -130,6 +130,18 @@ const hackathonRegistrationSchema = new mongoose.Schema(
       enum: ['Submitted', 'Under Review', 'Shortlisted', 'Finalist'],
       default: 'Submitted',
     },
+    isCheckedIn: {
+      type: Boolean,
+      default: false,
+    },
+    checkedInAt: {
+      type: Date,
+      default: null,
+    },
+    checkedInBy: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

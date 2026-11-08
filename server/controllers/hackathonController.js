@@ -655,6 +655,9 @@ export const verifyPass = async (req, res) => {
           status: m.status || 'Pending',
         })),
         status: entry.status,
+        isCheckedIn: Boolean(entry.isCheckedIn),
+        checkedInAt: entry.checkedInAt,
+        checkedInBy: entry.checkedInBy,
         submittedAt: entry.createdAt,
         verifiedAt: new Date().toISOString(),
       },
@@ -665,6 +668,72 @@ export const verifyPass = async (req, res) => {
       success: false,
       verified: false,
       message: error.message || 'Pass verification failed',
+    });
+  }
+};
+
+/**
+ * @desc    Toggle check-in / admit candidate team (Admin Only)
+ * @route   POST /api/hackathon/admin/check-in
+ * @access  Private / Admin
+ */
+export const checkInPass = async (req, res) => {
+  try {
+    const { passId, action } = req.body;
+    if (!passId) {
+      return res.status(400).json({ success: false, message: 'Pass ID is required' });
+    }
+
+    const rawPassId = passId.trim();
+
+    // Find registration
+    let entry = await HackathonRegistration.findOne({
+      $or: [
+        { ticketId: rawPassId },
+        { ticketId: new RegExp(`^${rawPassId}$`, 'i') },
+      ],
+    });
+
+    if (!entry) {
+      const allEntries = await HackathonRegistration.find();
+      entry = allEntries.find((e) => {
+        const genTicket = `MCAI-2026-${e._id.toString().slice(-4).toUpperCase()}`;
+        return (
+          genTicket.toLowerCase() === rawPassId.toLowerCase() ||
+          e._id.toString().toUpperCase().endsWith(rawPassId.toUpperCase().replace(/^MCAI-2026-/, ''))
+        );
+      });
+    }
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        message: 'No hackathon registration found for this Pass ID',
+      });
+    }
+
+    const shouldCheckIn = action !== 'undo';
+    entry.isCheckedIn = shouldCheckIn;
+    entry.checkedInAt = shouldCheckIn ? new Date() : null;
+    entry.checkedInBy = shouldCheckIn ? (req.user?.email || 'admin') : null;
+
+    await entry.save();
+
+    return res.status(200).json({
+      success: true,
+      message: shouldCheckIn
+        ? `Team "${entry.projectName}" successfully checked in and admitted to venue!`
+        : `Check-in reversed for Team "${entry.projectName}".`,
+      entry,
+      isCheckedIn: entry.isCheckedIn,
+      checkedInAt: entry.checkedInAt,
+      checkedInBy: entry.checkedInBy,
+    });
+  } catch (error) {
+    console.error('[Admin Check-In Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update check-in status',
     });
   }
 };

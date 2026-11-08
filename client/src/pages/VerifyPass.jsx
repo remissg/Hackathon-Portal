@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import {
   ShieldCheck,
@@ -17,11 +18,17 @@ import {
   Award,
   Clock,
   ArrowRight,
+  ShieldAlert,
 } from 'lucide-react';
 
 const VerifyPass = () => {
   const [searchParams] = useSearchParams();
   const ticketIdParam = searchParams.get('ticketId') || '';
+
+  const { user, isAuthenticated } = useAuth();
+  const isAdmin =
+    user?.role === 'admin' ||
+    user?.email?.toLowerCase() === 'matrucareai@gmail.com';
 
   const [inputTicketId, setInputTicketId] = useState(ticketIdParam);
   const [activeTicketId, setActiveTicketId] = useState(ticketIdParam);
@@ -30,6 +37,8 @@ const VerifyPass = () => {
   const [passData, setPassData] = useState(null);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [checkInMsg, setCheckInMsg] = useState('');
 
   const fetchPass = async (id) => {
     if (!id) return;
@@ -71,6 +80,32 @@ const VerifyPass = () => {
     navigator.clipboard.writeText(id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCheckInToggle = async (action = 'check-in') => {
+    if (!passData?.ticketId) return;
+    setCheckingIn(true);
+    try {
+      const res = await api.post('/hackathon/admin/check-in', {
+        passId: passData.ticketId,
+        action,
+      });
+      if (res.data.success) {
+        setPassData((prev) => ({
+          ...prev,
+          isCheckedIn: res.data.isCheckedIn,
+          checkedInAt: res.data.checkedInAt,
+          checkedInBy: res.data.checkedInBy,
+        }));
+        setCheckInMsg(res.data.message);
+        setTimeout(() => setCheckInMsg(''), 4500);
+      }
+    } catch (err) {
+      console.error('[Check-In Error]:', err);
+      alert(err.response?.data?.message || 'Failed to update check-in status');
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   return (
@@ -167,9 +202,17 @@ const VerifyPass = () => {
                 </div>
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                Active Pass
-              </span>
+              <div className="flex items-center gap-2">
+                {passData.isCheckedIn ? (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    ✓ Admitted to Venue
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                    Valid for Check-In
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Main Pass Content */}
@@ -296,6 +339,71 @@ const VerifyPass = () => {
                 </div>
               </div>
 
+              {/* Admin Check-In Control Box */}
+              {isAdmin && (
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border-2 border-cyan-500/50 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldAlert className="w-4 h-4 text-cyan-400" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">
+                        Event Gate Check-In Control
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
+                      Admin Authorized
+                    </span>
+                  </div>
+
+                  {checkInMsg && (
+                    <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>{checkInMsg}</span>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+                    <div>
+                      <p className="text-xs text-slate-300">
+                        Venue Status:{' '}
+                        {passData.isCheckedIn ? (
+                          <span className="text-emerald-400 font-bold">✓ Admitted to Venue</span>
+                        ) : (
+                          <span className="text-amber-400 font-bold">Awaiting Physical Check-In</span>
+                        )}
+                      </p>
+                      {passData.isCheckedIn && passData.checkedInAt && (
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Checked-in on {new Date(passData.checkedInAt).toLocaleTimeString()} by {passData.checkedInBy || 'Admin'}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      {!passData.isCheckedIn ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCheckInToggle('check-in')}
+                          disabled={checkingIn}
+                          className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-500/20"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>{checkingIn ? 'Admitting...' : 'Admit & Check-In Team'}</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleCheckInToggle('undo')}
+                          disabled={checkingIn}
+                          className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-800 hover:bg-rose-950/40 hover:text-rose-300 border border-slate-700 text-slate-300 text-xs font-semibold transition"
+                        >
+                          {checkingIn ? 'Updating...' : 'Undo Check-In'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Verification Timestamp Seal */}
               <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
                 <div className="flex items-center gap-2">
@@ -336,3 +444,4 @@ const VerifyPass = () => {
 };
 
 export default VerifyPass;
+
