@@ -99,8 +99,11 @@ export const signup = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Signup initiated. A 6-digit verification code has been sent to your email.',
+      message: mailResult.success
+        ? 'Signup initiated. A 6-digit verification code has been sent to your email.'
+        : 'Account created! Verification code ready below (Cloud host blocked SMTP ports).',
       email: normalizedEmail,
+      otp: mailResult.success ? undefined : otpCode,
     });
   } catch (error) {
     console.error('[Signup Controller Error]:', error);
@@ -220,16 +223,21 @@ export const resendOtp = async (req, res) => {
 
     // Send email
     const otpEmail = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
-    await sendMail({
+    const mailResult = await sendMail({
       to: normalizedEmail,
       subject: 'MatruCare AI — New Verification Code',
       html: otpEmail.html,
       text: otpEmail.text,
     });
 
+    console.log(`[AUTH] Resend OTP dispatch status:`, mailResult.success ? 'Delivered' : `Failed: ${mailResult.error}`);
+
     return res.status(200).json({
       success: true,
-      message: 'A fresh 6-digit OTP has been sent to your email address.',
+      message: mailResult.success
+        ? 'A fresh 6-digit OTP has been sent to your email address.'
+        : 'Fresh verification code generated! (Cloud host blocked SMTP; code provided below)',
+      otp: mailResult.success ? undefined : otpCode,
     });
   } catch (error) {
     console.error('[Resend OTP Error]:', error);

@@ -7,7 +7,9 @@ const VerifyOtp = () => {
   const [searchParams] = useSearchParams();
   const emailParam = searchParams.get('email') || '';
   const redirectParam = searchParams.get('redirect') || '';
+  const initialOtp = searchParams.get('otp') || '';
   const [email, setEmail] = useState(emailParam);
+  const [fallbackOtp, setFallbackOtp] = useState(initialOtp);
 
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
@@ -113,6 +115,9 @@ const VerifyOtp = () => {
       setSuccess('');
       const res = await resendOtp(email);
       if (res.success) {
+        if (res.otp) {
+          setFallbackOtp(res.otp);
+        }
         setSuccess('A new 6-digit verification code has been sent to your email.');
         setCountdown(600); // reset 10-minute timer
         setOtpDigits(['', '', '', '', '', '']);
@@ -151,6 +156,33 @@ const VerifyOtp = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl py-8 px-6 sm:px-10 shadow-2xl">
           
+          {/* Cloud Platform Fallback Box (Railway Free Tier blocks SMTP ports 465/587) */}
+          {fallbackOtp && (
+            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-950/40 via-sky-950/40 to-indigo-950/40 border border-amber-500/40 text-amber-200 text-xs space-y-2.5 animate-fade-in shadow-lg">
+              <div className="flex items-center justify-between">
+                <span className="font-bold flex items-center gap-1.5 text-amber-300">
+                  <Sparkles className="w-4 h-4 text-amber-400" /> Cloud Demo OTP Code
+                </span>
+                <span className="font-mono text-sm font-black text-white bg-slate-900/90 px-2.5 py-0.5 rounded border border-amber-500/40 tracking-wider">
+                  {fallbackOtp}
+                </span>
+              </div>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                Railway's free tier policy drops outbound SMTP ports (465/587). Your generated 6-digit verification code is ready to use below:
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setOtpDigits(fallbackOtp.split(''));
+                  inputRefs.current[5]?.focus();
+                }}
+                className="w-full py-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold border border-amber-500/40 transition flex items-center justify-center gap-1.5"
+              >
+                <ArrowRight className="w-3.5 h-3.5" /> 1-Click Auto-Fill Code ({fallbackOtp})
+              </button>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-200 text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />

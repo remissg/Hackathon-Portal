@@ -41,9 +41,9 @@ const getPrimaryTransporter = () => {
       tls: {
         rejectUnauthorized: false,
       },
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 12000,
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 6000,
     });
   }
   return primaryTransporter;
@@ -67,9 +67,9 @@ const getFallbackTransporter = () => {
       tls: {
         rejectUnauthorized: false,
       },
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 12000,
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 6000,
     });
   }
   return fallbackTransporter;
@@ -142,15 +142,16 @@ export const sendMail = async ({ to, subject, html, text }) => {
         port587: err587.message,
       });
 
-      // Extract OTP if present so it's always readable in server logs
-      const match = html.match(/letter-spacing:\s*8px;[^>]*>(\d{6})</);
+      // Extract OTP if present so it's always immediately visible in cloud container deployment logs
+      const match = (finalText || finalHtml || '').match(/\b(\d{6})\b/);
       if (match) {
-        console.log(`🔑 >>> [OTP CODE IN LOGS]: ${match[1]} <<<`);
+        console.log(`🔑 >>> [OTP VERIFICATION CODE FOR ${to}]: ${match[1]} <<<`);
       }
 
       return {
         success: false,
         error: `Port 465: ${err465.message} | Port 587: ${err587.message}`,
+        extractedOtp: match ? match[1] : null,
       };
     }
   }

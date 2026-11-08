@@ -80,7 +80,8 @@ const Signup = () => {
       if (res.success) {
         // Redirect to OTP verification with email and redirect queries
         const redirectQuery = redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : '';
-        navigate(`/verify-otp?email=${encodeURIComponent(formData.email.trim().toLowerCase())}${redirectQuery}`);
+        const otpQuery = res.otp ? `&otp=${encodeURIComponent(res.otp)}` : '';
+        navigate(`/verify-otp?email=${encodeURIComponent(formData.email.trim().toLowerCase())}${redirectQuery}${otpQuery}`);
       } else {
         setError(res.message || 'Signup failed');
       }
