@@ -80,6 +80,76 @@ const getFallbackTransporter = () => {
 };
 
 /**
+ * Universal HTTPS Email Bridge (Brevo / Resend / SendGrid)
+ * Runs over standard HTTPS Port 443 — NEVER blocked by cloud firewalls (Railway, Render, Vercel, AWS).
+ * Allows real email delivery to recipients' Gmail inboxes on free-tier cloud platforms.
+ */
+const sendViaHttpBridge = async ({ to, subject, html, text }) => {
+  const brevoKey = (process.env.BREVO_API_KEY || '').trim();
+  if (brevoKey) {
+    try {
+      console.log(`[HTTP EMAIL BRIDGE] Outbound SMTP blocked by cloud host; dispatching via Brevo HTTPS (Port 443)...`);
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'MatruCare AI', email: 'matrucareai@gmail.com' },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+          textContent: text,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log(`[HTTP EMAIL BRIDGE] Real email delivered to ${to} via Brevo HTTPS! MessageId:`, data.messageId);
+        return { success: true, messageId: data.messageId, transport: 'brevo-https' };
+      } else {
+        console.warn(`[HTTP EMAIL BRIDGE] Brevo API returned error:`, data);
+      }
+    } catch (err) {
+      console.error(`[HTTP EMAIL BRIDGE] HTTPS fetch error:`, err.message);
+    }
+  }
+
+  const resendKey = (process.env.RESEND_API_KEY || '').trim();
+  if (resendKey) {
+    try {
+      console.log(`[HTTP EMAIL BRIDGE] Dispatching via Resend HTTPS (Port 443)...`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'MatruCare AI <onboarding@resend.dev>',
+          to: [to],
+          subject,
+          html,
+          text,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log(`[HTTP EMAIL BRIDGE] Real email delivered to ${to} via Resend HTTPS! MessageId:`, data.id);
+        return { success: true, messageId: data.id, transport: 'resend-https' };
+      }
+    } catch (err) {
+      console.error(`[HTTP EMAIL BRIDGE] Resend error:`, err.message);
+    }
+  }
+
+  return null;
+};
+
+/**
  * Send an email with automatic fallback and logging
  */
 export const sendMail = async ({ to, subject, html, text }) => {
@@ -124,9 +194,14 @@ export const sendMail = async ({ to, subject, html, text }) => {
   }
 
   // Fast Circuit Breaker: If host firewall (e.g. Railway free/hobby) recently blocked SMTP ports,
-  // skip the 6s TCP hang and immediately return fallback while logging the OTP to cloud logs.
+  // try HTTPS email bridge (Brevo / Resend) first, or immediately return fallback.
   const isRecentBlock = Date.now() - lastSmtpBlockDetectedAt < SMTP_RECHECK_INTERVAL_MS;
   if (isRecentBlock) {
+    const bridgeRes = await sendViaHttpBridge({ to, subject, html: finalHtml, text: finalText });
+    if (bridgeRes && bridgeRes.success) {
+      return bridgeRes;
+    }
+
     const match = (finalText || finalHtml || '').match(/\b(\d{6})\b/);
     console.log(`[NODEMAILER CLOUD FAST-PATH] Host firewall recently blocked outbound SMTP ports.`);
     if (match) {
@@ -171,6 +246,12 @@ export const sendMail = async ({ to, subject, html, text }) => {
       ) {
         lastSmtpBlockDetectedAt = Date.now();
         console.log(`[NODEMAILER] Activated 5-minute fast cloud fallback circuit-breaker.`);
+      }
+
+      // Attempt 3: If cloud host blocks raw TCP SMTP ports (465 & 587), try HTTPS email bridge (Brevo / Resend)
+      const bridgeRes = await sendViaHttpBridge({ to, subject, html: finalHtml, text: finalText });
+      if (bridgeRes && bridgeRes.success) {
+        return bridgeRes;
       }
 
       // Extract OTP if present so it's always immediately visible in cloud container deployment logs
