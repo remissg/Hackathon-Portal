@@ -89,6 +89,11 @@ const sendViaHttpBridge = async ({ to, subject, html, text }) => {
   if (brevoKey) {
     try {
       console.log(`[HTTP EMAIL BRIDGE] Outbound SMTP blocked by cloud host; dispatching via Brevo HTTPS (Port 443)...`);
+      const brevoSenderEmail = (
+        process.env.BREVO_SENDER_EMAIL ||
+        (process.env.EMAIL_USER && !process.env.EMAIL_USER.includes('matrucareai') ? process.env.EMAIL_USER : 'wishtory.in@gmail.com')
+      ).trim();
+
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -99,7 +104,7 @@ const sendViaHttpBridge = async ({ to, subject, html, text }) => {
         body: JSON.stringify({
           sender: {
             name: 'MatruCare AI',
-            email: (process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || 'matrucareai@gmail.com').trim(),
+            email: brevoSenderEmail,
           },
           replyTo: {
             name: 'MatruCare AI',
