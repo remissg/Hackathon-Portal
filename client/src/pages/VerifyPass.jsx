@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { Html5Qrcode } from 'html5-qrcode';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import {
@@ -19,6 +20,11 @@ import {
   Clock,
   ArrowRight,
   ShieldAlert,
+  Camera,
+  CameraOff,
+  Zap,
+  X,
+  Volume2,
 } from 'lucide-react';
 
 const VerifyPass = () => {
@@ -41,6 +47,130 @@ const VerifyPass = () => {
   const [copied, setCopied] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkInMsg, setCheckInMsg] = useState('');
+
+  // Live Camera Scanner State
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerStarting, setScannerStarting] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const [autoCheckIn, setAutoCheckIn] = useState(false);
+  const scannerInstanceRef = useRef(null);
+
+  // Audio Confirmation Chime on scan
+  const playScanBeep = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch (_) {}
+  };
+
+  // Cleanup scanner on component unmount
+  useEffect(() => {
+    return () => {
+      if (scannerInstanceRef.current) {
+        try {
+          scannerInstanceRef.current
+            .stop()
+            .then(() => scannerInstanceRef.current.clear())
+            .catch(() => {});
+        } catch (_) {}
+      }
+    };
+  }, []);
+
+  const stopScanner = async () => {
+    if (scannerInstanceRef.current) {
+      try {
+        await scannerInstanceRef.current.stop();
+        scannerInstanceRef.current.clear();
+      } catch (_) {}
+      scannerInstanceRef.current = null;
+    }
+    setScannerOpen(false);
+    setScannerStarting(false);
+  };
+
+  const handleScanSuccess = async (scannedId) => {
+    playScanBeep();
+    await stopScanner();
+    setInputTicketId(scannedId);
+    setActiveTicketId(scannedId);
+
+    // If auto-admit on scan is enabled and user is gate staff, check in immediately!
+    if (autoCheckIn && canCheckIn) {
+      try {
+        setCheckingIn(true);
+        const res = await api.post('/hackathon/admin/check-in', {
+          passId: scannedId,
+          action: 'check-in',
+        });
+        if (res.data.success) {
+          setCheckInMsg(
+            `⚡ Instant Gate Admission: "${res.data.entry?.projectName || scannedId}" admitted to venue!`
+          );
+          setTimeout(() => setCheckInMsg(''), 5000);
+        }
+      } catch (err) {
+        console.error('[Auto Check-in Error]:', err);
+      } finally {
+        setCheckingIn(false);
+      }
+    }
+  };
+
+  const startScanner = async () => {
+    setCameraError('');
+    setScannerStarting(true);
+    setScannerOpen(true);
+
+    setTimeout(async () => {
+      try {
+        const qr = new Html5Qrcode('qr-camera-viewport');
+        scannerInstanceRef.current = qr;
+
+        await qr.start(
+          { facingMode: 'environment' },
+          {
+            fps: 15,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          (decodedText) => {
+            let extractedId = decodedText.trim();
+            if (extractedId.includes('ticketId=')) {
+              try {
+                const u = new URL(extractedId, window.location.origin);
+                extractedId = u.searchParams.get('ticketId') || extractedId;
+              } catch (_) {
+                extractedId = extractedId.split('ticketId=')[1]?.split('&')[0] || extractedId;
+              }
+            } else if (extractedId.includes('/verify-pass/')) {
+              extractedId = extractedId.split('/verify-pass/')[1]?.split('?')[0] || extractedId;
+            }
+            handleScanSuccess(extractedId);
+          },
+          () => {} // frame scan miss, silence
+        );
+      } catch (err) {
+        console.error('[Camera Init Error]:', err);
+        setCameraError(
+          'Could not access camera. Please allow camera permissions in your browser or connect a webcam.'
+        );
+      } finally {
+        setScannerStarting(false);
+      }
+    }, 200);
+  };
 
   const fetchPass = async (id) => {
     if (!id) return;
@@ -127,6 +257,113 @@ const VerifyPass = () => {
             MatruCare AI National Innovation Hackathon 2026
           </p>
         </div>
+
+        {/* Global Live Scan Toast */}
+        {checkInMsg && (
+          <div className="p-4 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 text-emerald-300 text-sm flex items-center gap-3 animate-fade-in shadow-2xl">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span className="font-bold">{checkInMsg}</span>
+          </div>
+        )}
+
+        {/* Camera Scanner Viewfinder Card */}
+        {scannerOpen && (
+          <div className="bg-[#0b132b]/95 border-2 border-cyan-500/50 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl text-center space-y-4 animate-fade-in relative">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2 text-left">
+                <Camera className="w-5 h-5 text-cyan-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-white">Live Camera QR Scanner</h3>
+                  <p className="text-[11px] text-slate-400">Position the candidate QR code inside the frame to scan</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={stopScanner}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                title="Close camera"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Error if camera blocked */}
+            {cameraError && (
+              <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
+                {cameraError}
+              </div>
+            )}
+
+            {/* HTML5 QR Code Video Target */}
+            <div className="relative mx-auto max-w-sm rounded-2xl overflow-hidden border-2 border-dashed border-cyan-500/40 bg-black min-h-[280px] flex items-center justify-center shadow-inner">
+              {scannerStarting && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-950/80 z-10 text-xs text-cyan-400">
+                  <div className="w-7 h-7 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-semibold">Starting camera sensor...</span>
+                </div>
+              )}
+              <div id="qr-camera-viewport" className="w-full"></div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-400">
+              <span className="flex items-center gap-1.5 text-[11px]">
+                <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+                Audio chime enabled on scan detection
+              </span>
+
+              {canCheckIn && (
+                <label className="flex items-center gap-2 cursor-pointer bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500/50 transition">
+                  <input
+                    type="checkbox"
+                    checked={autoCheckIn}
+                    onChange={(e) => setAutoCheckIn(e.target.checked)}
+                    className="accent-cyan-500 rounded"
+                  />
+                  <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-cyan-400" /> Instant Check-In on Scan
+                  </span>
+                </label>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={stopScanner}
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+            >
+              Cancel &amp; Close Camera
+            </button>
+          </div>
+        )}
+
+        {/* Quick Scanner Action Bar */}
+        {!scannerOpen && (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={startScanner}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-sm flex items-center gap-2.5 shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5"
+            >
+              <Camera className="w-4 h-4 text-slate-950" />
+              <span>Scan QR with Device Camera</span>
+            </button>
+
+            {activeTicketId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTicketId('');
+                  setInputTicketId('');
+                  setPassData(null);
+                  setError('');
+                }}
+                className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition"
+              >
+                Clear / Manual Lookup
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Manual Lookup Form if no ID provided in URL */}
         {!activeTicketId && (
@@ -421,18 +658,29 @@ const VerifyPass = () => {
 
               {/* Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
-                <Link
-                  to="/"
-                  className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm text-center transition"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPassData(null);
+                    startScanner();
+                  }}
+                  className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
                 >
-                  Return to Home
-                </Link>
+                  <Camera className="w-4 h-4" />
+                  Scan Next Pass
+                </button>
                 <Link
                   to="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-cyan-500/20"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-sm transition"
                 >
-                  Open Participant Dashboard
+                  Open Dashboard
                   <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/"
+                  className="px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-sm text-center transition"
+                >
+                  Return to Home
                 </Link>
               </div>
 
