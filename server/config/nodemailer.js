@@ -97,7 +97,14 @@ const sendViaHttpBridge = async ({ to, subject, html, text }) => {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          sender: { name: 'MatruCare AI', email: 'matrucareai@gmail.com' },
+          sender: {
+            name: 'MatruCare AI',
+            email: (process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || 'matrucareai@gmail.com').trim(),
+          },
+          replyTo: {
+            name: 'MatruCare AI',
+            email: 'matrucareai@gmail.com',
+          },
           to: [{ email: to }],
           subject,
           htmlContent: html,
@@ -175,6 +182,8 @@ export const sendMail = async ({ to, subject, html, text }) => {
 
   const mailOptions = {
     from: '"MatruCare AI" <matrucareai@gmail.com>',
+    replyTo: 'matrucareai@gmail.com',
+    sender: 'matrucareai@gmail.com',
     to,
     subject,
     html: finalHtml,
