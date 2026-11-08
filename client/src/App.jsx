@@ -18,6 +18,7 @@ import HackathonRegister from './pages/HackathonRegister';
 import Contact from './pages/Contact';
 import AdminDashboard from './pages/AdminDashboard';
 import TeamInviteAcceptance from './pages/TeamInviteAcceptance';
+import VerifyPass from './pages/VerifyPass';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/team-invite" element={<TeamInviteAcceptance />} />
+              <Route path="/verify-pass" element={<VerifyPass />} />
 
               {/* Protected Routes (JWT Protected) */}
               <Route

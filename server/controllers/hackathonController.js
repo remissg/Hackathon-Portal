@@ -3,6 +3,7 @@ import { sendMail } from '../config/nodemailer.js';
 import {
   generateRegistrationEmailTemplate,
   generateTeammateInviteEmailTemplate,
+  generateStatusUpdateEmailTemplate,
 } from '../utils/emailTemplates.js';
 
 /**
@@ -535,12 +536,53 @@ export const updateRegistrationStatus = async (req, res) => {
       });
     }
 
+    const oldStatus = entry.status;
     entry.status = status;
     const updated = await entry.save();
 
+    // If status changed, send milestone email notifications to team lead & accepted teammates
+    if (oldStatus !== status) {
+      const ticketId = entry.ticketId || `MCAI-2026-${entry._id.toString().slice(-4).toUpperCase()}`;
+      const recipients = [];
+
+      // Add team lead
+      recipients.push({ name: entry.fullName, email: entry.email });
+
+      // Add accepted teammates
+      if (Array.isArray(entry.teamMembers)) {
+        entry.teamMembers.forEach((m) => {
+          if (m.email && m.status === 'Accepted') {
+            recipients.push({ name: m.name, email: m.email });
+          }
+        });
+      }
+
+      // Dispatch in parallel
+      const emailDispatches = recipients.map((r) => {
+        const milestoneEmail = generateStatusUpdateEmailTemplate({
+          participantName: r.name,
+          projectName: entry.projectName,
+          status,
+          domain: entry.domain,
+          ticketId,
+        });
+
+        return sendMail({
+          to: r.email,
+          subject: `Status Milestone: ${entry.projectName} is now "${status.toUpperCase()}" — MatruCare AI Hackathon`,
+          html: milestoneEmail.html,
+          text: milestoneEmail.text,
+        });
+      });
+
+      Promise.allSettled(emailDispatches).catch((err) =>
+        console.error('[Milestone Email Dispatch Error]:', err)
+      );
+    }
+
     return res.status(200).json({
       success: true,
-      message: `Project status updated to "${status}"`,
+      message: `Project status updated to "${status}" and milestone notifications dispatched.`,
       entry: updated,
     });
   } catch (error) {
@@ -548,6 +590,81 @@ export const updateRegistrationStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Failed to update status',
+    });
+  }
+};
+
+/**
+ * @desc    Verify Official Admission Pass by Ticket ID (Public / Scanner)
+ * @route   GET /api/hackathon/verify-pass/:passId
+ * @access  Public
+ */
+export const verifyPass = async (req, res) => {
+  try {
+    const rawPassId = (req.params.passId || '').trim();
+    if (!rawPassId) {
+      return res.status(400).json({ success: false, verified: false, message: 'Pass ID is required' });
+    }
+
+    // Try finding by ticketId or by suffix of _id
+    let entry = await HackathonRegistration.findOne({
+      $or: [
+        { ticketId: rawPassId },
+        { ticketId: new RegExp(`^${rawPassId}$`, 'i') },
+      ],
+    });
+
+    if (!entry) {
+      const allEntries = await HackathonRegistration.find();
+      entry = allEntries.find((e) => {
+        const genTicket = `MCAI-2026-${e._id.toString().slice(-4).toUpperCase()}`;
+        return (
+          genTicket.toLowerCase() === rawPassId.toLowerCase() ||
+          e._id.toString().toUpperCase().endsWith(rawPassId.toUpperCase().replace(/^MCAI-2026-/, ''))
+        );
+      });
+    }
+
+    if (!entry) {
+      return res.status(404).json({
+        success: false,
+        verified: false,
+        message: 'Invalid or unregistered Hackathon Pass ID',
+      });
+    }
+
+    const ticketId = entry.ticketId || `MCAI-2026-${entry._id.toString().slice(-4).toUpperCase()}`;
+
+    return res.status(200).json({
+      success: true,
+      verified: true,
+      pass: {
+        ticketId,
+        projectName: entry.projectName,
+        domain: entry.domain,
+        collegeName: entry.collegeName,
+        course: entry.course,
+        branch: entry.branch,
+        yearOfStudy: entry.yearOfStudy,
+        teamLeadName: entry.fullName,
+        teamLeadEmail: entry.email,
+        teamSize: entry.teamSize,
+        teamMembers: (entry.teamMembers || []).map((m) => ({
+          name: m.name,
+          email: m.email,
+          status: m.status || 'Pending',
+        })),
+        status: entry.status,
+        submittedAt: entry.createdAt,
+        verifiedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('[Verify Pass Error]:', error);
+    return res.status(500).json({
+      success: false,
+      verified: false,
+      message: error.message || 'Pass verification failed',
     });
   }
 };

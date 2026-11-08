@@ -399,3 +399,4 @@ const TeamInviteAcceptance = () => {
 };
 
 export default TeamInviteAcceptance;
+

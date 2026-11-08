@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { QRCodeSVG } from 'qrcode.react';
+import { toPng } from 'html-to-image';
 import {
   Sparkles,
   User,
@@ -28,6 +30,7 @@ import {
   UserCheck,
   Award,
   QrCode,
+  Download,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -50,11 +53,35 @@ const Dashboard = () => {
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+  const [downloadingPass, setDownloadingPass] = useState(false);
 
   const handleCopyId = (id) => {
     navigator.clipboard.writeText(id);
     setCopiedId(true);
     setTimeout(() => setCopiedId(false), 2500);
+  };
+
+  const handleDownloadPassPng = async () => {
+    const passElement = document.getElementById('admission-pass-card');
+    if (!passElement) return;
+    try {
+      setDownloadingPass(true);
+      const dataUrl = await toPng(passElement, {
+        cacheBust: true,
+        backgroundColor: '#0b132b',
+        pixelRatio: 2,
+      });
+      const link = document.createElement('a');
+      link.download = `MatruCareAI-Pass-${ticketId}.png`;
+      link.href = dataUrl;
+      link.click();
+      setNotification('Pass image (PNG) downloaded successfully!');
+    } catch (err) {
+      console.error('[Download Pass PNG Error]:', err);
+      alert('Could not generate pass image. You can use Print Pass / PDF instead.');
+    } finally {
+      setDownloadingPass(false);
+    }
   };
   
   // Profile edit form state
@@ -559,84 +586,129 @@ const Dashboard = () => {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Ticket Header */}
-            <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-5 print:border-gray-300">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white print:bg-sky-600">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white print:text-black">MatruCare AI Hackathon 2026</h3>
-                <p className="text-xs text-sky-400 print:text-sky-700">Official Candidate Entry Pass</p>
-              </div>
-            </div>
-
-            {/* Ticket Body */}
-            <div className="space-y-4 text-xs">
-              <div className="flex justify-between items-center p-3 bg-slate-950 rounded-xl border border-slate-800 print:bg-gray-100 print:border-gray-200">
+            {/* Capturable Ticket Box */}
+            <div id="admission-pass-card" className="p-4 sm:p-5 bg-slate-900 rounded-2xl print:bg-white print:p-0">
+              {/* Ticket Header */}
+              <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-5 print:border-gray-300">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white print:bg-sky-600 shadow-md shadow-sky-500/20">
+                  <Sparkles className="w-5 h-5" />
+                </div>
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Pass / Ticket ID</span>
-                  <div className="flex items-center gap-2">
-                    <p className="font-mono font-bold text-sky-400 text-sm print:text-sky-800">{ticketId}</p>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyId(ticketId)}
-                      className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors print:hidden"
-                      title="Copy Pass ID"
-                    >
-                      {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                    {copiedId && <span className="text-[10px] text-emerald-400 print:hidden">Copied!</span>}
+                  <h3 className="text-lg font-bold text-white print:text-black">MatruCare AI Hackathon 2026</h3>
+                  <p className="text-xs text-sky-400 print:text-sky-700">Official Candidate Entry Pass</p>
+                </div>
+              </div>
+
+              {/* Ticket Body */}
+              <div className="space-y-4 text-xs">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800 print:bg-gray-100 print:border-gray-200">
+                  <div>
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Pass / Ticket ID</span>
+                    <div className="flex items-center gap-2">
+                      <p className="font-mono font-bold text-sky-400 text-sm print:text-sky-800">{ticketId}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyId(ticketId)}
+                        className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors print:hidden"
+                        title="Copy Pass ID"
+                      >
+                        {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                      {copiedId && <span className="text-[10px] text-emerald-400 print:hidden">Copied!</span>}
+                    </div>
+                  </div>
+                  <div className="sm:text-right">
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Track</span>
+                    <p className="font-bold text-white print:text-black">{entry.domain}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Track</span>
-                  <p className="font-bold text-white print:text-black">{entry.domain}</p>
-                </div>
-              </div>
 
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Project Title</span>
-                <p className="text-sm font-bold text-white print:text-black">{entry.projectName}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Lead Candidate</span>
-                  <p className="font-medium text-slate-200 print:text-gray-800">{entry.fullName}</p>
-                  <p className="text-slate-400 print:text-gray-600 text-[11px]">{entry.email}</p>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Project Title</span>
+                  <p className="text-sm font-bold text-white print:text-black">{entry.projectName}</p>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Lead Candidate</span>
+                    <p className="font-medium text-slate-200 print:text-gray-800">{entry.fullName}</p>
+                    <p className="text-slate-400 print:text-gray-600 text-[11px]">{entry.email}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">College</span>
+                    <p className="font-medium text-slate-200 print:text-gray-800 truncate">{entry.collegeName}</p>
+                  </div>
+                </div>
+
                 <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold">College</span>
-                  <p className="font-medium text-slate-200 print:text-gray-800 truncate">{entry.collegeName}</p>
+                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Team Size &amp; Members</span>
+                  <p className="font-medium text-slate-200 print:text-gray-800">
+                    {entry.teamSize} Member(s): {entry.fullName}
+                    {entry.teamMembers?.map((m) => `, ${m.name}`)}
+                  </p>
                 </div>
-              </div>
 
-              <div>
-                <span className="text-[10px] text-slate-500 uppercase font-semibold">Team Size & Members</span>
-                <p className="font-medium text-slate-200 print:text-gray-800">
-                  {entry.teamSize} Member(s): {entry.fullName}
-                  {entry.teamMembers?.map((m) => `, ${m.name}`)}
-                </p>
-              </div>
+                {/* Scannable Dynamic QR Code Box */}
+                <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center justify-between gap-4 print:border-gray-300 print:bg-white">
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-bold text-white print:text-black flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      Live Verifiable QR Code
+                    </span>
+                    <p className="text-[10px] text-slate-400 print:text-gray-600 max-w-[210px] leading-relaxed">
+                      Scan with any camera or open pass verifier to validate authenticity.
+                    </p>
+                    <Link
+                      to={`/verify-pass?ticketId=${ticketId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-sky-400 hover:underline inline-flex items-center gap-1 print:hidden pt-1"
+                    >
+                      Open Live Verifier Link <ExternalLink className="w-2.5 h-2.5" />
+                    </Link>
+                  </div>
 
-              <div className="p-3 bg-emerald-950/50 border border-emerald-800/80 rounded-xl text-emerald-300 text-[11px] print:bg-emerald-50 print:text-emerald-900 print:border-emerald-200">
-                ✓ Verified & Registered via OTP Auth • MatruCare AI Full Stack Track
+                  <div className="bg-white p-2 rounded-xl shadow-md shrink-0 flex flex-col items-center">
+                    <QRCodeSVG
+                      value={`https://client-seven-gold-99.vercel.app/verify-pass?ticketId=${ticketId}`}
+                      size={86}
+                      level="M"
+                      includeMargin={false}
+                    />
+                    <span className="text-[8px] font-bold text-slate-800 tracking-wider mt-1 uppercase">
+                      Scan Me
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-emerald-950/50 border border-emerald-800/80 rounded-xl text-emerald-300 text-[11px] print:bg-emerald-50 print:text-emerald-900 print:border-emerald-200">
+                  ✓ Verified &amp; Registered via OTP Auth • MatruCare AI Full Stack Track
+                </div>
               </div>
             </div>
 
             {/* Modal Actions */}
-            <div className="mt-6 pt-4 border-t border-slate-800 flex justify-end gap-3 print:hidden">
+            <div className="mt-5 pt-4 border-t border-slate-800 flex flex-wrap justify-end gap-2.5 print:hidden">
               <button
                 type="button"
                 onClick={() => setPassModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800"
+                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition"
               >
                 Close
               </button>
               <button
                 type="button"
+                onClick={handleDownloadPassPng}
+                disabled={downloadingPass}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{downloadingPass ? 'Generating Image...' : 'Save Image (PNG)'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={triggerPrintPass}
-                className="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20"
+                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20 transition"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Pass / PDF</span>

@@ -9,13 +9,15 @@ import {
   updateRegistrationStatus,
   getInvitationDetails,
   respondToInvitation,
+  verifyPass,
 } from '../controllers/hackathonController.js';
 import { protect, adminProtect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Public Invitation Lookup
+// Public Invitation & Pass Verification Lookups
 router.get('/invite/:passId', getInvitationDetails);
+router.get('/verify-pass/:passId', verifyPass);
 
 // Participant Endpoints
 router.post('/register', protect, registerHackathon);

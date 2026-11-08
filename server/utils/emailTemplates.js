@@ -225,3 +225,106 @@ matrucareai@gmail.com`;
 
   return { html, text };
 };
+
+/**
+ * Project Status Milestone Notification Template (Spam-Proof)
+ */
+export const generateStatusUpdateEmailTemplate = ({
+  participantName,
+  projectName,
+  status,
+  domain,
+  ticketId,
+  portalUrl = 'https://client-seven-gold-99.vercel.app',
+}) => {
+  let statusMessage = '';
+  let badgeColor = '#0284c7';
+
+  switch (status) {
+    case 'Under Review':
+      statusMessage =
+        'Your project submission is currently undergoing formal technical review by the MatruCare AI judging committee.';
+      badgeColor = '#0284c7';
+      break;
+    case 'Shortlisted':
+      statusMessage =
+        '🎉 Congratulations! Your project has demonstrated exceptional innovation and has been officially SHORTLISTED for Round 2 mentorship and evaluation!';
+      badgeColor = '#10b981';
+      break;
+    case 'Finalist':
+      statusMessage =
+        '🏆 Outstanding Achievement! Your team has been selected as a NATIONAL FINALIST for the MatruCare AI National Innovation Grand Finale 2026!';
+      badgeColor = '#8b5cf6';
+      break;
+    case 'Rejected':
+      statusMessage =
+        'Thank you for your participation in the MatruCare AI Hackathon. While your project was not selected for advancement, we commend your dedication and technical initiative.';
+      badgeColor = '#64748b';
+      break;
+    default:
+      statusMessage = `Your project status has been updated to "${status}".`;
+  }
+
+  const text = `MatruCare AI Hackathon — Project Status Update
+
+Hello ${participantName},
+
+This is an official milestone notification regarding your hackathon project "${projectName}".
+
+Status Milestone: ${status.toUpperCase()}
+Project Name: ${projectName}
+Track / Domain: ${domain}
+Pass ID: ${ticketId}
+
+${statusMessage}
+
+You can log in to your dashboard to review evaluation updates:
+${portalUrl}/dashboard
+
+Best regards,
+MatruCare AI Organizing Committee
+matrucareai@gmail.com`;
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">MatruCare AI</h2>
+      <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">Hackathon Evaluation Status Notice</p>
+
+      <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 14px 0;">
+        Hello <strong>${participantName}</strong>,
+      </p>
+      <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
+        This is an official milestone notification regarding your project team:
+      </p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+        <div style="margin-bottom: 12px;">
+          <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; display: block; margin-bottom: 4px;">Updated Status</span>
+          <span style="background-color: ${badgeColor}; color: #ffffff; padding: 4px 12px; border-radius: 4px; font-weight: 700; font-size: 13px; display: inline-block;">
+            ${status.toUpperCase()}
+          </span>
+        </div>
+        <p style="margin: 4px 0; font-size: 14px;"><strong>Project:</strong> ${projectName}</p>
+        <p style="margin: 4px 0; font-size: 14px;"><strong>Domain:</strong> <span style="color: #0284c7; font-weight: 600;">${domain}</span></p>
+        <p style="margin: 4px 0; font-size: 14px;"><strong>Pass ID:</strong> <span style="font-family: monospace; font-weight: 700; color: #0284c7;">${ticketId}</span></p>
+      </div>
+
+      <p style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+        ${statusMessage}
+      </p>
+
+      <div style="margin: 20px 0;">
+        <a href="${portalUrl}/dashboard" style="background-color: #0284c7; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+          Open Dashboard to View Details →
+        </a>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+        MatruCare AI • Evaluation Committee • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+      </p>
+    </div>
+  `;
+
+  return { html, text };
+};
