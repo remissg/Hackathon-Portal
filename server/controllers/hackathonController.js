@@ -881,3 +881,127 @@ export const respondToInvitation = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Submit or update evaluation score for a hackathon registration (Evaluator / Admin)
+ * @route   POST /api/hackathon/:id/evaluate
+ * @access  Private / Evaluator or Admin
+ */
+export const submitEvaluation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      innovation = 5,
+      technicalExecution = 5,
+      healthcareImpact = 5,
+      presentation = 5,
+      recommendation = 'Consideration',
+      feedback = '',
+    } = req.body;
+
+    const parseScore = (val) => {
+      const num = Number(val);
+      if (isNaN(num)) return 5;
+      return Math.min(Math.max(Math.round(num), 1), 10);
+    };
+
+    const cleanInnovation = parseScore(innovation);
+    const cleanTechnical = parseScore(technicalExecution);
+    const cleanImpact = parseScore(healthcareImpact);
+    const cleanPresentation = parseScore(presentation);
+    const totalScore = cleanInnovation + cleanTechnical + cleanImpact + cleanPresentation; // max 40
+
+    const entry = await HackathonRegistration.findById(id);
+    if (!entry) {
+      return res.status(404).json({ success: false, message: 'Hackathon registration not found' });
+    }
+
+    if (!Array.isArray(entry.evaluations)) {
+      entry.evaluations = [];
+    }
+
+    const existingIndex = entry.evaluations.findIndex(
+      (ev) => ev.evaluatorId?.toString() === req.user._id.toString()
+    );
+
+    const evaluationPayload = {
+      evaluatorId: req.user._id,
+      evaluatorName: req.user.fullName || 'Judge',
+      evaluatorEmail: req.user.email,
+      innovation: cleanInnovation,
+      technicalExecution: cleanTechnical,
+      healthcareImpact: cleanImpact,
+      presentation: cleanPresentation,
+      totalScore,
+      recommendation,
+      feedback: (feedback || '').trim(),
+      evaluatedAt: new Date(),
+    };
+
+    if (existingIndex >= 0) {
+      entry.evaluations[existingIndex] = evaluationPayload;
+    } else {
+      entry.evaluations.push(evaluationPayload);
+    }
+
+    // Recalculate averageScore
+    const sum = entry.evaluations.reduce((acc, curr) => acc + (curr.totalScore || 0), 0);
+    entry.averageScore = Number((sum / entry.evaluations.length).toFixed(1));
+    entry.evaluationCount = entry.evaluations.length;
+
+    await entry.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Evaluation submitted successfully for "${entry.projectName}"! Total Score: ${totalScore}/40`,
+      averageScore: entry.averageScore,
+      evaluationCount: entry.evaluationCount,
+      evaluation: evaluationPayload,
+      entry,
+    });
+  } catch (error) {
+    console.error('[Submit Evaluation Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to submit evaluation',
+    });
+  }
+};
+
+/**
+ * @desc    Get all submissions with evaluation data for Judges/Evaluators
+ * @route   GET /api/hackathon/evaluator/submissions
+ * @access  Private / Evaluator or Admin
+ */
+export const getEvaluatorSubmissions = async (req, res) => {
+  try {
+    const submissions = await HackathonRegistration.find({})
+      .select('-mobileNumber') // Protect candidate personal mobile number from judges
+      .sort({ createdAt: -1 });
+
+    const formatted = submissions.map((entry) => {
+      const obj = entry.toObject();
+      const myReview = obj.evaluations?.find(
+        (ev) => ev.evaluatorId?.toString() === req.user._id.toString()
+      );
+      return {
+        ...obj,
+        myReview: myReview || null,
+        hasEvaluated: Boolean(myReview),
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: formatted.length,
+      submissions: formatted,
+    });
+  } catch (error) {
+    console.error('[Get Evaluator Submissions Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch submissions for evaluator',
+    });
+  }
+};
+
+

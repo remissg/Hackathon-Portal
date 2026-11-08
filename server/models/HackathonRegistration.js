@@ -28,6 +28,67 @@ const teamMemberSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const evaluationSchema = new mongoose.Schema(
+  {
+    evaluatorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    evaluatorName: {
+      type: String,
+      default: 'Judge',
+    },
+    evaluatorEmail: {
+      type: String,
+      default: '',
+    },
+    innovation: {
+      type: Number,
+      min: 1,
+      max: 10,
+      default: 5,
+    },
+    technicalExecution: {
+      type: Number,
+      min: 1,
+      max: 10,
+      default: 5,
+    },
+    healthcareImpact: {
+      type: Number,
+      min: 1,
+      max: 10,
+      default: 5,
+    },
+    presentation: {
+      type: Number,
+      min: 1,
+      max: 10,
+      default: 5,
+    },
+    totalScore: {
+      type: Number,
+      default: 20, // out of 40
+    },
+    recommendation: {
+      type: String,
+      enum: ['Consideration', 'Needs Revision', 'Recommended for Shortlist', 'Top Contender'],
+      default: 'Consideration',
+    },
+    feedback: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    evaluatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: true }
+);
+
 const hackathonRegistrationSchema = new mongoose.Schema(
   {
     userId: {
@@ -141,6 +202,15 @@ const hackathonRegistrationSchema = new mongoose.Schema(
     checkedInBy: {
       type: String,
       default: null,
+    },
+    evaluations: [evaluationSchema],
+    averageScore: {
+      type: Number,
+      default: 0,
+    },
+    evaluationCount: {
+      type: Number,
+      default: 0,
     },
   },
   {

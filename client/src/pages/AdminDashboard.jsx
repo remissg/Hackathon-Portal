@@ -26,6 +26,9 @@ import {
   FileText,
   Github,
   Video,
+  UserCog,
+  Star,
+  ShieldCheck,
 } from 'lucide-react';
 
 const STATUS_OPTIONS = ['Submitted', 'Under Review', 'Shortlisted', 'Finalist', 'Rejected'];
@@ -51,6 +54,13 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notification, setNotification] = useState('');
+
+  // Tab Switcher ('submissions' | 'roles')
+  const [activeTab, setActiveTab] = useState('submissions');
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [updatingRoleId, setUpdatingRoleId] = useState(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,8 +95,43 @@ const AdminDashboard = () => {
     }
   };
 
+  // Fetch all registered users for role management
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await api.get('/user/admin/all');
+      if (res.data.success) {
+        setUsers(res.data.users || []);
+      }
+    } catch (err) {
+      console.error('[Fetch Users Error]:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Change user role handler
+  const handleRoleChange = async (userId, newRole) => {
+    setUpdatingRoleId(userId);
+    try {
+      const res = await api.patch(`/user/admin/${userId}/role`, { role: newRole });
+      if (res.data.success) {
+        setUsers((prev) =>
+          prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u))
+        );
+        showToast(res.data.message || 'User role updated successfully!');
+      }
+    } catch (err) {
+      console.error('[Update Role Error]:', err);
+      alert(err.response?.data?.message || 'Failed to update user role.');
+    } finally {
+      setUpdatingRoleId(null);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchUsers();
   }, []);
 
   // Show auto-dismiss notification
@@ -162,6 +207,18 @@ const AdminDashboard = () => {
     });
   }, [registrations, searchTerm, selectedDomain, selectedStatus]);
 
+  // Filter users by search term
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const term = userSearchTerm.toLowerCase().trim();
+      return (
+        !term ||
+        u.fullName?.toLowerCase().includes(term) ||
+        u.email?.toLowerCase().includes(term)
+      );
+    });
+  }, [users, userSearchTerm]);
+
   // Export to CSV
   const handleExportCSV = () => {
     if (registrations.length === 0) {
@@ -187,6 +244,8 @@ const AdminDashboard = () => {
       'Team Members Detail',
       'Venue Gate Check-In',
       'Check-In Timestamp',
+      'Judge Avg Score (/40)',
+      'Judge Reviews Count',
       'PPT Link',
       'Prototype Link',
       'Demo Video Link',
@@ -201,6 +260,8 @@ const AdminDashboard = () => {
           : 'None (Solo)';
       const checkInStatus = r.isCheckedIn ? 'Admitted' : 'Pending';
       const checkInTime = r.checkedInAt ? new Date(r.checkedInAt).toLocaleString('en-IN') : 'N/A';
+      const avgScore = r.averageScore ? r.averageScore : 'N/A';
+      const reviewCount = r.evaluationCount || 0;
 
       return [
         `"${regId}"`,
@@ -220,6 +281,8 @@ const AdminDashboard = () => {
         `"${membersText.replace(/"/g, '""')}"`,
         `"${checkInStatus}"`,
         `"${checkInTime}"`,
+        `"${avgScore}"`,
+        reviewCount,
         `"${r.pptLink || ''}"`,
         `"${r.prototypeLink || ''}"`,
         `"${r.demoVideoLink || ''}"`,
@@ -396,8 +459,42 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-4">
+        {/* Navigation Tabs: Submissions vs User Role Governance */}
+        <div className="flex items-center gap-3 border-b border-slate-800/80 pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab('submissions')}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+              activeTab === 'submissions'
+                ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
+                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Registered Submissions ({registrations.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('roles');
+              fetchUsers();
+            }}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+              activeTab === 'roles'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            <UserCog className="w-4 h-4" />
+            <span>Access & Role Governance ({users.length})</span>
+          </button>
+        </div>
+
+        {activeTab === 'submissions' ? (
+          <>
+            {/* Filter & Search Bar */}
+            <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-4">
           <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
             {/* Search Input */}
             <div className="relative flex-1">
@@ -505,6 +602,7 @@ const AdminDashboard = () => {
                     <th scope="col" className="px-5 py-3.5">Team Size</th>
                     <th scope="col" className="px-5 py-3.5">Links</th>
                     <th scope="col" className="px-5 py-3.5">Venue Gate</th>
+                    <th scope="col" className="px-5 py-3.5">Judge Score</th>
                     <th scope="col" className="px-5 py-3.5">Evaluation Status</th>
                     <th scope="col" className="px-5 py-3.5 text-right">Actions</th>
                   </tr>
@@ -638,6 +736,23 @@ const AdminDashboard = () => {
                           )}
                         </td>
 
+                        {/* Judge Score */}
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          {entry.averageScore > 0 ? (
+                            <div className="flex flex-col">
+                              <span className="inline-flex items-center gap-1 font-mono text-xs font-bold text-amber-300">
+                                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                                {entry.averageScore} / 40
+                              </span>
+                              <span className="text-[10px] text-slate-500">
+                                {entry.evaluationCount || 1} {entry.evaluationCount === 1 ? 'review' : 'reviews'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-500 font-mono italic">Unscored</span>
+                          )}
+                        </td>
+
                         {/* Evaluation Status Dropdown */}
                         <td className="px-5 py-4 whitespace-nowrap">
                           <select
@@ -683,6 +798,143 @@ const AdminDashboard = () => {
             </div>
           )}
         </div>
+      </>
+    ) : (
+      /* User Role Governance Workspace */
+      <div className="space-y-4">
+        <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={userSearchTerm}
+              onChange={(e) => setUserSearchTerm(e.target.value)}
+              placeholder="Search registered accounts by candidate name or email..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+            {userSearchTerm && (
+              <button
+                onClick={() => setUserSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={fetchUsers}
+            disabled={loadingUsers}
+            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 border border-slate-700 transition shrink-0"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingUsers ? 'animate-spin' : ''}`} />
+            Refresh Roster
+          </button>
+        </div>
+
+        <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden shadow-xl">
+          <div className="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <UserCog className="w-4 h-4 text-indigo-400" />
+              <span>User Role Permissions ({filteredUsers.length})</span>
+            </h2>
+            <span className="text-xs text-slate-500 font-mono">
+              Live role assignment for Candidates, Gate Volunteers, Judges & Admins
+            </span>
+          </div>
+
+          {loadingUsers ? (
+            <div className="p-16 text-center text-slate-400 flex flex-col items-center gap-3">
+              <RefreshCw className="w-8 h-8 animate-spin text-indigo-400" />
+              <p className="text-sm">Loading user roster...</p>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-16 text-center text-slate-400">No registered users found matching query.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300">
+                <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800/80">
+                  <tr>
+                    <th className="px-5 py-3.5">User Profile</th>
+                    <th className="px-5 py-3.5">Joined</th>
+                    <th className="px-5 py-3.5">Verification</th>
+                    <th className="px-5 py-3.5">Current Role</th>
+                    <th className="px-5 py-3.5 text-right">Assign Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredUsers.map((u) => {
+                    const isSuperAdminUser = u.email?.toLowerCase() === 'matrucareai@gmail.com';
+                    return (
+                      <tr key={u._id} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span className="font-bold text-white block">{u.fullName}</span>
+                          <span className="text-xs text-slate-400 font-mono">{u.email}</span>
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-xs text-slate-400">
+                          {new Date(u.createdAt).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          {u.isVerified ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                              <CheckCircle className="w-3 h-3" /> Verified
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                              Pending OTP
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          {isSuperAdminUser ? (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 flex items-center gap-1 w-fit">
+                              <ShieldCheck className="w-3.5 h-3.5 text-rose-400" /> Super Admin
+                            </span>
+                          ) : u.role === 'admin' ? (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20 w-fit block">
+                              Admin
+                            </span>
+                          ) : u.role === 'evaluator' ? (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 w-fit block">
+                              Judge / Evaluator
+                            </span>
+                          ) : u.role === 'volunteer' ? (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit block">
+                              Gate Volunteer
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 w-fit block">
+                              Candidate (User)
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 whitespace-nowrap text-right">
+                          {isSuperAdminUser ? (
+                            <span className="text-xs text-slate-500 italic">Protected</span>
+                          ) : (
+                            <select
+                              value={u.role || 'user'}
+                              disabled={updatingRoleId === u._id}
+                              onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                            >
+                              <option value="user">Candidate</option>
+                              <option value="volunteer">Gate Volunteer</option>
+                              <option value="evaluator">Judge / Evaluator</option>
+                              <option value="admin">Co-Admin</option>
+                            </select>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
 
         {/* Modal: View Full Submission Details */}
         {activeModalEntry && (
@@ -866,6 +1118,79 @@ const AdminDashboard = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Official Judge Evaluations & Rubrics */}
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center justify-between">
+                    <span>Judge Evaluations & Rubrics</span>
+                    <span className="text-amber-400 font-mono font-bold">
+                      {activeModalEntry.averageScore > 0
+                        ? `Avg Score: ${activeModalEntry.averageScore} / 40`
+                        : 'No reviews submitted yet'}
+                    </span>
+                  </h4>
+
+                  {Array.isArray(activeModalEntry.evaluations) && activeModalEntry.evaluations.length > 0 ? (
+                    <div className="space-y-3">
+                      {activeModalEntry.evaluations.map((ev, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Award className="w-4 h-4 text-amber-400" />
+                              <span className="text-xs font-bold text-white">
+                                {ev.evaluatorName || 'Judge'}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-mono">
+                                ({ev.evaluatorEmail})
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                                {ev.recommendation || 'Consideration'}
+                              </span>
+                              <span className="text-sm font-extrabold text-amber-400 font-mono">
+                                {ev.totalScore} / 40
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 4 Pillars Breakdown */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/80">
+                            <div>
+                              <span className="text-slate-500 block">Innovation</span>
+                              <span className="text-slate-200 font-bold font-mono">{ev.innovation}/10</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block">Tech Execution</span>
+                              <span className="text-slate-200 font-bold font-mono">{ev.technicalExecution}/10</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block">Clinical Impact</span>
+                              <span className="text-slate-200 font-bold font-mono">{ev.healthcareImpact}/10</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-500 block">Presentation</span>
+                              <span className="text-slate-200 font-bold font-mono">{ev.presentation}/10</span>
+                            </div>
+                          </div>
+
+                          {ev.feedback && (
+                            <p className="text-xs text-slate-300 italic bg-slate-900/40 p-2 rounded border border-slate-800/50">
+                              "{ev.feedback}"
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3.5 rounded-xl bg-slate-950/30 border border-slate-800/60 text-xs text-slate-500">
+                      This submission has not been evaluated by any judges yet.
+                    </div>
+                  )}
                 </div>
 
               </div>

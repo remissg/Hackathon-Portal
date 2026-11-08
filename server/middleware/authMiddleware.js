@@ -48,19 +48,40 @@ export const protect = async (req, res, next) => {
 };
 
 /**
- * Middleware to restrict access to Admins only
+ * Middleware factory to restrict access to specific roles.
+ * Super Admin (matrucareai@gmail.com or role 'admin') always has access.
  */
-export const adminProtect = async (req, res, next) => {
-  const isOfficialAdmin = req.user?.email?.toLowerCase() === 'matrucareai@gmail.com';
+export const roleProtect = (...allowedRoles) => {
+  return (req, res, next) => {
+    const isOfficialAdmin =
+      req.user?.email?.toLowerCase() === 'matrucareai@gmail.com' ||
+      req.user?.role === 'admin';
 
-  if (req.user && (req.user.role === 'admin' || isOfficialAdmin)) {
-    next();
-  } else {
+    if (isOfficialAdmin || (req.user && allowedRoles.includes(req.user.role))) {
+      return next();
+    }
+
     return res.status(403).json({
       success: false,
-      message: 'Access restricted: Administrator privileges required',
+      message: `Access denied. Requires one of the following roles: [${allowedRoles.join(', ')}]`,
     });
-  }
+  };
 };
+
+/**
+ * Middleware to restrict access to Admins only
+ */
+export const adminProtect = roleProtect('admin');
+
+/**
+ * Middleware to restrict access to Gate Volunteers and Admins
+ */
+export const volunteerProtect = roleProtect('volunteer', 'admin');
+
+/**
+ * Middleware to restrict access to Evaluators (Judges) and Admins
+ */
+export const evaluatorProtect = roleProtect('evaluator', 'admin');
+
 
 

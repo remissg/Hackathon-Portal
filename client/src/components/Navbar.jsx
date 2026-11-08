@@ -18,6 +18,7 @@ import {
   Ticket,
   QrCode,
   ShieldCheck,
+  Award,
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -35,6 +36,8 @@ const Navbar = () => {
   const isAdmin =
     user?.role === 'admin' ||
     user?.email?.toLowerCase() === 'matrucareai@gmail.com';
+  const isJudge = user?.role === 'evaluator' || isAdmin;
+  const isVolunteer = user?.role === 'volunteer';
 
   // Notification Center State (persisted per user)
   const userStorageKey = `mcai_notifs_${user?.email || 'guest'}`;
@@ -207,6 +210,36 @@ const Navbar = () => {
                   </Link>
                 )}
 
+                {/* If Judge / Evaluator: Direct Quick Pill */}
+                {isJudge && (
+                  <Link
+                    to="/judge"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      isActive('/judge')
+                        ? 'bg-amber-500 text-slate-950 font-bold shadow-sm shadow-amber-500/30'
+                        : 'bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20'
+                    }`}
+                  >
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Judge</span>
+                  </Link>
+                )}
+
+                {/* If Volunteer: Direct Quick Pill to Gate Scanner */}
+                {isVolunteer && (
+                  <Link
+                    to="/verify-pass"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      isActive('/verify-pass')
+                        ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                        : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20'
+                    }`}
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Gate Scanner</span>
+                  </Link>
+                )}
+
                 {/* Real-Time Notification Bell Center */}
                 <div className="relative" ref={notifRef}>
                   <button
@@ -320,6 +353,14 @@ const Navbar = () => {
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1">
                               <ShieldAlert className="w-3 h-3" /> Admin
                             </span>
+                          ) : user?.role === 'evaluator' ? (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+                              <Award className="w-3 h-3" /> Judge
+                            </span>
+                          ) : user?.role === 'volunteer' ? (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                              <QrCode className="w-3 h-3" /> Volunteer
+                            </span>
                           ) : (
                             <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
                               Innovator
@@ -348,6 +389,28 @@ const Navbar = () => {
                           <PlusCircle className="w-4 h-4 text-indigo-400" />
                           <span>Register New Team</span>
                         </Link>
+
+                        {isJudge && (
+                          <Link
+                            to="/judge"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-950/30 transition-colors"
+                          >
+                            <Award className="w-4 h-4 text-amber-400" />
+                            <span>Judge Scoring Rubric</span>
+                          </Link>
+                        )}
+
+                        {(isAdmin || isVolunteer) && (
+                          <Link
+                            to="/verify-pass"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-300 hover:text-emerald-200 hover:bg-emerald-950/30 transition-colors"
+                          >
+                            <QrCode className="w-4 h-4 text-emerald-400" />
+                            <span>Gate Pass Scanner</span>
+                          </Link>
+                        )}
 
                         {isAdmin && (
                           <Link
@@ -474,6 +537,26 @@ const Navbar = () => {
                   >
                     <ShieldAlert className="w-4 h-4" />
                     Admin Evaluation Console
+                  </Link>
+                )}
+                {isJudge && (
+                  <Link
+                    to="/judge"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500 text-slate-950 font-bold"
+                  >
+                    <Award className="w-4 h-4" />
+                    Judge Scoring Workspace
+                  </Link>
+                )}
+                {(isAdmin || isVolunteer) && (
+                  <Link
+                    to="/verify-pass"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white font-bold"
+                  >
+                    <QrCode className="w-4 h-4" />
+                    Gate Pass Scanner
                   </Link>
                 )}
                 <Link

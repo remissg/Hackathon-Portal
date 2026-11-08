@@ -11,8 +11,15 @@ import {
   respondToInvitation,
   verifyPass,
   checkInPass,
+  submitEvaluation,
+  getEvaluatorSubmissions,
 } from '../controllers/hackathonController.js';
-import { protect, adminProtect } from '../middleware/authMiddleware.js';
+import {
+  protect,
+  adminProtect,
+  volunteerProtect,
+  evaluatorProtect,
+} from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -27,11 +34,17 @@ router.post('/respond-invite', protect, respondToInvitation);
 router.put('/:id', protect, updateEntry);
 router.delete('/:id', protect, deleteEntry);
 
-// Admin Endpoints
+// Evaluator / Judge Endpoints
+router.get('/evaluator/submissions', protect, evaluatorProtect, getEvaluatorSubmissions);
+router.post('/:id/evaluate', protect, evaluatorProtect, submitEvaluation);
+
+// Gate Volunteer & Admin Check-In Endpoint
+router.post('/admin/check-in', protect, volunteerProtect, checkInPass);
+
+// Admin Governance Endpoints
 router.get('/admin/all', protect, adminProtect, getAllRegistrations);
 router.get('/admin/stats', protect, adminProtect, getAdminStats);
 router.patch('/admin/:id/status', protect, adminProtect, updateRegistrationStatus);
-router.post('/admin/check-in', protect, adminProtect, checkInPass);
 
 export default router;
 

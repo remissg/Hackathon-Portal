@@ -29,6 +29,8 @@ const VerifyPass = () => {
   const isAdmin =
     user?.role === 'admin' ||
     user?.email?.toLowerCase() === 'matrucareai@gmail.com';
+  const isVolunteer = user?.role === 'volunteer';
+  const canCheckIn = isAdmin || isVolunteer;
 
   const [inputTicketId, setInputTicketId] = useState(ticketIdParam);
   const [activeTicketId, setActiveTicketId] = useState(ticketIdParam);
@@ -339,8 +341,8 @@ const VerifyPass = () => {
                 </div>
               </div>
 
-              {/* Admin Check-In Control Box */}
-              {isAdmin && (
+              {/* Gate Volunteer & Admin Check-In Control Box */}
+              {canCheckIn && (
                 <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border-2 border-cyan-500/50 shadow-xl space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -350,7 +352,7 @@ const VerifyPass = () => {
                       </span>
                     </div>
                     <span className="text-[10px] text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-800">
-                      Admin Authorized
+                      {isAdmin ? 'Admin Authorized' : 'Gate Volunteer Authorized'}
                     </span>
                   </div>
 

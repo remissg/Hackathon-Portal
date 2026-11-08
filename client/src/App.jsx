@@ -19,6 +19,7 @@ import Contact from './pages/Contact';
 import AdminDashboard from './pages/AdminDashboard';
 import TeamInviteAcceptance from './pages/TeamInviteAcceptance';
 import VerifyPass from './pages/VerifyPass';
+import JudgePortal from './pages/JudgePortal';
 
 function App() {
   return (
@@ -60,6 +61,14 @@ function App() {
                   <AdminRoute>
                     <AdminDashboard />
                   </AdminRoute>
+                }
+              />
+              <Route
+                path="/judge"
+                element={
+                  <ProtectedRoute>
+                    <JudgePortal />
+                  </ProtectedRoute>
                 }
               />
 
