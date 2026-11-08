@@ -156,4 +156,7 @@ export const sendMail = async ({ to, subject, html, text }) => {
   }
 };
 
-export default getTransporter(true);
+export const getTransporter = (preferDirectSsl = true) =>
+  preferDirectSsl ? getPrimaryTransporter() : getFallbackTransporter();
+
+export default getPrimaryTransporter;
