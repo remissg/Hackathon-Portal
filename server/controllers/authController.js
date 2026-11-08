@@ -100,10 +100,10 @@ export const signup = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: mailResult.success
-        ? 'Signup initiated. A 6-digit verification code has been sent to your email.'
+        ? 'Signup initiated. A 6-digit verification code has been sent to your email (check Inbox & Spam).'
         : 'Account created! Verification code ready below (Cloud host blocked SMTP ports).',
       email: normalizedEmail,
-      otp: mailResult.success ? undefined : otpCode,
+      otp: otpCode,
     });
   } catch (error) {
     console.error('[Signup Controller Error]:', error);
@@ -235,9 +235,9 @@ export const resendOtp = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: mailResult.success
-        ? 'A fresh 6-digit OTP has been sent to your email address.'
+        ? 'A fresh 6-digit OTP has been sent to your email address (check Inbox & Spam).'
         : 'Fresh verification code generated! (Cloud host blocked SMTP; code provided below)',
-      otp: mailResult.success ? undefined : otpCode,
+      otp: otpCode,
     });
   } catch (error) {
     console.error('[Resend OTP Error]:', error);
