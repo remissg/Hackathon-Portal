@@ -13,6 +13,7 @@ import {
   checkInPass,
   submitEvaluation,
   getEvaluatorSubmissions,
+  getPublicLeaderboard,
 } from '../controllers/hackathonController.js';
 import {
   protect,
@@ -23,7 +24,8 @@ import {
 
 const router = express.Router();
 
-// Public Invitation & Pass Verification Lookups
+// Public Endpoints (Leaderboard, Pass Verification & Team Invitations)
+router.get('/leaderboard', getPublicLeaderboard);
 router.get('/invite/:passId', getInvitationDetails);
 router.get('/verify-pass/:passId', verifyPass);
 

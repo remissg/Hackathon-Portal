@@ -8,17 +8,20 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import hackathonRoutes from './routes/hackathonRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
 
 // Middleware imports
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import { seedAdmin } from './utils/seedAdmin.js';
+import { seedDefaultEventIfEmpty } from './controllers/eventController.js';
 
 // Load environment variables
 dotenv.config();
 
-// Initialize MongoDB connection & ensure admin account exists
+// Initialize MongoDB connection & ensure admin account and default hackathon event exist
 connectDB().then(() => {
   seedAdmin();
+  seedDefaultEventIfEmpty();
 });
 
 const app = express();
@@ -83,6 +86,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/hackathon', hackathonRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/events', eventRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);

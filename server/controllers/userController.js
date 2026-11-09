@@ -11,7 +11,28 @@ export const getMe = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    return res.status(200).json({ success: true, user });
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isVerified: user.isVerified,
+        role: user.role,
+        mobileNumber: user.mobileNumber || '',
+        collegeName: user.collegeName || '',
+        course: user.course || '',
+        branch: user.branch || '',
+        yearOfStudy: user.yearOfStudy || '',
+        githubUrl: user.githubUrl || '',
+        linkedinUrl: user.linkedinUrl || '',
+        portfolioUrl: user.portfolioUrl || '',
+        headline: user.headline || '',
+        skills: user.skills || [],
+        bio: user.bio || '',
+      },
+    });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -24,14 +45,30 @@ export const getMe = async (req, res) => {
  */
 export const updateProfile = async (req, res) => {
   try {
-    const { fullName } = req.body;
+    const {
+      fullName,
+      mobileNumber,
+      collegeName,
+      course,
+      branch,
+      yearOfStudy,
+      githubUrl,
+      linkedinUrl,
+      portfolioUrl,
+      headline,
+      skills,
+      bio,
+      currentPassword,
+      newPassword,
+    } = req.body;
+
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    if (fullName) {
+    if (fullName !== undefined) {
       if (fullName.trim().length < 3) {
         return res.status(400).json({
           success: false,
@@ -41,16 +78,74 @@ export const updateProfile = async (req, res) => {
       user.fullName = fullName.trim();
     }
 
+    if (mobileNumber !== undefined) user.mobileNumber = mobileNumber.trim();
+    if (collegeName !== undefined) user.collegeName = collegeName.trim();
+    if (course !== undefined) user.course = course.trim();
+    if (branch !== undefined) user.branch = branch.trim();
+    if (yearOfStudy !== undefined) user.yearOfStudy = yearOfStudy.trim();
+    if (githubUrl !== undefined) user.githubUrl = githubUrl.trim();
+    if (linkedinUrl !== undefined) user.linkedinUrl = linkedinUrl.trim();
+    if (portfolioUrl !== undefined) user.portfolioUrl = portfolioUrl.trim();
+    if (headline !== undefined) user.headline = headline.trim();
+    if (bio !== undefined) user.bio = bio.trim();
+
+    if (skills !== undefined) {
+      if (Array.isArray(skills)) {
+        user.skills = skills.map((s) => s.trim()).filter(Boolean);
+      } else if (typeof skills === 'string') {
+        user.skills = skills
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
+
+    // Optional Password Change
+    if (newPassword && newPassword.trim()) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is required to change password',
+        });
+      }
+      const isMatch = await user.matchPassword(currentPassword);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is incorrect',
+        });
+      }
+      if (newPassword.trim().length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password must be at least 6 characters long',
+        });
+      }
+      user.password = newPassword.trim();
+    }
+
     const updatedUser = await user.save();
     return res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
       user: {
         id: updatedUser._id,
+        _id: updatedUser._id,
         fullName: updatedUser.fullName,
         email: updatedUser.email,
         isVerified: updatedUser.isVerified,
         role: updatedUser.role,
+        mobileNumber: updatedUser.mobileNumber || '',
+        collegeName: updatedUser.collegeName || '',
+        course: updatedUser.course || '',
+        branch: updatedUser.branch || '',
+        yearOfStudy: updatedUser.yearOfStudy || '',
+        githubUrl: updatedUser.githubUrl || '',
+        linkedinUrl: updatedUser.linkedinUrl || '',
+        portfolioUrl: updatedUser.portfolioUrl || '',
+        headline: updatedUser.headline || '',
+        skills: updatedUser.skills || [],
+        bio: updatedUser.bio || '',
       },
     });
   } catch (error) {

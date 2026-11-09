@@ -164,6 +164,9 @@ export const registerHackathon = async (req, res) => {
       branch,
       yearOfStudy,
       domain,
+      hackathonId: req.body.hackathonId || null,
+      problemStatementId: req.body.problemStatementId || '',
+      problemStatementTitle: req.body.problemStatementTitle || '',
       projectName: projectName.trim(),
       pptLink: pptLink.trim(),
       prototypeLink: prototypeLink.trim(),
@@ -1000,6 +1003,94 @@ export const getEvaluatorSubmissions = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Failed to fetch submissions for evaluator',
+    });
+  }
+};
+
+/**
+ * @desc    Public Leaderboard & Project Showcase
+ * @route   GET /api/hackathon/leaderboard
+ * @access  Public
+ */
+export const getPublicLeaderboard = async (req, res) => {
+  try {
+    const { domain, search, sort = 'score' } = req.query;
+
+    const query = {};
+
+    if (domain && domain !== 'All') {
+      query.domain = domain;
+    }
+
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { projectName: regex },
+        { collegeName: regex },
+        { fullName: regex },
+        { domain: regex },
+      ];
+    }
+
+    // Determine sorting criteria
+    let sortObj = { averageScore: -1, evaluationCount: -1, createdAt: -1 };
+    if (sort === 'newest') {
+      sortObj = { createdAt: -1 };
+    } else if (sort === 'alpha') {
+      sortObj = { projectName: 1 };
+    }
+
+    const registrations = await HackathonRegistration.find(query)
+      .select(
+        'projectName domain collegeName course branch yearOfStudy teamSize fullName teamMembers pptLink prototypeLink demoVideoLink status averageScore evaluationCount ticketId createdAt'
+      )
+      .sort(sortObj)
+      .lean();
+
+    // Map rank to each entry
+    const leaderboard = registrations.map((entry, index) => {
+      return {
+        rank: index + 1,
+        id: entry._id,
+        ticketId: entry.ticketId,
+        projectName: entry.projectName,
+        domain: entry.domain,
+        collegeName: entry.collegeName,
+        course: entry.course,
+        branch: entry.branch,
+        yearOfStudy: entry.yearOfStudy,
+        teamSize: entry.teamSize,
+        teamLead: entry.fullName,
+        teamMembers: (entry.teamMembers || []).map((m) => m.name),
+        status: entry.status,
+        averageScore: entry.averageScore || 0,
+        evaluationCount: entry.evaluationCount || 0,
+        pptLink: entry.pptLink,
+        prototypeLink: entry.prototypeLink,
+        demoVideoLink: entry.demoVideoLink,
+        createdAt: entry.createdAt,
+      };
+    });
+
+    const totalProjects = registrations.length;
+    const evaluatedProjects = registrations.filter((r) => (r.evaluationCount || 0) > 0).length;
+    const topScore = registrations.length > 0 ? registrations[0].averageScore || 0 : 0;
+
+    return res.status(200).json({
+      success: true,
+      count: leaderboard.length,
+      stats: {
+        totalProjects,
+        evaluatedProjects,
+        topScore,
+      },
+      leaderboard,
+    });
+  } catch (error) {
+    console.error('[Public Leaderboard Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch public leaderboard',
     });
   }
 };

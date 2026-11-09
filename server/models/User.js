@@ -31,6 +31,60 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'volunteer', 'evaluator', 'admin'],
       default: 'user',
     },
+    mobileNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    collegeName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    course: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    branch: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    yearOfStudy: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    githubUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    linkedinUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    portfolioUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    headline: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    skills: {
+      type: [String],
+      default: [],
+    },
+    bio: {
+      type: String,
+      trim: true,
+      default: '',
+    },
   },
   {
     timestamps: true,

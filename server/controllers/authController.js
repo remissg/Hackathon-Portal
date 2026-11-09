@@ -301,10 +301,22 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user._id,
+        _id: user._id,
         fullName: user.fullName,
         email: user.email,
         isVerified: user.isVerified,
         role: user.role || 'user',
+        mobileNumber: user.mobileNumber || '',
+        collegeName: user.collegeName || '',
+        course: user.course || '',
+        branch: user.branch || '',
+        yearOfStudy: user.yearOfStudy || '',
+        githubUrl: user.githubUrl || '',
+        linkedinUrl: user.linkedinUrl || '',
+        portfolioUrl: user.portfolioUrl || '',
+        headline: user.headline || '',
+        skills: user.skills || [],
+        bio: user.bio || '',
       },
     });
   } catch (error) {

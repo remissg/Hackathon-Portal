@@ -152,6 +152,21 @@ const hackathonRegistrationSchema = new mongoose.Schema(
       ],
       default: 'AI/ML',
     },
+    hackathonId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'HackathonEvent',
+      default: null,
+    },
+    problemStatementId: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    problemStatementTitle: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     projectName: {
       type: String,
       required: [true, 'Project name is required'],

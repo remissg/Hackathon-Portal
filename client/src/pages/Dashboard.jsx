@@ -8,6 +8,7 @@ import {
   Sparkles,
   User,
   Mail,
+  Phone,
   ShieldCheck,
   CheckCircle2,
   Calendar,
@@ -21,6 +22,7 @@ import {
   PlusCircle,
   ExternalLink,
   GraduationCap,
+  BookOpen,
   Clock,
   AlertTriangle,
   Printer,
@@ -31,6 +33,10 @@ import {
   Award,
   QrCode,
   Download,
+  Github,
+  Linkedin,
+  Globe,
+  Lock,
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -84,10 +90,28 @@ const Dashboard = () => {
     }
   };
   
-  // Profile edit form state
-  const [newFullName, setNewFullName] = useState(user?.fullName || '');
+  // Profile edit form state with multi-tab support
+  const [profileTab, setProfileTab] = useState('academic'); // 'academic' | 'developer' | 'security'
+  const [profileForm, setProfileForm] = useState({
+    fullName: user?.fullName || '',
+    mobileNumber: user?.mobileNumber || '',
+    collegeName: user?.collegeName || '',
+    course: user?.course || 'B.Tech',
+    branch: user?.branch || 'CSE',
+    yearOfStudy: user?.yearOfStudy || '3rd Year',
+    headline: user?.headline || '',
+    githubUrl: user?.githubUrl || '',
+    linkedinUrl: user?.linkedinUrl || '',
+    portfolioUrl: user?.portfolioUrl || '',
+    skills: Array.isArray(user?.skills) ? user.skills.join(', ') : (user?.skills || ''),
+    bio: user?.bio || '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [updatingProfile, setUpdatingProfile] = useState(false);
   const [profileMessage, setProfileMessage] = useState('');
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState('');
 
   const [notification, setNotification] = useState(
     isJustRegistered ? 'Congratulations! Your hackathon registration has been confirmed and emailed.' : ''
@@ -138,19 +162,95 @@ const Dashboard = () => {
     }
   };
 
+  const handleOpenEditProfile = () => {
+    setProfileForm({
+      fullName: user?.fullName || '',
+      mobileNumber: user?.mobileNumber || '',
+      collegeName: user?.collegeName || '',
+      course: user?.course || 'B.Tech',
+      branch: user?.branch || 'CSE',
+      yearOfStudy: user?.yearOfStudy || '3rd Year',
+      headline: user?.headline || '',
+      githubUrl: user?.githubUrl || '',
+      linkedinUrl: user?.linkedinUrl || '',
+      portfolioUrl: user?.portfolioUrl || '',
+      skills: Array.isArray(user?.skills) ? user.skills.join(', ') : (user?.skills || ''),
+      bio: user?.bio || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setProfileTab('academic');
+    setProfileMessage('');
+    setProfileSuccessMsg('');
+    setEditProfileOpen(true);
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    if (!newFullName.trim() || newFullName.trim().length < 3) {
+    setProfileMessage('');
+    setProfileSuccessMsg('');
+
+    if (!profileForm.fullName.trim() || profileForm.fullName.trim().length < 3) {
       setProfileMessage('Full name must be at least 3 characters');
+      setProfileTab('academic');
       return;
     }
+
+    if (profileForm.mobileNumber && !/^[0-9]{10}$/.test(profileForm.mobileNumber.trim())) {
+      setProfileMessage('Please enter a valid 10-digit mobile number');
+      setProfileTab('academic');
+      return;
+    }
+
+    if (profileForm.newPassword) {
+      if (!profileForm.currentPassword) {
+        setProfileMessage('Current password is required to change password');
+        setProfileTab('security');
+        return;
+      }
+      if (profileForm.newPassword.length < 6) {
+        setProfileMessage('New password must be at least 6 characters');
+        setProfileTab('security');
+        return;
+      }
+      if (profileForm.newPassword !== profileForm.confirmPassword) {
+        setProfileMessage('New passwords do not match');
+        setProfileTab('security');
+        return;
+      }
+    }
+
     try {
       setUpdatingProfile(true);
-      const res = await api.put('/user/update', { fullName: newFullName.trim() });
+      const payload = {
+        fullName: profileForm.fullName.trim(),
+        mobileNumber: profileForm.mobileNumber.trim(),
+        collegeName: profileForm.collegeName.trim(),
+        course: profileForm.course.trim(),
+        branch: profileForm.branch.trim(),
+        yearOfStudy: profileForm.yearOfStudy.trim(),
+        headline: profileForm.headline.trim(),
+        githubUrl: profileForm.githubUrl.trim(),
+        linkedinUrl: profileForm.linkedinUrl.trim(),
+        portfolioUrl: profileForm.portfolioUrl.trim(),
+        skills: profileForm.skills,
+        bio: profileForm.bio.trim(),
+      };
+
+      if (profileForm.newPassword) {
+        payload.currentPassword = profileForm.currentPassword;
+        payload.newPassword = profileForm.newPassword;
+      }
+
+      const res = await api.put('/user/update', payload);
       if (res.data.success) {
         updateUser(res.data.user);
-        setEditProfileOpen(false);
-        setNotification('Profile details updated successfully!');
+        setProfileSuccessMsg('Candidate profile updated successfully!');
+        setTimeout(() => {
+          setEditProfileOpen(false);
+          setNotification('Candidate profile updated successfully!');
+        }, 700);
       }
     } catch (err) {
       setProfileMessage(err.response?.data?.message || 'Failed to update profile');
@@ -219,59 +319,139 @@ const Dashboard = () => {
         )}
 
         {/* User Profile Card */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-sky-500/20">
-              {user?.fullName?.charAt(0) || 'U'}
-            </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-white tracking-tight">{user?.fullName}</h1>
-                {user?.isVerified && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 border border-emerald-800 text-emerald-400">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Verified Candidate
-                  </span>
-                )}
-                <button
-                  onClick={() => {
-                    setNewFullName(user?.fullName || '');
-                    setProfileMessage('');
-                    setEditProfileOpen(true);
-                  }}
-                  className="p-1 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition-colors"
-                  title="Edit Profile Name"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
+        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white text-2xl sm:text-3xl font-extrabold shadow-lg shadow-sky-500/20 shrink-0">
+                {user?.fullName?.charAt(0) || 'U'}
               </div>
-              <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
-                <Mail className="w-4 h-4 text-slate-500" />
-                {user?.email}
-              </p>
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-2xl font-bold text-white tracking-tight">{user?.fullName}</h1>
+                  {user?.isVerified && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/80 border border-emerald-800 text-emerald-400">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Verified Candidate
+                    </span>
+                  )}
+                  {user?.role && user?.role !== 'user' && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-950 border border-indigo-800 text-indigo-300 capitalize">
+                      {user.role}
+                    </span>
+                  )}
+                </div>
+
+                {user?.headline ? (
+                  <p className="text-sm font-medium text-sky-400">{user.headline}</p>
+                ) : (
+                  <p className="text-xs text-slate-500 italic">Add your headline, college, and skills to stand out</p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs text-slate-400 pt-1">
+                  <span className="flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-slate-500" />
+                    {user?.email}
+                  </span>
+                  {user?.mobileNumber && (
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-500" />
+                      +91 {user.mobileNumber}
+                    </span>
+                  )}
+                  {(user?.collegeName || user?.branch) && (
+                    <span className="flex items-center gap-1.5 text-slate-300">
+                      <GraduationCap className="w-3.5 h-3.5 text-sky-400" />
+                      {[user.collegeName, user.course, user.branch, user.yearOfStudy].filter(Boolean).join(' • ')}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions & Links */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleOpenEditProfile}
+                className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-2 transition"
+              >
+                <Edit3 className="w-4 h-4 text-sky-400" />
+                <span>Edit Profile</span>
+              </button>
+
+              {!entry && !loading && (
+                <Link
+                  to="/register-hackathon"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-sky-500/25 flex items-center justify-center gap-2 transition-all"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Register Project</span>
+                </Link>
+              )}
+              {entry && (
+                <button
+                  onClick={() => setPassModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
+                >
+                  <Printer className="w-4 h-4 text-sky-400" />
+                  <span>Print Entry Pass</span>
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3 self-stretch sm:self-auto">
-            {!entry && !loading && (
-              <Link
-                to="/register-hackathon"
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold text-sm shadow-md shadow-sky-500/25 flex items-center justify-center gap-2 transition-all"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Register Project Now</span>
-              </Link>
-            )}
-            {entry && (
-              <button
-                onClick={() => setPassModalOpen(true)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
-              >
-                <Printer className="w-4 h-4 text-sky-400" />
-                <span>Print Entry Pass</span>
-              </button>
-            )}
-          </div>
+          {/* Social Links & Skills Row */}
+          {((user?.skills && user.skills.length > 0) || user?.githubUrl || user?.linkedinUrl || user?.portfolioUrl || user?.bio) && (
+            <div className="mt-5 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Skills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {user?.skills && user.skills.map((skill, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2.5 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-800/90 text-sky-300 border border-slate-700"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+
+              {/* Developer Links */}
+              <div className="flex items-center gap-3">
+                {user?.githubUrl && (
+                  <a
+                    href={user.githubUrl.startsWith('http') ? user.githubUrl : `https://${user.githubUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 transition"
+                  >
+                    <Github className="w-3.5 h-3.5" />
+                    <span>GitHub</span>
+                  </a>
+                )}
+                {user?.linkedinUrl && (
+                  <a
+                    href={user.linkedinUrl.startsWith('http') ? user.linkedinUrl : `https://${user.linkedinUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-slate-400 hover:text-sky-400 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-sky-800 transition"
+                  >
+                    <Linkedin className="w-3.5 h-3.5 text-sky-500" />
+                    <span>LinkedIn</span>
+                  </a>
+                )}
+                {user?.portfolioUrl && (
+                  <a
+                    href={user.portfolioUrl.startsWith('http') ? user.portfolioUrl : `https://${user.portfolioUrl}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-slate-400 hover:text-emerald-400 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-emerald-800 transition"
+                  >
+                    <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Portfolio</span>
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Submission Details Section */}
@@ -628,22 +808,43 @@ const Dashboard = () => {
                   <p className="text-sm font-bold text-white print:text-black">{entry.projectName}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Lead Candidate</span>
-                    <p className="font-medium text-slate-200 print:text-gray-800">{entry.fullName}</p>
-                    <p className="text-slate-400 print:text-gray-600 text-[11px]">{entry.email}</p>
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Candidate (Ticket Holder)</span>
+                    <p className="font-medium text-slate-200 print:text-gray-800 text-sm">
+                      {user?.fullName || entry.fullName}
+                    </p>
+                    <p className="text-slate-400 print:text-gray-600 text-[11px] truncate">
+                      {user?.email || entry.email}
+                    </p>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        user?.email?.toLowerCase() === entry.email?.toLowerCase()
+                          ? 'bg-sky-950/80 text-sky-300 border border-sky-800/60'
+                          : 'bg-indigo-950/80 text-indigo-300 border border-indigo-800/60'
+                      }`}>
+                        {user?.email?.toLowerCase() === entry.email?.toLowerCase() ? '★ Team Lead' : '👤 Team Member'}
+                      </span>
+                    </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">College</span>
-                    <p className="font-medium text-slate-200 print:text-gray-800 truncate">{entry.collegeName}</p>
+                    <span className="text-[10px] text-slate-500 uppercase font-semibold">College / Institute</span>
+                    <p className="font-medium text-slate-200 print:text-gray-800 text-sm truncate" title={entry.collegeName}>
+                      {entry.collegeName}
+                    </p>
+                    {user?.email?.toLowerCase() !== entry.email?.toLowerCase() && (
+                      <div className="mt-1 text-[11px] text-slate-400">
+                        <span>Team Lead: </span>
+                        <span className="text-slate-200 font-medium">{entry.fullName}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div>
                   <span className="text-[10px] text-slate-500 uppercase font-semibold">Team Size &amp; Members</span>
                   <p className="font-medium text-slate-200 print:text-gray-800">
-                    {entry.teamSize} Member(s): {entry.fullName}
+                    {entry.teamSize} Member(s): {entry.fullName} (Lead)
                     {entry.teamMembers?.map((m) => `, ${m.name}`)}
                   </p>
                 </div>
@@ -718,49 +919,351 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* MODAL 2: Edit Profile Name */}
+      {/* MODAL 2: Comprehensive Candidate Profile Editor */}
       {editProfileOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-2">Update Candidate Profile</h3>
-            <p className="text-xs text-slate-400 mb-5">Modify your account display name</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl max-h-[92vh] overflow-y-auto relative">
+            <button
+              onClick={() => setEditProfileOpen(false)}
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-1.5 flex items-center gap-2.5">
+                <Sparkles className="w-5 h-5 text-sky-400" />
+                <span>Update Candidate Profile</span>
+              </h3>
+              <p className="text-xs text-slate-400">
+                Manage your academic credentials, developer showcase, skills, and account credentials.
+              </p>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="flex items-center gap-1.5 p-1 bg-slate-950/80 border border-slate-800 rounded-2xl mb-6">
+              <button
+                type="button"
+                onClick={() => setProfileTab('academic')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                  profileTab === 'academic'
+                    ? 'bg-sky-500 text-slate-950 shadow-md font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <GraduationCap className="w-4 h-4" />
+                <span>Academic &amp; Contact</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProfileTab('developer')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                  profileTab === 'developer'
+                    ? 'bg-sky-500 text-slate-950 shadow-md font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <FileCode className="w-4 h-4" />
+                <span>Dev Showcase &amp; Skills</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProfileTab('security')}
+                className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                  profileTab === 'security'
+                    ? 'bg-sky-500 text-slate-950 shadow-md font-bold'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <Lock className="w-4 h-4" />
+                <span>Security</span>
+              </button>
+            </div>
 
             {profileMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-200 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
+              <div className="mb-5 p-3.5 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs flex items-center gap-2.5 shadow-sm">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{profileMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newFullName}
-                  onChange={(e) => setNewFullName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
-                />
+            {profileSuccessMsg && (
+              <div className="mb-5 p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-800 text-emerald-200 text-xs flex items-center gap-2.5 shadow-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>{profileSuccessMsg}</span>
               </div>
+            )}
 
-              <div className="flex justify-end gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setEditProfileOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={updatingProfile}
-                  className="px-5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20 disabled:opacity-50"
-                >
-                  {updatingProfile ? 'Saving...' : 'Save Changes'}
-                </button>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              {/* TAB 1: ACADEMIC & CONTACT */}
+              {profileTab === 'academic' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Full Name <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.fullName}
+                        onChange={(e) => setProfileForm({ ...profileForm, fullName: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="e.g. Joydip Maiti"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Mobile / WhatsApp Number
+                      </label>
+                      <input
+                        type="tel"
+                        maxLength={10}
+                        value={profileForm.mobileNumber}
+                        onChange={(e) => setProfileForm({ ...profileForm, mobileNumber: e.target.value.replace(/\D/g, '') })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="10-digit mobile number"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                      College / University Name
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.collegeName}
+                      onChange={(e) => setProfileForm({ ...profileForm, collegeName: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                      placeholder="e.g. Calcutta Institute of Technology"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Degree / Course
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.course}
+                        onChange={(e) => setProfileForm({ ...profileForm, course: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="e.g. B.Tech, BCA, MCA"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Branch / Stream
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.branch}
+                        onChange={(e) => setProfileForm({ ...profileForm, branch: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="e.g. CSE, IT, ECE"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Year of Study
+                      </label>
+                      <select
+                        value={profileForm.yearOfStudy}
+                        onChange={(e) => setProfileForm({ ...profileForm, yearOfStudy: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                      >
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                        <option value="Postgraduate / Alumni">Postgraduate / Alumni</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-sky-950/40 border border-sky-800/60 rounded-xl text-sky-300 text-xs flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
+                    <span>These academic details will automatically pre-fill your hackathon registrations!</span>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: DEV SHOWCASE & SKILLS */}
+              {profileTab === 'developer' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                      Professional Headline
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.headline}
+                      onChange={(e) => setProfileForm({ ...profileForm, headline: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                      placeholder="e.g. Full-Stack Web & AI Developer | Open Source Contributor"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                      Technical Skills (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.skills}
+                      onChange={(e) => setProfileForm({ ...profileForm, skills: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                      placeholder="e.g. React, Node.js, Python, MongoDB, Docker, Tailwind"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1.5">
+                        <Github className="w-3.5 h-3.5" />
+                        <span>GitHub Profile URL</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={profileForm.githubUrl}
+                        onChange={(e) => setProfileForm({ ...profileForm, githubUrl: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="https://github.com/username"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1.5">
+                        <Linkedin className="w-3.5 h-3.5 text-sky-400" />
+                        <span>LinkedIn Profile URL</span>
+                      </label>
+                      <input
+                        type="url"
+                        value={profileForm.linkedinUrl}
+                        onChange={(e) => setProfileForm({ ...profileForm, linkedinUrl: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="https://linkedin.com/in/username"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Portfolio / Website Link</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={profileForm.portfolioUrl}
+                      onChange={(e) => setProfileForm({ ...profileForm, portfolioUrl: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                      placeholder="https://yourportfolio.dev"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                      Short Bio / About
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={profileForm.bio}
+                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500 resize-none"
+                      placeholder="Tell hackathon organizers and teammates about what you like to build..."
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: ACCOUNT SECURITY */}
+              {profileTab === 'security' && (
+                <div className="space-y-4">
+                  <div className="p-3.5 bg-amber-950/40 border border-amber-800/60 rounded-xl text-amber-300 text-xs flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>Leave these fields blank if you do not wish to change your password.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                      Current Password
+                    </label>
+                    <input
+                      type="password"
+                      value={profileForm.currentPassword}
+                      onChange={(e) => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                      placeholder="Enter current password"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={profileForm.newPassword}
+                        onChange={(e) => setProfileForm({ ...profileForm, newPassword: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="Min 6 characters"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        value={profileForm.confirmPassword}
+                        onChange={(e) => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-sky-500"
+                        placeholder="Re-type new password"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-3 pt-5 border-t border-slate-800">
+                <div className="text-xs text-slate-500">
+                  Account: <span className="text-slate-300 font-mono">{user?.email}</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setEditProfileOpen(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updatingProfile}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-sky-500/20 disabled:opacity-50 transition"
+                  >
+                    {updatingProfile ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Saving Profile...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Save Candidate Profile</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

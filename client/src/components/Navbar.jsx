@@ -19,6 +19,8 @@ import {
   QrCode,
   ShieldCheck,
   Award,
+  Trophy,
+  Target,
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -149,23 +151,35 @@ const Navbar = () => {
             >
               Home
             </Link>
+            <Link
+              to="/problems"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                isActive('/problems') ? 'text-sky-400 bg-sky-950/40' : 'text-slate-300 hover:text-white hover:bg-slate-800/40'
+              }`}
+            >
+              <Target className="w-3.5 h-3.5 text-sky-400" />
+              Challenges
+            </Link>
+            <Link
+              to="/leaderboard"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                isActive('/leaderboard') ? 'text-amber-400 bg-amber-950/40 font-bold' : 'text-amber-300/90 hover:text-amber-300 hover:bg-slate-800/40'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              Leaderboard
+            </Link>
             <a
               href="/#highlights"
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/40 transition-colors"
             >
-              Event Tracks
+              Tracks
             </a>
             <a
               href="/#timeline"
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/40 transition-colors"
             >
-              Timeline & Prizes
-            </a>
-            <a
-              href="/#faq"
-              className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/40 transition-colors"
-            >
-              FAQ
+              Prizes
             </a>
             <Link
               to="/contact"
@@ -480,6 +494,22 @@ const Navbar = () => {
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800"
           >
             Home
+          </Link>
+          <Link
+            to="/problems"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-sky-400 hover:text-sky-300 hover:bg-slate-800 flex items-center gap-2"
+          >
+            <Target className="w-4 h-4 text-sky-400" />
+            Challenges &amp; Problem Statements
+          </Link>
+          <Link
+            to="/leaderboard"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-slate-800 flex items-center gap-2"
+          >
+            <Trophy className="w-4 h-4 text-amber-400" />
+            Live Leaderboard
           </Link>
           <a
             href="/#highlights"

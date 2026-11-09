@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import {
@@ -20,6 +20,8 @@ import {
   CheckCircle2,
   Trash2,
   Plus,
+  Target,
+  ExternalLink,
 } from 'lucide-react';
 
 const collegesList = [
@@ -50,12 +52,14 @@ const HackathonRegister = () => {
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
-    mobileNumber: '',
-    collegeName: '',
-    course: 'B.Tech',
-    branch: 'CSE',
-    yearOfStudy: '3rd Year',
+    mobileNumber: user?.mobileNumber || '',
+    collegeName: user?.collegeName || '',
+    course: user?.course || 'B.Tech',
+    branch: user?.branch || 'CSE',
+    yearOfStudy: user?.yearOfStudy || '3rd Year',
     domain: 'AI/ML',
+    problemStatementId: '',
+    problemStatementTitle: '',
     projectName: '',
     pptLink: '',
     prototypeLink: '',
@@ -64,6 +68,7 @@ const HackathonRegister = () => {
     teamMembers: [],
   });
 
+  const [availableProblems, setAvailableProblems] = useState([]);
   const [otherBranch, setOtherBranch] = useState('');
   const [otherCourse, setOtherCourse] = useState('');
   const [loading, setLoading] = useState(false);
@@ -72,6 +77,35 @@ const HackathonRegister = () => {
 
   const standardBranches = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'AIDS', 'AIML'];
   const standardCourses = ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'B.Sc', 'M.Sc'];
+
+  // Load available challenge problem statements
+  useEffect(() => {
+    api
+      .get('/events/problems/all')
+      .then((res) => {
+        if (res.data.success) {
+          setAvailableProblems(res.data.problems || []);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Pre-fill problem statement from query parameters (e.g. from /problems page)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const psId = params.get('psId');
+    const track = params.get('track');
+    const title = params.get('title');
+
+    if (psId) {
+      setFormData((prev) => ({
+        ...prev,
+        problemStatementId: psId,
+        problemStatementTitle: title || '',
+        domain: track || prev.domain,
+      }));
+    }
+  }, [location.search]);
 
   // Check if candidate already has an active registration
   useEffect(() => {
@@ -102,6 +136,8 @@ const HackathonRegister = () => {
         branch: isCustomBranch ? 'Other' : (editEntry.branch || 'CSE'),
         yearOfStudy: editEntry.yearOfStudy || '3rd Year',
         domain: editEntry.domain || 'AI/ML',
+        problemStatementId: editEntry.problemStatementId || '',
+        problemStatementTitle: editEntry.problemStatementTitle || '',
         projectName: editEntry.projectName || '',
         pptLink: editEntry.pptLink || '',
         prototypeLink: editEntry.prototypeLink || '',
@@ -115,8 +151,13 @@ const HackathonRegister = () => {
     } else if (user) {
       setFormData((prev) => ({
         ...prev,
-        fullName: user.fullName,
-        email: user.email,
+        fullName: user.fullName || prev.fullName,
+        email: user.email || prev.email,
+        mobileNumber: prev.mobileNumber || user.mobileNumber || '',
+        collegeName: prev.collegeName || user.collegeName || '',
+        course: prev.course && prev.course !== 'B.Tech' ? prev.course : (user.course || 'B.Tech'),
+        branch: prev.branch && prev.branch !== 'CSE' ? prev.branch : (user.branch || 'CSE'),
+        yearOfStudy: prev.yearOfStudy && prev.yearOfStudy !== '3rd Year' ? prev.yearOfStudy : (user.yearOfStudy || '3rd Year'),
       }));
     }
   }, [user, editEntry]);
@@ -487,6 +528,56 @@ const HackathonRegister = () => {
                 <FileCode className="w-5 h-5 text-sky-400" />
                 <span>3. Project & Submission Details</span>
               </h2>
+
+              {/* SIH / National Format: Problem Statement Selector */}
+              {availableProblems.length > 0 && (
+                <div className="mb-5 p-4 rounded-2xl bg-gradient-to-r from-sky-950/40 via-slate-900 to-indigo-950/40 border border-sky-800/60 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-sky-300 flex items-center gap-1.5">
+                      <Target className="w-4 h-4 text-sky-400" />
+                      Target Problem Statement (SIH / National Format)
+                    </label>
+                    <Link
+                      to="/problems"
+                      target="_blank"
+                      className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1"
+                    >
+                      Browse Catalog <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  </div>
+                  <select
+                    value={formData.problemStatementId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const found = availableProblems.find((p) => p.psId === selectedId);
+                      setFormData((prev) => ({
+                        ...prev,
+                        problemStatementId: selectedId,
+                        problemStatementTitle: found?.title || '',
+                        domain: found?.category || prev.domain,
+                      }));
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                  >
+                    <option value="">-- Open Innovation / Custom Track (No Specific Challenge) --</option>
+                    {availableProblems.map((p) => (
+                      <option key={p.psId} value={p.psId}>
+                        [{p.psId}] {p.title} • ({p.category})
+                      </option>
+                    ))}
+                  </select>
+                  {formData.problemStatementId && (
+                    <div className="p-2.5 rounded-xl bg-sky-950/80 border border-sky-800/80 text-xs text-sky-200 space-y-1">
+                      <p className="font-semibold text-white">
+                        ✓ Selected: [{formData.problemStatementId}] {formData.problemStatementTitle}
+                      </p>
+                      <p className="text-[11px] text-sky-300/80">
+                        Category auto-locked to <strong className="text-white">{formData.domain}</strong>.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                 <div>

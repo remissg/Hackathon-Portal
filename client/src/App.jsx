@@ -20,6 +20,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import TeamInviteAcceptance from './pages/TeamInviteAcceptance';
 import VerifyPass from './pages/VerifyPass';
 import JudgePortal from './pages/JudgePortal';
+import Leaderboard from './pages/Leaderboard';
+import ProblemStatements from './pages/ProblemStatements';
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+              <Route path="/problems" element={<ProblemStatements />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/verify-otp" element={<VerifyOtp />} />
               <Route path="/login" element={<Login />} />
