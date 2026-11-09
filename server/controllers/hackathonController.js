@@ -605,6 +605,8 @@ export const updateRegistrationStatus = async (req, res) => {
 export const verifyPass = async (req, res) => {
   try {
     const rawPassId = (req.params.passId || '').trim();
+    const targetedMemberQuery = (req.query.member || req.query.memberEmail || '').trim().toLowerCase();
+
     if (!rawPassId) {
       return res.status(400).json({ success: false, verified: false, message: 'Pass ID is required' });
     }
@@ -638,6 +640,48 @@ export const verifyPass = async (req, res) => {
 
     const ticketId = entry.ticketId || `MCAI-2026-${entry._id.toString().slice(-4).toUpperCase()}`;
 
+    // Team Leader Check-in Status
+    const leaderIsCheckedIn = entry.leaderIsCheckedIn ?? Boolean(entry.isCheckedIn);
+    const leaderCheckedInAt = entry.leaderCheckedInAt || entry.checkedInAt;
+    const leaderCheckedInBy = entry.leaderCheckedInBy || entry.checkedInBy;
+
+    // Teammates Check-in Statuses
+    const teamMembers = (entry.teamMembers || []).map((m) => ({
+      name: m.name,
+      email: m.email,
+      status: m.status || 'Pending',
+      acceptedAt: m.acceptedAt,
+      isCheckedIn: Boolean(m.isCheckedIn),
+      checkedInAt: m.checkedInAt,
+      checkedInBy: m.checkedInBy,
+    }));
+
+    // Find targeted member if late arrival scanned a personal pass
+    let targetedMember = null;
+    if (targetedMemberQuery) {
+      if (entry.email.toLowerCase() === targetedMemberQuery) {
+        targetedMember = {
+          name: entry.fullName,
+          email: entry.email,
+          isLeader: true,
+          isCheckedIn: leaderIsCheckedIn,
+          checkedInAt: leaderCheckedInAt,
+        };
+      } else {
+        const found = teamMembers.find((m) => m.email.toLowerCase() === targetedMemberQuery);
+        if (found) {
+          targetedMember = {
+            ...found,
+            isLeader: false,
+          };
+        }
+      }
+    }
+
+    // Attendance stats
+    const totalMembers = 1 + teamMembers.length;
+    const admittedMembers = (leaderIsCheckedIn ? 1 : 0) + teamMembers.filter((m) => m.isCheckedIn).length;
+
     return res.status(200).json({
       success: true,
       verified: true,
@@ -651,16 +695,18 @@ export const verifyPass = async (req, res) => {
         yearOfStudy: entry.yearOfStudy,
         teamLeadName: entry.fullName,
         teamLeadEmail: entry.email,
+        leaderIsCheckedIn,
+        leaderCheckedInAt,
+        leaderCheckedInBy,
         teamSize: entry.teamSize,
-        teamMembers: (entry.teamMembers || []).map((m) => ({
-          name: m.name,
-          email: m.email,
-          status: m.status || 'Pending',
-        })),
+        teamMembers,
         status: entry.status,
-        isCheckedIn: Boolean(entry.isCheckedIn),
-        checkedInAt: entry.checkedInAt,
-        checkedInBy: entry.checkedInBy,
+        isCheckedIn: Boolean(entry.isCheckedIn || leaderIsCheckedIn || admittedMembers > 0),
+        checkedInAt: entry.checkedInAt || leaderCheckedInAt,
+        checkedInBy: entry.checkedInBy || leaderCheckedInBy,
+        totalMembers,
+        admittedMembers,
+        targetedMember,
         submittedAt: entry.createdAt,
         verifiedAt: new Date().toISOString(),
       },
@@ -676,18 +722,20 @@ export const verifyPass = async (req, res) => {
 };
 
 /**
- * @desc    Toggle check-in / admit candidate team (Admin Only)
+ * @desc    Toggle check-in / admit candidate team or individual members (Admin & Volunteers)
  * @route   POST /api/hackathon/admin/check-in
- * @access  Private / Admin
+ * @access  Private / Admin / Volunteer
  */
 export const checkInPass = async (req, res) => {
   try {
-    const { passId, action } = req.body;
+    const { passId, action, memberEmail } = req.body;
     if (!passId) {
       return res.status(400).json({ success: false, message: 'Pass ID is required' });
     }
 
     const rawPassId = passId.trim();
+    const operator = req.user?.email || 'admin';
+    const now = new Date();
 
     // Find registration
     let entry = await HackathonRegistration.findOne({
@@ -715,22 +763,109 @@ export const checkInPass = async (req, res) => {
       });
     }
 
-    const shouldCheckIn = action !== 'undo';
-    entry.isCheckedIn = shouldCheckIn;
-    entry.checkedInAt = shouldCheckIn ? new Date() : null;
-    entry.checkedInBy = shouldCheckIn ? (req.user?.email || 'admin') : null;
+    let responseMsg = '';
+
+    if (action === 'admit-all' || action === 'check-in') {
+      // Check in Leader
+      entry.leaderIsCheckedIn = true;
+      entry.leaderCheckedInAt = now;
+      entry.leaderCheckedInBy = operator;
+
+      // Check in all team members
+      if (Array.isArray(entry.teamMembers)) {
+        entry.teamMembers.forEach((m) => {
+          m.isCheckedIn = true;
+          m.checkedInAt = now;
+          m.checkedInBy = operator;
+        });
+      }
+
+      entry.isCheckedIn = true;
+      entry.checkedInAt = now;
+      entry.checkedInBy = operator;
+      responseMsg = `Entire Team "${entry.projectName}" (${1 + (entry.teamMembers?.length || 0)} members) admitted to venue!`;
+    } else if (action === 'undo-all' || action === 'undo') {
+      // Revoke Leader
+      entry.leaderIsCheckedIn = false;
+      entry.leaderCheckedInAt = null;
+      entry.leaderCheckedInBy = null;
+
+      // Revoke all team members
+      if (Array.isArray(entry.teamMembers)) {
+        entry.teamMembers.forEach((m) => {
+          m.isCheckedIn = false;
+          m.checkedInAt = null;
+          m.checkedInBy = null;
+        });
+      }
+
+      entry.isCheckedIn = false;
+      entry.checkedInAt = null;
+      entry.checkedInBy = null;
+      responseMsg = `Check-in reversed for Team "${entry.projectName}". All members reset to pending.`;
+    } else if (action === 'toggle-leader') {
+      const nextState = !entry.leaderIsCheckedIn;
+      entry.leaderIsCheckedIn = nextState;
+      entry.leaderCheckedInAt = nextState ? now : null;
+      entry.leaderCheckedInBy = nextState ? operator : null;
+      responseMsg = nextState
+        ? `Team Leader (${entry.fullName}) checked in successfully.`
+        : `Team Leader (${entry.fullName}) check-in reversed.`;
+    } else if (action === 'toggle-member' || action === 'admit-member') {
+      const targetEmail = (memberEmail || '').trim().toLowerCase();
+      if (!targetEmail) {
+        return res.status(400).json({ success: false, message: 'Member email is required for member check-in' });
+      }
+
+      if (entry.email.toLowerCase() === targetEmail) {
+        const nextState = action === 'admit-member' ? true : !entry.leaderIsCheckedIn;
+        entry.leaderIsCheckedIn = nextState;
+        entry.leaderCheckedInAt = nextState ? now : null;
+        entry.leaderCheckedInBy = nextState ? operator : null;
+        responseMsg = nextState
+          ? `Team Leader (${entry.fullName}) admitted to venue!`
+          : `Team Leader (${entry.fullName}) check-in reversed.`;
+      } else {
+        const member = (entry.teamMembers || []).find((m) => m.email.toLowerCase() === targetEmail);
+        if (!member) {
+          return res.status(404).json({ success: false, message: `Member "${targetEmail}" not found on team roster.` });
+        }
+
+        const nextState = action === 'admit-member' ? true : !member.isCheckedIn;
+        member.isCheckedIn = nextState;
+        member.checkedInAt = nextState ? now : null;
+        member.checkedInBy = nextState ? operator : null;
+        responseMsg = nextState
+          ? `Teammate "${member.name}" admitted to venue!`
+          : `Teammate "${member.name}" check-in reversed.`;
+      }
+    }
+
+    // Recalculate team-level summary
+    const anyAdmitted = entry.leaderIsCheckedIn || (entry.teamMembers || []).some((m) => m.isCheckedIn);
+    entry.isCheckedIn = anyAdmitted;
+    if (anyAdmitted && !entry.checkedInAt) {
+      entry.checkedInAt = now;
+      entry.checkedInBy = operator;
+    } else if (!anyAdmitted) {
+      entry.checkedInAt = null;
+      entry.checkedInBy = null;
+    }
 
     await entry.save();
 
+    const totalMembers = 1 + (entry.teamMembers?.length || 0);
+    const admittedMembers = (entry.leaderIsCheckedIn ? 1 : 0) + (entry.teamMembers?.filter((m) => m.isCheckedIn).length || 0);
+
     return res.status(200).json({
       success: true,
-      message: shouldCheckIn
-        ? `Team "${entry.projectName}" successfully checked in and admitted to venue!`
-        : `Check-in reversed for Team "${entry.projectName}".`,
+      message: responseMsg,
       entry,
       isCheckedIn: entry.isCheckedIn,
       checkedInAt: entry.checkedInAt,
       checkedInBy: entry.checkedInBy,
+      totalMembers,
+      admittedMembers,
     });
   } catch (error) {
     console.error('[Admin Check-In Error]:', error);

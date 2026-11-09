@@ -54,6 +54,7 @@ const Dashboard = () => {
   // Modals state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [passModalOpen, setPassModalOpen] = useState(false);
+  const [selectedPassAttendee, setSelectedPassAttendee] = useState(null); // null = Team Lead
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   
   const [deleting, setDeleting] = useState(false);
@@ -74,17 +75,20 @@ const Dashboard = () => {
       setDownloadingPass(true);
       const dataUrl = await toPng(passElement, {
         cacheBust: true,
-        backgroundColor: '#0b132b',
+        backgroundColor: '#070d1e',
         pixelRatio: 2,
       });
+      const attendeeName = selectedPassAttendee
+        ? selectedPassAttendee.name.replace(/\s+/g, '_')
+        : (entry?.fullName ? entry.fullName.replace(/\s+/g, '_') : 'Lead');
       const link = document.createElement('a');
-      link.download = `HackSphere-Pass-${ticketId}.png`;
+      link.download = `HackSphere-Badge-${ticketId}-${attendeeName}.png`;
       link.href = dataUrl;
       link.click();
-      setNotification('Pass image (PNG) downloaded successfully!');
+      setNotification('Official Lanyard Badge (PNG) downloaded successfully!');
     } catch (err) {
       console.error('[Download Pass PNG Error]:', err);
-      alert('Could not generate pass image. You can use Print Pass / PDF instead.');
+      alert('Could not generate badge image. You can use Print Pass / PDF instead.');
     } finally {
       setDownloadingPass(false);
     }
@@ -289,11 +293,25 @@ const Dashboard = () => {
     window.print();
   };
 
-  const ticketId = entry ? `MCAI-2026-${entry._id.slice(-6).toUpperCase()}` : '';
+  const ticketId = entry ? (entry.ticketId || `HS-2026-${entry._id.slice(-6).toUpperCase()}`) : '';
   const isLead =
     !entry ||
     entry.userId?.toString() === user?.id ||
     entry.email?.toLowerCase() === user?.email?.toLowerCase();
+
+  const handleOpenPassModal = (initialAttendee = null) => {
+    if (initialAttendee) {
+      setSelectedPassAttendee(initialAttendee);
+    } else if (!isLeadRole && entry?.teamMembers) {
+      const currentMember = entry.teamMembers.find(
+        (m) => m.email?.toLowerCase() === user?.email?.toLowerCase()
+      );
+      setSelectedPassAttendee(currentMember || null);
+    } else {
+      setSelectedPassAttendee(null);
+    }
+    setPassModalOpen(true);
+  };
 
   // If a non-user role opens /dashboard, do not show candidate UI
   if (user && user.role && user.role !== 'user') {
@@ -419,11 +437,11 @@ const Dashboard = () => {
               )}
               {entry && (
                 <button
-                  onClick={() => setPassModalOpen(true)}
+                  onClick={() => handleOpenPassModal()}
                   className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-all"
                 >
                   <Printer className="w-4 h-4 text-sky-400" />
-                  <span>Print Entry Pass</span>
+                  <span>Entry Pass &amp; Badge</span>
                 </button>
               )}
             </div>
@@ -555,6 +573,14 @@ const Dashboard = () => {
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
                   <span>{copied ? 'Copied' : 'Share'}</span>
+                </button>
+                <button
+                  onClick={() => handleOpenPassModal()}
+                  className="px-3.5 py-2 rounded-xl bg-sky-950/80 hover:bg-sky-900/90 text-sky-300 text-xs font-semibold flex items-center gap-1.5 border border-sky-800/80 transition-colors"
+                  title="View & Download Official Entry Badge"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Entry Badge</span>
                 </button>
                 {isLead ? (
                   <>
@@ -740,33 +766,59 @@ const Dashboard = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {/* Lead Member */}
-                  <div className="p-4 bg-slate-950/80 border border-sky-800/60 rounded-2xl relative">
-                    <span className="absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-950 text-sky-400 border border-sky-800">
-                      Team Leader
-                    </span>
-                    <p className="text-sm font-bold text-white">{entry.fullName}</p>
-                    <p className="text-xs text-slate-400 mt-1">{entry.email}</p>
+                  <div className="p-4 bg-slate-950/80 border border-sky-800/60 rounded-2xl relative flex flex-col justify-between">
+                    <div>
+                      <span className="absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-950 text-sky-400 border border-sky-800">
+                        Team Leader
+                      </span>
+                      <p className="text-sm font-bold text-white">{entry.fullName}</p>
+                      <p className="text-xs text-slate-400 mt-1">{entry.email}</p>
+                    </div>
+                    <div className="mt-3 pt-2.5 border-t border-slate-900 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-500">Master Pass</span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPassModal(null)}
+                        className="text-[11px] text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1"
+                      >
+                        <QrCode className="w-3 h-3" />
+                        <span>View Badge</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Additional Members */}
                   {entry.teamMembers?.map((m, idx) => (
-                    <div key={idx} className="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl relative">
-                      <span
-                        className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                          m.status === 'Accepted'
-                            ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                            : m.status === 'Declined'
-                            ? 'bg-rose-950 text-rose-400 border border-rose-800'
-                            : 'bg-amber-950 text-amber-400 border border-amber-800'
-                        }`}
-                      >
-                        {m.status || 'Pending'}
-                      </span>
-                      <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
-                        Member #{idx + 2}
-                      </span>
-                      <p className="text-sm font-bold text-white">{m.name}</p>
-                      <p className="text-xs text-slate-400 mt-1 truncate">{m.email}</p>
+                    <div key={idx} className="p-4 bg-slate-950/70 border border-slate-800 rounded-2xl relative flex flex-col justify-between">
+                      <div>
+                        <span
+                          className={`absolute top-3 right-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            m.status === 'Accepted'
+                              ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                              : m.status === 'Declined'
+                              ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                              : 'bg-amber-950 text-amber-400 border border-amber-800'
+                          }`}
+                        >
+                          {m.status || 'Pending'}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
+                          Member #{idx + 2}
+                        </span>
+                        <p className="text-sm font-bold text-white">{m.name}</p>
+                        <p className="text-xs text-slate-400 mt-1 truncate">{m.email}</p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-900 flex items-center justify-between">
+                        <span className="text-[10px] text-slate-500">Attendee Pass</span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenPassModal(m)}
+                          className="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1"
+                        >
+                          <QrCode className="w-3 h-3" />
+                          <span>View Badge</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -785,169 +837,271 @@ const Dashboard = () => {
 
       </div>
 
-      {/* MODAL 1: Official Printable Registration Pass */}
-      {passModalOpen && entry && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 print:p-0 print:bg-white">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative print:bg-white print:text-black print:border-none print:shadow-none">
-            <button
-              onClick={() => setPassModalOpen(false)}
-              className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white print:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* MODAL 1: Official Printable Registration Pass & Lanyard Badge */}
+      {passModalOpen && entry && (() => {
+        const isLeadAttendee = !selectedPassAttendee;
+        const currentAttendeeName = isLeadAttendee
+          ? (entry.fullName || user?.fullName || 'Team Lead')
+          : selectedPassAttendee.name;
+        const currentAttendeeEmail = isLeadAttendee
+          ? (entry.email || user?.email || '')
+          : selectedPassAttendee.email;
+        const currentAttendeeRoleBadge = isLeadAttendee
+          ? '★ Team Leader • Master Pass'
+          : '⚡ Innovation Hacker';
+        const currentAttendeeIndex = isLeadAttendee
+          ? 0
+          : ((entry.teamMembers?.findIndex((m) => m.email?.toLowerCase() === selectedPassAttendee.email?.toLowerCase()) ?? -1) + 1);
+        const currentAttendeeIdSuffix = isLeadAttendee
+          ? 'LEAD'
+          : (currentAttendeeIndex > 0 ? `M${currentAttendeeIndex}` : 'MEMBER');
+        const currentAttendeeIsCheckedIn = isLeadAttendee
+          ? !!entry.leaderIsCheckedIn
+          : !!selectedPassAttendee.isCheckedIn;
+        const activeQrUrl = isLeadAttendee
+          ? `https://client-seven-gold-99.vercel.app/verify-pass?ticketId=${ticketId}`
+          : `https://client-seven-gold-99.vercel.app/verify-pass?ticketId=${ticketId}&member=${encodeURIComponent(currentAttendeeEmail)}`;
 
-            {/* Capturable Ticket Box */}
-            <div id="admission-pass-card" className="p-4 sm:p-5 bg-slate-900 rounded-2xl print:bg-white print:p-0">
-              {/* Ticket Header */}
-              <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-5 print:border-gray-300">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white print:bg-sky-600 shadow-md shadow-sky-500/20">
-                  <Sparkles className="w-5 h-5" />
+        return (
+          <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static">
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl relative my-auto print:bg-white print:text-black print:border-none print:shadow-none print:p-0">
+              
+              {/* Modal Top Bar */}
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 print:hidden">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Official Conference Badge</h3>
+                    <p className="text-[11px] text-slate-400">Gate Entry &amp; Lanyard Credential</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white print:text-black">HackSphere National Hackathon 2026</h3>
-                  <p className="text-xs text-sky-400 print:text-sky-700">Official Candidate Entry Pass</p>
-                </div>
+                <button
+                  onClick={() => setPassModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+                  title="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Ticket Body */}
-              <div className="space-y-4 text-xs">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800 print:bg-gray-100 print:border-gray-200">
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Pass / Ticket ID</span>
-                    <div className="flex items-center gap-2">
-                      <p className="font-mono font-bold text-sky-400 text-sm print:text-sky-800">{ticketId}</p>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyId(ticketId)}
-                        className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors print:hidden"
-                        title="Copy Pass ID"
-                      >
-                        {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      </button>
-                      {copiedId && <span className="text-[10px] text-emerald-400 print:hidden">Copied!</span>}
+              {/* Dynamic Attendee Switcher (for Multi-Member Teams) */}
+              {entry.teamMembers && entry.teamMembers.length > 0 && (
+                <div className="mb-3.5 p-2.5 bg-slate-950/80 rounded-2xl border border-slate-800 print:hidden">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Switch Badge ({entry.teamSize} Candidates)
+                    </span>
+                    <span className="text-[10px] text-cyan-400 font-semibold">
+                      {isLeadAttendee ? 'Team Master Pass' : 'Individual Badge'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPassAttendee(null)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                        isLeadAttendee
+                          ? 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/25 ring-1 ring-sky-300'
+                          : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60'
+                      }`}
+                    >
+                      <span>👑 {entry.fullName} (Lead)</span>
+                    </button>
+                    {entry.teamMembers.map((m, idx) => {
+                      const isSelected = selectedPassAttendee?.email?.toLowerCase() === m.email?.toLowerCase();
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedPassAttendee(m)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/25 ring-1 ring-cyan-300'
+                              : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60'
+                          }`}
+                        >
+                          <span>⚡ {m.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* VERTICAL TECH LANYARD ID BADGE */}
+              <div
+                id="admission-pass-card"
+                style={{ backgroundColor: '#070d1e' }}
+                className="w-full max-w-[360px] mx-auto rounded-[26px] border-2 border-indigo-500/40 p-5 shadow-[0_0_40px_-10px_rgba(99,102,241,0.35)] relative overflow-hidden text-white print:bg-white print:text-black print:border-gray-400 print:shadow-none print:max-w-none"
+              >
+                {/* Lanyard Punch Slot Die-Cut Cutout */}
+                <div className="w-16 h-3 bg-slate-950/90 border border-slate-700/80 rounded-full mx-auto mb-2 shadow-inner flex items-center justify-center print:border-gray-400">
+                  <div className="w-10 h-1 bg-black/90 rounded-full print:bg-gray-300"></div>
+                </div>
+
+                {/* Holographic Security Foil Bar */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-cyan-400 via-indigo-500 via-purple-500 to-pink-500 rounded-full mb-3 shadow-[0_0_10px_rgba(99,102,241,0.5)] print:bg-gray-400"></div>
+
+                {/* Badge Header: Event & Track */}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20 print:bg-black">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black tracking-wider uppercase text-white print:text-black font-mono">
+                        HackSphere 2026
+                      </h3>
+                      <p className="text-[9px] text-cyan-400 print:text-cyan-800 font-bold uppercase tracking-widest">
+                        National Finale • Entry Pass
+                      </p>
                     </div>
                   </div>
-                  <div className="sm:text-right">
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Track</span>
-                    <p className="font-bold text-white print:text-black">{entry.domain}</p>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-950/90 text-indigo-300 border border-indigo-700/60 print:bg-gray-100 print:text-black print:border-gray-300 shrink-0">
+                    {entry.domain || 'Innovation'}
+                  </span>
+                </div>
+
+                {/* Candidate Persona Card */}
+                <div className="flex flex-col items-center text-center p-3.5 bg-slate-900/80 rounded-2xl border border-slate-800/80 mb-3 relative overflow-hidden print:bg-gray-50 print:border-gray-200">
+                  <Award className="absolute -right-3 -bottom-3 w-20 h-20 text-slate-800/20 pointer-events-none print:hidden" />
+
+                  {/* Candidate Monogram Avatar */}
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-500/30 ring-2 ring-cyan-400/50 mb-2 print:bg-slate-800">
+                    {currentAttendeeName?.charAt(0).toUpperCase()}
                   </div>
-                </div>
 
-                <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Project Title</span>
-                  <p className="text-sm font-bold text-white print:text-black">{entry.projectName}</p>
-                </div>
+                  {/* Persona Role Pill */}
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest mb-1 flex items-center gap-1 ${
+                      isLeadAttendee
+                        ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 print:bg-amber-100 print:text-amber-900 print:border-amber-300'
+                        : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 print:bg-cyan-100 print:text-cyan-900 print:border-cyan-300'
+                    }`}
+                  >
+                    {currentAttendeeRoleBadge}
+                  </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">Candidate (Ticket Holder)</span>
-                    <p className="font-medium text-slate-200 print:text-gray-800 text-sm">
-                      {user?.fullName || entry.fullName}
-                    </p>
-                    <p className="text-slate-400 print:text-gray-600 text-[11px] truncate">
-                      {user?.email || entry.email}
-                    </p>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        user?.email?.toLowerCase() === entry.email?.toLowerCase()
-                          ? 'bg-sky-950/80 text-sky-300 border border-sky-800/60'
-                          : 'bg-indigo-950/80 text-indigo-300 border border-indigo-800/60'
-                      }`}>
-                        {user?.email?.toLowerCase() === entry.email?.toLowerCase() ? '★ Team Lead' : '👤 Team Member'}
+                  {/* Candidate Name & Email */}
+                  <h4 className="text-base font-extrabold text-white print:text-black tracking-tight leading-snug">
+                    {currentAttendeeName}
+                  </h4>
+                  <p className="text-[11px] text-slate-400 print:text-gray-600 font-mono">
+                    {currentAttendeeEmail}
+                  </p>
+
+                  {/* College & Project Title */}
+                  <div className="mt-2.5 pt-2.5 border-t border-slate-800 w-full flex flex-col gap-1 text-[11px] print:border-gray-300">
+                    <div className="flex items-center justify-center gap-1.5 text-slate-300 print:text-gray-700">
+                      <GraduationCap className="w-3.5 h-3.5 text-cyan-400 print:text-cyan-700 shrink-0" />
+                      <span className="truncate max-w-[220px] font-medium" title={entry.collegeName}>
+                        {entry.collegeName}
                       </span>
                     </div>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-semibold">College / Institute</span>
-                    <p className="font-medium text-slate-200 print:text-gray-800 text-sm truncate" title={entry.collegeName}>
-                      {entry.collegeName}
-                    </p>
-                    {user?.email?.toLowerCase() !== entry.email?.toLowerCase() && (
-                      <div className="mt-1 text-[11px] text-slate-400">
-                        <span>Team Lead: </span>
-                        <span className="text-slate-200 font-medium">{entry.fullName}</span>
-                      </div>
-                    )}
+                    <div className="text-slate-400 print:text-gray-600 text-[10px] truncate">
+                      <span className="text-slate-500 print:text-gray-500 uppercase font-bold">Project: </span>
+                      <span className="text-slate-200 print:text-black font-semibold">{entry.projectName}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <span className="text-[10px] text-slate-500 uppercase font-semibold">Team Size &amp; Members</span>
-                  <p className="font-medium text-slate-200 print:text-gray-800">
-                    {entry.teamSize} Member(s): {entry.fullName} (Lead)
-                    {entry.teamMembers?.map((m) => `, ${m.name}`)}
-                  </p>
-                </div>
-
-                {/* Scannable Dynamic QR Code Box */}
-                <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-center justify-between gap-4 print:border-gray-300 print:bg-white">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-white print:text-black flex items-center gap-1.5">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      Live Verifiable QR Code
-                    </span>
-                    <p className="text-[10px] text-slate-400 print:text-gray-600 max-w-[210px] leading-relaxed">
-                      Scan with any camera or open pass verifier to validate authenticity.
-                    </p>
-                    <Link
-                      to={`/verify-pass?ticketId=${ticketId}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[10px] text-sky-400 hover:underline inline-flex items-center gap-1 print:hidden pt-1"
-                    >
-                      Open Live Verifier Link <ExternalLink className="w-2.5 h-2.5" />
-                    </Link>
-                  </div>
-
-                  <div className="bg-white p-2 rounded-xl shadow-md shrink-0 flex flex-col items-center">
+                {/* High-Contrast Live Scannable QR Code */}
+                <div className="p-3 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col items-center text-center mb-3 print:bg-white print:border-gray-300">
+                  <div className="bg-white p-2 rounded-2xl shadow-xl ring-2 ring-white/10 mb-2">
                     <QRCodeSVG
-                      value={`https://client-seven-gold-99.vercel.app/verify-pass?ticketId=${ticketId}`}
-                      size={86}
+                      value={activeQrUrl}
+                      size={110}
                       level="M"
                       includeMargin={false}
                     />
-                    <span className="text-[8px] font-bold text-slate-800 tracking-wider mt-1 uppercase">
-                      Scan Me
-                    </span>
                   </div>
+
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="font-mono text-xs font-bold text-cyan-300 print:text-cyan-800 tracking-wider">
+                      {ticketId} • {currentAttendeeIdSuffix}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyId(ticketId)}
+                      className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors print:hidden"
+                      title="Copy Pass ID"
+                    >
+                      {copiedId ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-[10px] text-slate-400 print:text-gray-600 font-medium">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400 print:text-emerald-700 shrink-0" />
+                    <span>Scan at Gate for Instant Admission</span>
+                  </div>
+
+                  {/* Gate Admission Status */}
+                  {currentAttendeeIsCheckedIn ? (
+                    <div className="mt-2 px-2.5 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-600/80 text-emerald-300 text-[10px] font-bold flex items-center gap-1 print:bg-emerald-100 print:text-emerald-900">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span>Admitted at Gate</span>
+                    </div>
+                  ) : (
+                    <div className="mt-2 px-2 py-0.5 rounded-full bg-sky-950/60 border border-sky-800/60 text-sky-300 text-[10px] font-semibold print:bg-gray-100 print:text-gray-800">
+                      Ready for Gate Scan
+                    </div>
+                  )}
                 </div>
 
-                <div className="p-3 bg-emerald-950/50 border border-emerald-800/80 rounded-xl text-emerald-300 text-[11px] print:bg-emerald-50 print:text-emerald-900 print:border-emerald-200">
-                  ✓ Verified &amp; Registered via OTP Auth • HackSphere Full Stack Track
+                {/* Security Watermark & Timestamp Footer */}
+                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[9px] text-slate-500 font-mono tracking-wider print:border-gray-300 print:text-gray-500">
+                  <span className="truncate">RSA-256 SIGNED • GATE BADGE</span>
+                  <span>HACKSPHERE 2026</span>
                 </div>
               </div>
-            </div>
 
-            {/* Modal Actions */}
-            <div className="mt-5 pt-4 border-t border-slate-800 flex flex-wrap justify-end gap-2.5 print:hidden">
-              <button
-                type="button"
-                onClick={() => setPassModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadPassPng}
-                disabled={downloadingPass}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>{downloadingPass ? 'Generating Image...' : 'Save Image (PNG)'}</span>
-              </button>
-              <button
-                type="button"
-                onClick={triggerPrintPass}
-                className="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20 transition"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Pass / PDF</span>
-              </button>
+              {/* Live Link Info */}
+              <div className="mt-3 text-center print:hidden">
+                <Link
+                  to={`/verify-pass?ticketId=${ticketId}${!isLeadAttendee ? `&member=${encodeURIComponent(currentAttendeeEmail)}` : ''}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-sky-400 hover:text-sky-300 hover:underline inline-flex items-center gap-1 font-medium"
+                >
+                  <span>Test Gate Verifier Screen</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="mt-4 pt-3 border-t border-slate-800 flex flex-wrap justify-end gap-2 print:hidden">
+                <button
+                  type="button"
+                  onClick={() => setPassModalOpen(false)}
+                  className="px-3.5 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPassPng}
+                  disabled={downloadingPass}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{downloadingPass ? 'Generating...' : 'Save Badge (PNG)'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={triggerPrintPass}
+                  className="px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-sky-500/20 transition"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Print Badge / PDF</span>
+                </button>
+              </div>
+
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* MODAL 2: Comprehensive Candidate Profile Editor */}
       {editProfileOpen && (

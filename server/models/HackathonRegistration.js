@@ -24,6 +24,18 @@ const teamMemberSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    isCheckedIn: {
+      type: Boolean,
+      default: false,
+    },
+    checkedInAt: {
+      type: Date,
+      default: null,
+    },
+    checkedInBy: {
+      type: String,
+      default: null,
+    },
   },
   { _id: false }
 );
@@ -215,6 +227,18 @@ const hackathonRegistrationSchema = new mongoose.Schema(
       default: null,
     },
     checkedInBy: {
+      type: String,
+      default: null,
+    },
+    leaderIsCheckedIn: {
+      type: Boolean,
+      default: false,
+    },
+    leaderCheckedInAt: {
+      type: Date,
+      default: null,
+    },
+    leaderCheckedInBy: {
       type: String,
       default: null,
     },
