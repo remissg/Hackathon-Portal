@@ -146,7 +146,7 @@ const VerifyOtp = () => {
           Verify Your Email
         </h2>
         <p className="mt-2 text-center text-sm text-slate-400">
-          Enter the 6-digit code sent by <strong className="text-sky-400">MatruCare AI</strong> to
+          Enter the 6-digit code sent by <strong className="text-sky-400">HackSphere</strong> to
         </p>
         <p className="text-center text-sm font-semibold text-slate-200 mt-0.5">
           {email || 'your registered email'}

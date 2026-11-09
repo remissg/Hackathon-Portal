@@ -45,9 +45,9 @@ export const submitContact = async (req, res) => {
     // Send automated acknowledgement email to the sender
     const ackHtml = `
       <div style="font-family: Arial, sans-serif; padding: 25px; color: #1e293b; background-color: #f8fafc; border-radius: 8px;">
-        <h2 style="color: #0b132b; margin-top: 0;">MatruCare AI — Inquiry Received</h2>
+        <h2 style="color: #0b132b; margin-top: 0;">HackSphere — Inquiry Received</h2>
         <p>Dear ${name},</p>
-        <p>Thank you for reaching out to the <strong>MatruCare AI National Innovation Hackathon 2026</strong> organizing committee.</p>
+        <p>Thank you for reaching out to the <strong>HackSphere National Innovation Hackathon 2026</strong> organizing committee.</p>
         <p>We have successfully received your inquiry regarding:</p>
         <blockquote style="background-color: #ffffff; border-left: 4px solid #0284c7; padding: 12px; margin: 16px 0; color: #475569;">
           ${message.replace(/\n/g, '<br/>')}
@@ -55,7 +55,7 @@ export const submitContact = async (req, res) => {
         <p>Our academic and technical coordination team will review your query and reply within 24 hours.</p>
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
         <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">
-          <strong>MatruCare AI • Full Stack Developer Track</strong><br />
+          <strong>HackSphere • National Innovation Arena</strong><br />
           Contact: <a href="mailto:matrucareai@gmail.com" style="color: #0284c7;">matrucareai@gmail.com</a>
         </p>
       </div>
@@ -63,14 +63,14 @@ export const submitContact = async (req, res) => {
 
     await sendMail({
       to: email.trim().toLowerCase(),
-      subject: 'We Received Your Inquiry — MatruCare AI Hackathon 2026',
+      subject: 'We Received Your Inquiry — HackSphere Hackathon 2026',
       html: ackHtml,
-      text: `Dear ${name},\n\nWe have received your inquiry. Our team will review it and reply within 24 hours.\n\nMatruCare AI`,
+      text: `Dear ${name},\n\nWe have received your inquiry. Our team will review it and reply within 24 hours.\n\nHackSphere`,
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Your inquiry has been received. A confirmation has been sent to your email and the MatruCare AI team will get back to you shortly.',
+      message: 'Your inquiry has been received. A confirmation has been sent to your email and the HackSphere team will get back to you shortly.',
     });
   } catch (error) {
     console.error('[Contact Controller Error]:', error);

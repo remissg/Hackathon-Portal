@@ -179,7 +179,7 @@ export const registerHackathon = async (req, res) => {
     // Send confirmation email via Nodemailer
     const regEmail = generateRegistrationEmailTemplate({
       participantName: registration.fullName,
-      eventName: 'MatruCare AI National Innovation Hackathon 2026',
+      eventName: 'HackSphere National Innovation Hackathon 2026',
       domain: registration.domain,
       projectName: registration.projectName,
       teamSize: registration.teamSize,
@@ -191,7 +191,7 @@ export const registerHackathon = async (req, res) => {
 
     const leadMailRes = await sendMail({
       to: registration.email,
-      subject: `Registration Confirmed: ${registration.projectName} — MatruCare AI Hackathon`,
+      subject: `Registration Confirmed: ${registration.projectName} — HackSphere Hackathon`,
       html: regEmail.html,
       text: regEmail.text,
     });
@@ -216,7 +216,7 @@ export const registerHackathon = async (req, res) => {
 
             const inviteRes = await sendMail({
               to: member.email,
-              subject: `You've been added to Team "${registration.projectName}" — MatruCare AI Hackathon 2026`,
+              subject: `You've been added to Team "${registration.projectName}" — HackSphere Hackathon 2026`,
               html: inviteEmail.html,
               text: inviteEmail.text,
             });
@@ -572,7 +572,7 @@ export const updateRegistrationStatus = async (req, res) => {
 
         return sendMail({
           to: r.email,
-          subject: `Status Milestone: ${entry.projectName} is now "${status.toUpperCase()}" — MatruCare AI Hackathon`,
+          subject: `Status Milestone: ${entry.projectName} is now "${status.toUpperCase()}" — HackSphere Hackathon`,
           html: milestoneEmail.html,
           text: milestoneEmail.text,
         });

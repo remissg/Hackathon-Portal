@@ -172,7 +172,7 @@ const Home = () => {
     {
       title: 'Nodemailer Integration',
       marks: 10,
-      desc: 'Automatic email dispatch with sender MatruCare AI (matrucareai@gmail.com). Clean HTML templates for OTP and Hackathon confirmation.',
+      desc: 'Automatic email dispatch with sender HackSphere (matrucareai@gmail.com). Clean HTML templates for OTP and Hackathon confirmation.',
       badge: '10 Marks',
     },
     {
@@ -232,7 +232,7 @@ const Home = () => {
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-950/70 border border-sky-800/80 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-8 shadow-inner">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>MatruCare AI Internship Programme • 2026 Edition</span>
+              <span>HackSphere Innovation Arena • 2026 Edition</span>
             </div>
 
             {/* Headline */}
@@ -245,7 +245,7 @@ const Home = () => {
 
             {/* Subtitle */}
             <p className="mt-6 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
-              Join the official MatruCare AI Hackathon. Showcase your technical chops across AI/ML, MERN stack, and Cloud engineering. Verify identity via OTP, form your team, and submit your breakthrough solution.
+              Join the official HackSphere National Innovation Hackathon. Showcase your technical chops across AI/ML, MERN stack, and Cloud engineering. Verify identity via OTP, form your team, and submit your breakthrough solution.
             </p>
 
             {/* Live Registration Countdown */}
@@ -486,7 +486,7 @@ const Home = () => {
               Evaluation Criteria (100 Marks)
             </p>
             <p className="mt-3 text-slate-400 text-base">
-              Submissions are evaluated by the MatruCare AI Technical Committee using the official evaluation matrix.
+              Submissions are evaluated by the HackSphere Technical Committee using the official evaluation matrix.
             </p>
           </div>
 

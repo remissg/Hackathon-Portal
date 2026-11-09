@@ -103,11 +103,11 @@ const sendViaHttpBridge = async ({ to, subject, html, text }) => {
         },
         body: JSON.stringify({
           sender: {
-            name: 'MatruCare AI',
+            name: 'HackSphere',
             email: brevoSenderEmail,
           },
           replyTo: {
-            name: 'MatruCare AI',
+            name: 'HackSphere',
             email: 'matrucareai@gmail.com',
           },
           to: [{ email: to }],
@@ -186,7 +186,7 @@ export const sendMail = async ({ to, subject, html, text }) => {
   }
 
   const mailOptions = {
-    from: '"MatruCare AI" <matrucareai@gmail.com>',
+    from: '"HackSphere" <matrucareai@gmail.com>',
     replyTo: 'matrucareai@gmail.com',
     sender: 'matrucareai@gmail.com',
     to,
@@ -228,7 +228,7 @@ export const sendMail = async ({ to, subject, html, text }) => {
     };
   }
 
-  console.log(`[NODEMAILER] Dispatching email to: ${to} | From: "MatruCare AI" <matrucareai@gmail.com> | User: ${userEmail}...`);
+  console.log(`[NODEMAILER] Dispatching email to: ${to} | From: "HackSphere" <matrucareai@gmail.com> | User: ${userEmail}...`);
 
   // Attempt 1: Direct SSL (Port 465 with Connection Pooling & IPv4)
   try {

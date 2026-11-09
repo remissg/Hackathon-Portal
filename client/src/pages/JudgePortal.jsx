@@ -185,7 +185,7 @@ const JudgePortal = () => {
           </div>
           <h2 className="text-xl font-bold text-white">Evaluator Access Required</h2>
           <p className="text-sm text-slate-400">
-            This workspace is reserved for official MatruCare AI Hackathon Judges and Technical Evaluators.
+            This workspace is reserved for official HackSphere Hackathon Judges and Technical Evaluators.
           </p>
           <div className="pt-2">
             <Link

@@ -16,7 +16,7 @@ export const seedAdmin = async () => {
 
     if (!officialAdmin) {
       await User.create({
-        fullName: 'MatruCare AI Admin',
+        fullName: 'HackSphere Admin',
         email: officialAdminEmail,
         password: defaultSecret,
         isVerified: true,
@@ -25,6 +25,10 @@ export const seedAdmin = async () => {
       console.log(`[Seed Admin] Initialized official admin account: ${officialAdminEmail}`);
     } else {
       let needsSave = false;
+      if (officialAdmin.fullName === 'MatruCare AI Admin') {
+        officialAdmin.fullName = 'HackSphere Admin';
+        needsSave = true;
+      }
       if (!officialAdmin.isVerified) {
         officialAdmin.isVerified = true;
         needsSave = true;

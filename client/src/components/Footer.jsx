@@ -15,7 +15,7 @@ const Footer = () => {
                 <Sparkles className="w-4 h-4 text-sky-200" />
               </div>
               <span className="text-xl font-bold tracking-tight text-white">
-                MatruCare <span className="text-sky-400">AI</span>
+                Hack<span className="text-sky-400 font-extrabold">Sphere</span>
               </span>
             </Link>
             <p className="text-sm leading-relaxed text-slate-400">
@@ -120,7 +120,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-          <p>© {new Date().getFullYear()} MatruCare AI. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} HackSphere Global. All rights reserved.</p>
           <p className="flex items-center gap-1">
             Built with MERN Stack + Nodemailer for the Internship Track
           </p>

@@ -9,14 +9,14 @@ export const seedDefaultEventIfEmpty = async () => {
     const count = await HackathonEvent.countDocuments();
     if (count > 0) return;
 
-    console.log('[HackathonEvent] Seeding default MatruCare AI Hackathon 2026 with Problem Statements...');
+    console.log('[HackathonEvent] Seeding default HackSphere Hackathon 2026 with Problem Statements...');
 
     await HackathonEvent.create({
-      title: 'MatruCare AI National Innovation Hackathon 2026',
-      slug: 'matrucare-ai-hackathon-2026',
-      tagline: 'Pioneering AI & IoT Innovations in Maternal, Neonatal & Preventative Healthcare',
+      title: 'HackSphere National Innovation Hackathon 2026',
+      slug: 'hacksphere-national-hackathon-2026',
+      tagline: 'Pioneering AI & IoT Innovations in Healthcare, Web3, Telemetry & Intelligent Systems',
       description:
-        'MatruCare AI Hackathon 2026 invites student innovators, researchers, and engineers across India to design production-ready, scalable solutions solving high-impact challenges in maternal healthcare, remote telemetry, and preventative diagnostic intelligence.',
+        'HackSphere National Innovation Hackathon 2026 invites student innovators, researchers, and engineers across India to design production-ready, scalable solutions solving high-impact challenges in maternal healthcare, remote telemetry, and preventative diagnostic intelligence.',
       prizePool: '₹5,00,000',
       startDate: new Date('2026-06-15T09:00:00Z'),
       endDate: new Date('2026-06-17T18:00:00Z'),

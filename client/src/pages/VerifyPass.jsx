@@ -187,7 +187,7 @@ const VerifyPass = () => {
       console.error('[Verify Pass Error]:', err);
       setError(
         err.response?.data?.message ||
-          'Invalid or unregistered Pass ID. This pass could not be authenticated against the MatruCare AI registry.'
+          'Invalid or unregistered Pass ID. This pass could not be authenticated against the HackSphere registry.'
       );
       setPassData(null);
     } finally {
@@ -254,7 +254,7 @@ const VerifyPass = () => {
             Event Pass Verification
           </h1>
           <p className="mt-2 text-slate-400 text-sm sm:text-base">
-            MatruCare AI National Innovation Hackathon 2026
+            HackSphere National Innovation Hackathon 2026
           </p>
         </div>
 
@@ -652,7 +652,7 @@ const VerifyPass = () => {
                   </span>
                 </div>
                 <span className="text-slate-500">
-                  MatruCare AI Registry • Official Security Token
+                  HackSphere Registry • Official Security Token
                 </span>
               </div>
 

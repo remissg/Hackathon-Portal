@@ -133,10 +133,10 @@ const Navbar = () => {
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight text-white group-hover:text-sky-400 transition-colors">
-                MatruCare <span className="text-sky-400">AI</span>
+                Hack<span className="text-sky-400 font-extrabold">Sphere</span>
               </span>
               <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold -mt-0.5">
-                Hackathon Portal
+                Innovation Portal
               </span>
             </div>
           </Link>
@@ -321,7 +321,7 @@ const Navbar = () => {
 
                       {notifications.length > 0 && (
                         <div className="px-4 pt-2 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-500">MatruCare AI Live Alerts</span>
+                          <span className="text-slate-500">HackSphere Live Alerts</span>
                           <button
                             type="button"
                             onClick={clearAllNotifications}

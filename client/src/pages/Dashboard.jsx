@@ -78,7 +78,7 @@ const Dashboard = () => {
         pixelRatio: 2,
       });
       const link = document.createElement('a');
-      link.download = `MatruCareAI-Pass-${ticketId}.png`;
+      link.download = `HackSphere-Pass-${ticketId}.png`;
       link.href = dataUrl;
       link.click();
       setNotification('Pass image (PNG) downloaded successfully!');
@@ -777,7 +777,7 @@ const Dashboard = () => {
             {/* Footer with Timestamp */}
             <div className="px-6 sm:px-8 py-4 bg-slate-950 border-t border-slate-800 text-xs text-slate-500 flex items-center justify-between">
               <span>Submitted: {new Date(entry.createdAt).toLocaleDateString()}</span>
-              <span>MatruCare AI • Full Stack Developer Track</span>
+              <span>HackSphere • National Innovation Arena</span>
             </div>
 
           </div>
@@ -804,7 +804,7 @@ const Dashboard = () => {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white print:text-black">MatruCare AI Hackathon 2026</h3>
+                  <h3 className="text-lg font-bold text-white print:text-black">HackSphere National Hackathon 2026</h3>
                   <p className="text-xs text-sky-400 print:text-sky-700">Official Candidate Entry Pass</p>
                 </div>
               </div>
@@ -913,7 +913,7 @@ const Dashboard = () => {
                 </div>
 
                 <div className="p-3 bg-emerald-950/50 border border-emerald-800/80 rounded-xl text-emerald-300 text-[11px] print:bg-emerald-50 print:text-emerald-900 print:border-emerald-200">
-                  ✓ Verified &amp; Registered via OTP Auth • MatruCare AI Full Stack Track
+                  ✓ Verified &amp; Registered via OTP Auth • HackSphere Full Stack Track
                 </div>
               </div>
             </div>

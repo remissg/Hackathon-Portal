@@ -314,7 +314,7 @@ const HackathonRegister = () => {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-950/70 border border-sky-800/80 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>MatruCare AI Hackathon 2026</span>
+            <span>HackSphere National Hackathon 2026</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             {editEntry ? 'Update Hackathon Registration' : 'Official Hackathon Registration Form'}
@@ -610,7 +610,7 @@ const HackathonRegister = () => {
                     required
                     value={formData.projectName}
                     onChange={handleChange}
-                    placeholder="Min 5 characters (e.g. MatruCare AI Telehealth)"
+                    placeholder="Min 5 characters (e.g. HackSphere Telehealth)"
                     className="w-full px-4 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500"
                   />
                 </div>

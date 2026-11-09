@@ -70,8 +70,8 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    organization: 'MatruCare AI',
-    service: 'Hackathon Registration Portal Backend API',
+    organization: 'HackSphere',
+    service: 'HackSphere National Hackathon Portal API',
     emailConfig: {
       hasUser: Boolean(emailUser),
       user: emailUser ? emailUser.replace(/(?<=.{3}).(?=.*@)/g, '*') : 'NOT_SET',
@@ -94,7 +94,7 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`[MatruCare AI Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-  console.log(`[MatruCare AI Server] Health check available at: http://localhost:${PORT}/api/health`);
+  console.log(`[HackSphere Server] Running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  console.log(`[HackSphere Server] Health check available at: http://localhost:${PORT}/api/health`);
 });
 

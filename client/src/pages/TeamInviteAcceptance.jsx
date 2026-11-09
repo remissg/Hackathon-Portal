@@ -124,7 +124,7 @@ const TeamInviteAcceptance = () => {
             Team Invitation &amp; Pass Claim
           </h1>
           <p className="mt-2 text-slate-400 text-sm sm:text-base">
-            MatruCare AI National Innovation Hackathon 2026
+            HackSphere National Innovation Hackathon 2026
           </p>
         </div>
 

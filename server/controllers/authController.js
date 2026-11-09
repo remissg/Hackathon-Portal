@@ -90,7 +90,7 @@ export const signup = async (req, res) => {
     const otpEmail = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
     const mailResult = await sendMail({
       to: normalizedEmail,
-      subject: 'MatruCare AI — Your 6-Digit Verification Code',
+      subject: 'HackSphere — Your 6-Digit Verification Code',
       html: otpEmail.html,
       text: otpEmail.text,
     });
@@ -225,7 +225,7 @@ export const resendOtp = async (req, res) => {
     const otpEmail = generateOtpEmailTemplate({ otp: otpCode, expiryMinutes: 10 });
     const mailResult = await sendMail({
       to: normalizedEmail,
-      subject: 'MatruCare AI — New Verification Code',
+      subject: 'HackSphere — New Verification Code',
       html: otpEmail.html,
       text: otpEmail.text,
     });

@@ -51,7 +51,7 @@ const AdminRoute = ({ children }) => {
           </h2>
 
           <p className="text-sm text-slate-400 leading-relaxed mb-6">
-            This console is reserved exclusively for the <strong className="text-white">MatruCare AI Hackathon Committee</strong> (<code className="text-rose-400 text-xs">matrucareai@gmail.com</code>). Regular participants cannot access, modify, or view other candidates' project applications.
+            This console is reserved exclusively for the <strong className="text-white">HackSphere Committee</strong> (<code className="text-rose-400 text-xs">matrucareai@gmail.com</code>). Regular participants cannot access, modify, or view other candidates' project applications.
           </p>
 
           <div className="space-y-3">

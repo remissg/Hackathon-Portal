@@ -205,7 +205,7 @@ export const updateUserRole = async (req, res) => {
     ) {
       return res.status(403).json({
         success: false,
-        message: 'The official MatruCare AI super admin role cannot be modified',
+        message: 'The official HackSphere super admin role cannot be modified',
       });
     }
 

@@ -286,7 +286,7 @@ const ProblemStatements = () => {
               <div>
                 <h2 className="text-xl font-bold text-white">{selectedProblem.title}</h2>
                 <p className="text-xs text-sky-400 mt-1">
-                  Event: {selectedProblem.hackathonTitle || 'MatruCare AI National Hackathon 2026'}
+                  Event: {selectedProblem.hackathonTitle || 'HackSphere National Hackathon 2026'}
                 </p>
               </div>
 

@@ -436,7 +436,7 @@ const AdminDashboard = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `MatruCare_AI_Hackathon_Registrations_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `HackSphere_Hackathon_Registrations_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -483,7 +483,9 @@ const AdminDashboard = () => {
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-base font-bold text-white tracking-tight block">MatruCare AI</span>
+              <span className="text-base font-bold text-white tracking-tight block">
+                Hack<span className="text-rose-400 font-extrabold">Sphere</span>
+              </span>
               <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800 inline-block">
                 Admin Console
               </span>
@@ -1381,7 +1383,7 @@ const AdminDashboard = () => {
 
                   <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
                     <span className="text-[10px] text-slate-500">
-                      Hackathon: {prob.hackathonTitle || 'MatruCare AI 2026'}
+                      Hackathon: {prob.hackathonTitle || 'HackSphere 2026'}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button

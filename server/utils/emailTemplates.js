@@ -1,18 +1,18 @@
 /**
- * MatruCare AI - Lightweight Spam-Resistant Email Templates
+ * HackSphere - Lightweight Spam-Resistant Email Templates
  * Designed for high deliverability with minimal CSS and clean plain-text alternatives.
- * Complies with strict guidelines: Sender is 'MatruCare AI' <matrucareai@gmail.com>
+ * Complies with strict guidelines: Sender is 'HackSphere' <matrucareai@gmail.com>
  */
 
 /**
  * Account Verification OTP Template
  */
 export const generateOtpEmailTemplate = ({ otp, expiryMinutes = 10 }) => {
-  const text = `MatruCare AI — Hackathon Verification Code
+  const text = `HackSphere — Hackathon Verification Code
 
 Hello,
 
-Thank you for signing up for the MatruCare AI National Innovation Hackathon 2026.
+Thank you for signing up for the HackSphere National Innovation Hackathon 2026.
 
 Your 6-digit verification code is: ${otp}
 
@@ -20,14 +20,14 @@ This code expires in ${expiryMinutes} minutes. For security, please do not share
 
 If you did not initiate this request, you can safely ignore this email.
 
-— MatruCare AI Organizing Committee
+— HackSphere Organizing Committee
 matrucareai@gmail.com`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 16px 0;">MatruCare AI</h2>
+      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 16px 0;">HackSphere</h2>
       <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
-        Thank you for signing up for the <strong>MatruCare AI National Innovation Hackathon 2026</strong>.
+        Thank you for signing up for the <strong>HackSphere National Innovation Hackathon 2026</strong>.
       </p>
       <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
         Please enter the verification code below to verify your account:
@@ -41,7 +41,7 @@ matrucareai@gmail.com`;
       </p>
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
       <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-        MatruCare AI • Full Stack Developer Track • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+        HackSphere • Innovation Arena • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
       </p>
     </div>
   `;
@@ -54,7 +54,7 @@ matrucareai@gmail.com`;
  */
 export const generateRegistrationEmailTemplate = ({
   participantName,
-  eventName = 'MatruCare AI National Innovation Hackathon 2026',
+  eventName = 'HackSphere National Innovation Hackathon 2026',
   domain,
   projectName,
   teamSize,
@@ -68,7 +68,7 @@ export const generateRegistrationEmailTemplate = ({
       ? teamMembers.map((m, i) => `  ${i + 1}. ${m.name} (${m.email})`).join('\n')
       : '  Solo Participation';
 
-  const text = `MatruCare AI Hackathon — Registration Confirmed!
+  const text = `HackSphere Hackathon — Registration Confirmed!
 
 Hello ${participantName},
 
@@ -87,7 +87,7 @@ You can log in to your dashboard to review evaluation updates and manage your su
 https://client-seven-gold-99.vercel.app/dashboard
 
 Best regards,
-MatruCare AI Organizing Committee
+HackSphere Organizing Committee
 matrucareai@gmail.com`;
 
   const membersHtml =
@@ -106,7 +106,7 @@ matrucareai@gmail.com`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">MatruCare AI</h2>
+      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">HackSphere</h2>
       <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">${eventName}</p>
       
       <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 14px 0;">
@@ -137,7 +137,7 @@ matrucareai@gmail.com`;
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
       <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-        MatruCare AI • Full Stack Developer Track • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+        HackSphere • Innovation Arena • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
       </p>
     </div>
   `;
@@ -153,7 +153,7 @@ export const generateTeammateInviteEmailTemplate = ({
   memberEmail = '',
   teamLeadName,
   teamLeadEmail,
-  eventName = 'MatruCare AI National Innovation Hackathon 2026',
+  eventName = 'HackSphere National Innovation Hackathon 2026',
   domain,
   projectName,
   ticketId,
@@ -161,7 +161,7 @@ export const generateTeammateInviteEmailTemplate = ({
 }) => {
   const inviteUrl = `${portalUrl}/team-invite?passId=${ticketId}${memberEmail ? `&email=${encodeURIComponent(memberEmail)}` : ''}`;
 
-  const text = `MatruCare AI Hackathon — Team Invitation
+  const text = `HackSphere Hackathon — Team Invitation
 
 Hello ${memberName},
 
@@ -179,12 +179,12 @@ ${inviteUrl}
 (If you do not have an account yet, you will be prompted to create one with this email address.)
 
 Best regards,
-MatruCare AI Organizing Committee
+HackSphere Organizing Committee
 matrucareai@gmail.com`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">MatruCare AI</h2>
+      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">HackSphere</h2>
       <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">Teammate Invitation Notice</p>
 
       <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 14px 0;">
@@ -218,7 +218,7 @@ matrucareai@gmail.com`;
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
       <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-        MatruCare AI • Full Stack Developer Track • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+        HackSphere • Innovation Arena • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
       </p>
     </div>
   `;
@@ -243,7 +243,7 @@ export const generateStatusUpdateEmailTemplate = ({
   switch (status) {
     case 'Under Review':
       statusMessage =
-        'Your project submission is currently undergoing formal technical review by the MatruCare AI judging committee.';
+        'Your project submission is currently undergoing formal technical review by the HackSphere judging committee.';
       badgeColor = '#0284c7';
       break;
     case 'Shortlisted':
@@ -253,19 +253,19 @@ export const generateStatusUpdateEmailTemplate = ({
       break;
     case 'Finalist':
       statusMessage =
-        '🏆 Outstanding Achievement! Your team has been selected as a NATIONAL FINALIST for the MatruCare AI National Innovation Grand Finale 2026!';
+        '🏆 Outstanding Achievement! Your team has been selected as a NATIONAL FINALIST for the HackSphere National Innovation Grand Finale 2026!';
       badgeColor = '#8b5cf6';
       break;
     case 'Rejected':
       statusMessage =
-        'Thank you for your participation in the MatruCare AI Hackathon. While your project was not selected for advancement, we commend your dedication and technical initiative.';
+        'Thank you for your participation in the HackSphere Hackathon. While your project was not selected for advancement, we commend your dedication and technical initiative.';
       badgeColor = '#64748b';
       break;
     default:
       statusMessage = `Your project status has been updated to "${status}".`;
   }
 
-  const text = `MatruCare AI Hackathon — Project Status Update
+  const text = `HackSphere Hackathon — Project Status Update
 
 Hello ${participantName},
 
@@ -282,12 +282,12 @@ You can log in to your dashboard to review evaluation updates:
 ${portalUrl}/dashboard
 
 Best regards,
-MatruCare AI Organizing Committee
+HackSphere Organizing Committee
 matrucareai@gmail.com`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">MatruCare AI</h2>
+      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 4px 0;">HackSphere</h2>
       <p style="font-size: 13px; color: #64748b; margin: 0 0 16px 0;">Hackathon Evaluation Status Notice</p>
 
       <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 14px 0;">
@@ -321,7 +321,7 @@ matrucareai@gmail.com`;
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
       <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-        MatruCare AI • Evaluation Committee • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+        HackSphere • Evaluation Committee • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
       </p>
     </div>
   `;
