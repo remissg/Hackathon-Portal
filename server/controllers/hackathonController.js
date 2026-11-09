@@ -1,4 +1,5 @@
 import HackathonRegistration from '../models/HackathonRegistration.js';
+import User from '../models/User.js';
 import { sendMail } from '../config/nodemailer.js';
 import {
   generateRegistrationEmailTemplate,
@@ -148,6 +149,7 @@ export const registerHackathon = async (req, res) => {
         cleanTeamMembers.push({
           name: m.name.trim(),
           email: m.email.trim().toLowerCase(),
+          collegeName: m.collegeName ? m.collegeName.trim() : collegeName.trim(),
           status: 'Pending',
         });
       }
@@ -263,10 +265,25 @@ export const getMyEntry = async (req, res) => {
       ],
     });
 
-    const isTeamLead = entry ? entry.userId.toString() === req.user._id.toString() : false;
+    let entryObj = entry ? (entry.toObject ? entry.toObject() : entry) : null;
+    if (entryObj && Array.isArray(entryObj.teamMembers) && entryObj.teamMembers.length > 0) {
+      const memberEmails = entryObj.teamMembers.map((m) => m.email.toLowerCase());
+      const users = await User.find({ email: { $in: memberEmails } }).select('email collegeName');
+      const collegeMap = {};
+      users.forEach((u) => {
+        if (u.collegeName) collegeMap[u.email.toLowerCase()] = u.collegeName;
+      });
+
+      entryObj.teamMembers = entryObj.teamMembers.map((m) => ({
+        ...m,
+        collegeName: m.collegeName || collegeMap[m.email.toLowerCase()] || entryObj.collegeName || '',
+      }));
+    }
+
+    const isTeamLead = entryObj ? entryObj.userId.toString() === req.user._id.toString() : false;
     let memberStatus = isTeamLead ? 'Accepted' : null;
-    if (entry && !isTeamLead && Array.isArray(entry.teamMembers)) {
-      const myMember = entry.teamMembers.find((m) => m.email.toLowerCase() === userEmail);
+    if (entryObj && !isTeamLead && Array.isArray(entryObj.teamMembers)) {
+      const myMember = entryObj.teamMembers.find((m) => m.email.toLowerCase() === userEmail);
       if (myMember) {
         memberStatus = myMember.status || 'Pending';
       }
@@ -274,7 +291,7 @@ export const getMyEntry = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      entry: entry || null,
+      entry: entryObj || null,
       isTeamLead,
       memberStatus,
     });
@@ -341,10 +358,21 @@ export const updateEntry = async (req, res) => {
       const parsedSize = parseInt(teamSize, 10) || 1;
       entry.teamSize = parsedSize;
       if (parsedSize > 1 && Array.isArray(teamMembers)) {
-        entry.teamMembers = teamMembers.map((m) => ({
-          name: m.name ? m.name.trim() : '',
-          email: m.email ? m.email.trim().toLowerCase() : '',
-        }));
+        entry.teamMembers = teamMembers.map((m) => {
+          const existing = (entry.teamMembers || []).find(
+            (em) => em.email?.toLowerCase() === (m.email || '').toLowerCase().trim()
+          );
+          return {
+            name: m.name ? m.name.trim() : '',
+            email: m.email ? m.email.trim().toLowerCase() : '',
+            collegeName: m.collegeName ? m.collegeName.trim() : (existing?.collegeName || entry.collegeName || ''),
+            status: existing?.status || 'Pending',
+            acceptedAt: existing?.acceptedAt || null,
+            isCheckedIn: existing?.isCheckedIn || false,
+            checkedInAt: existing?.checkedInAt || null,
+            checkedInBy: existing?.checkedInBy || null,
+          };
+        });
       } else {
         entry.teamMembers = [];
       }
@@ -645,10 +673,19 @@ export const verifyPass = async (req, res) => {
     const leaderCheckedInAt = entry.leaderCheckedInAt || entry.checkedInAt;
     const leaderCheckedInBy = entry.leaderCheckedInBy || entry.checkedInBy;
 
+    // Fetch teammate profile colleges if not present
+    const memberEmails = (entry.teamMembers || []).map((m) => m.email.toLowerCase());
+    const users = await User.find({ email: { $in: memberEmails } }).select('email collegeName');
+    const collegeMap = {};
+    users.forEach((u) => {
+      if (u.collegeName) collegeMap[u.email.toLowerCase()] = u.collegeName;
+    });
+
     // Teammates Check-in Statuses
     const teamMembers = (entry.teamMembers || []).map((m) => ({
       name: m.name,
       email: m.email,
+      collegeName: m.collegeName || collegeMap[m.email.toLowerCase()] || entry.collegeName || 'Verified Institute',
       status: m.status || 'Pending',
       acceptedAt: m.acceptedAt,
       isCheckedIn: Boolean(m.isCheckedIn),
@@ -997,6 +1034,9 @@ export const respondToInvitation = async (req, res) => {
     entry.teamMembers[memberIndex].status = newStatus;
     if (newStatus === 'Accepted') {
       entry.teamMembers[memberIndex].acceptedAt = new Date();
+      if (req.user.collegeName && req.user.collegeName.trim()) {
+        entry.teamMembers[memberIndex].collegeName = req.user.collegeName.trim();
+      }
     }
 
     await entry.save();

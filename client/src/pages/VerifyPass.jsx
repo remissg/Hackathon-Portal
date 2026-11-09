@@ -606,6 +606,10 @@ const VerifyPass = () => {
                     </div>
                     <p className="text-sm font-bold text-white">{passData.teamLeadName}</p>
                     <p className="text-xs text-slate-400">{passData.teamLeadEmail}</p>
+                    <div className="flex items-center gap-1.5 text-[11px] text-cyan-400 mt-0.5">
+                      <GraduationCap className="w-3 h-3 text-cyan-400 shrink-0" />
+                      <span className="font-medium">{passData.collegeName}</span>
+                    </div>
                     {passData.leaderIsCheckedIn && passData.leaderCheckedInAt && (
                       <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
                         ✓ Admitted at {new Date(passData.leaderCheckedInAt).toLocaleTimeString()}
@@ -684,6 +688,10 @@ const VerifyPass = () => {
                               </span>
                             </div>
                             <p className="text-xs text-slate-400">{m.email}</p>
+                            <div className="flex items-center gap-1.5 text-[11px] text-cyan-400 mt-0.5">
+                              <GraduationCap className="w-3 h-3 text-cyan-400 shrink-0" />
+                              <span className="font-medium">{m.collegeName || passData.collegeName}</span>
+                            </div>
                             {m.isCheckedIn && m.checkedInAt && (
                               <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
                                 ✓ Admitted at {new Date(m.checkedInAt).toLocaleTimeString()}

@@ -172,7 +172,7 @@ const HackathonRegister = () => {
       // Add empty member slots
       const toAdd = requiredExtraMembers - updatedMembers.length;
       for (let i = 0; i < toAdd; i++) {
-        updatedMembers.push({ name: '', email: '' });
+        updatedMembers.push({ name: '', email: '', collegeName: '' });
       }
     } else if (updatedMembers.length > requiredExtraMembers) {
       // Trim excess slots
@@ -721,11 +721,11 @@ const HackathonRegister = () => {
                   {formData.teamMembers.map((member, index) => (
                     <div
                       key={index}
-                      className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center"
+                      className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-3 items-center"
                     >
                       <div>
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                          Member #{index + 2} Full Name
+                          Member #{index + 2} Full Name *
                         </label>
                         <input
                           type="text"
@@ -739,7 +739,7 @@ const HackathonRegister = () => {
 
                       <div>
                         <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                          Member #{index + 2} Email Address
+                          Member #{index + 2} Email *
                         </label>
                         <input
                           type="email"
@@ -747,6 +747,19 @@ const HackathonRegister = () => {
                           value={member.email}
                           onChange={(e) => handleMemberChange(index, 'email', e.target.value)}
                           placeholder="member@example.com"
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-sky-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+                          College / Institute (Cross-College)
+                        </label>
+                        <input
+                          type="text"
+                          value={member.collegeName || ''}
+                          onChange={(e) => handleMemberChange(index, 'collegeName', e.target.value)}
+                          placeholder="Defaults to team college"
                           className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-sky-500"
                         />
                       </div>

@@ -15,6 +15,11 @@ const teamMemberSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, 'Invalid email address for team member'],
     },
+    collegeName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     status: {
       type: String,
       enum: ['Pending', 'Accepted', 'Declined'],
