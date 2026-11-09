@@ -196,54 +196,35 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center gap-2.5">
                 
-                {/* Fast Link to Dashboard */}
-                <Link
-                  to="/dashboard"
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    isActive('/dashboard')
-                      ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30'
-                      : 'bg-slate-900 border border-slate-800 text-slate-200 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Dashboard</span>
-                </Link>
-
-                {/* If Admin: Direct Quick Pill */}
-                {isAdmin && (
+                {/* Role-Specific Primary Dashboard Link */}
+                {isAdmin ? (
                   <Link
                     to="/admin"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       isActive('/admin')
                         ? 'bg-rose-600 text-white shadow-sm shadow-rose-600/30'
                         : 'bg-rose-500/10 text-rose-400 border border-rose-500/30 hover:bg-rose-500/20'
                     }`}
                   >
                     <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Admin</span>
+                    <span>Admin Console</span>
                   </Link>
-                )}
-
-                {/* If Judge / Evaluator: Direct Quick Pill */}
-                {isJudge && (
+                ) : isJudge ? (
                   <Link
                     to="/judge"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       isActive('/judge')
                         ? 'bg-amber-500 text-slate-950 font-bold shadow-sm shadow-amber-500/30'
                         : 'bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20'
                     }`}
                   >
                     <Award className="w-3.5 h-3.5" />
-                    <span>Judge</span>
+                    <span>Judge Workspace</span>
                   </Link>
-                )}
-
-                {/* If Volunteer: Direct Quick Pill to Gate Scanner */}
-                {isVolunteer && (
+                ) : isVolunteer ? (
                   <Link
                     to="/verify-pass"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                       isActive('/verify-pass')
                         ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
                         : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20'
@@ -251,6 +232,18 @@ const Navbar = () => {
                   >
                     <QrCode className="w-3.5 h-3.5" />
                     <span>Gate Scanner</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/dashboard"
+                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      isActive('/dashboard')
+                        ? 'bg-sky-600 text-white shadow-sm shadow-sky-600/30'
+                        : 'bg-slate-900 border border-slate-800 text-slate-200 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Dashboard</span>
                   </Link>
                 )}
 
@@ -386,55 +379,80 @@ const Navbar = () => {
 
                       {/* Dropdown Action Links */}
                       <div className="py-1.5 px-2 space-y-0.5">
-                        <Link
-                          to="/dashboard"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800/70 transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-sky-400" />
-                          <span>Participant Dashboard</span>
-                        </Link>
-
-                        <Link
-                          to="/register-hackathon"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800/70 transition-colors"
-                        >
-                          <PlusCircle className="w-4 h-4 text-indigo-400" />
-                          <span>Register New Team</span>
-                        </Link>
-
-                        {isJudge && (
-                          <Link
-                            to="/judge"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-950/30 transition-colors"
-                          >
-                            <Award className="w-4 h-4 text-amber-400" />
-                            <span>Judge Scoring Rubric</span>
-                          </Link>
-                        )}
-
-                        {(isAdmin || isVolunteer) && (
+                        {isAdmin ? (
+                          <>
+                            <Link
+                              to="/admin"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-950/40 transition-colors"
+                            >
+                              <ShieldAlert className="w-4 h-4 text-rose-400" />
+                              <span>Admin Console</span>
+                            </Link>
+                            <Link
+                              to="/judge"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-amber-300 hover:text-white hover:bg-amber-950/30 transition-colors"
+                            >
+                              <Award className="w-4 h-4 text-amber-400" />
+                              <span>Judge Portal</span>
+                            </Link>
+                            <Link
+                              to="/verify-pass"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/30 transition-colors"
+                            >
+                              <QrCode className="w-4 h-4 text-emerald-400" />
+                              <span>Pass Scanner</span>
+                            </Link>
+                          </>
+                        ) : isJudge ? (
+                          <>
+                            <Link
+                              to="/judge"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-amber-300 hover:text-white hover:bg-amber-950/30 transition-colors"
+                            >
+                              <Award className="w-4 h-4 text-amber-400" />
+                              <span>Judge Scoring Rubric</span>
+                            </Link>
+                            <Link
+                              to="/verify-pass"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/30 transition-colors"
+                            >
+                              <QrCode className="w-4 h-4 text-emerald-400" />
+                              <span>Gate Pass Scanner</span>
+                            </Link>
+                          </>
+                        ) : isVolunteer ? (
                           <Link
                             to="/verify-pass"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-300 hover:text-emerald-200 hover:bg-emerald-950/30 transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-emerald-300 hover:text-white hover:bg-emerald-950/30 transition-colors"
                           >
                             <QrCode className="w-4 h-4 text-emerald-400" />
                             <span>Gate Pass Scanner</span>
                           </Link>
-                        )}
-
-                        {isAdmin && (
-                          <Link
-                            to="/admin"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-300 hover:text-rose-200 hover:bg-rose-950/30 transition-colors"
-                          >
-                            <ShieldAlert className="w-4 h-4 text-rose-400" />
-                            <span>Admin Evaluation Console</span>
-                          </Link>
+                        ) : (
+                          <>
+                            <Link
+                              to="/dashboard"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800/70 transition-colors"
+                            >
+                              <LayoutDashboard className="w-4 h-4 text-sky-400" />
+                              <span>Participant Dashboard</span>
+                            </Link>
+                            <Link
+                              to="/register-hackathon"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-800/70 transition-colors"
+                            >
+                              <PlusCircle className="w-4 h-4 text-indigo-400" />
+                              <span>Register Project</span>
+                            </Link>
+                          </>
                         )}
                       </div>
 
@@ -551,52 +569,53 @@ const Navbar = () => {
                     </span>
                   )}
                 </div>
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-sky-600 text-white"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Link>
-                {isAdmin && (
+                {isAdmin ? (
                   <Link
                     to="/admin"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-rose-600 text-white"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-rose-600 text-white shadow-sm"
                   >
                     <ShieldAlert className="w-4 h-4" />
-                    Admin Evaluation Console
+                    Admin Console
                   </Link>
-                )}
-                {isJudge && (
+                ) : isJudge ? (
                   <Link
                     to="/judge"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-amber-500 text-slate-950 font-bold"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-amber-500 text-slate-950 font-bold"
                   >
                     <Award className="w-4 h-4" />
                     Judge Scoring Workspace
                   </Link>
-                )}
-                {(isAdmin || isVolunteer) && (
+                ) : isVolunteer ? (
                   <Link
                     to="/verify-pass"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white font-bold"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white font-bold"
                   >
                     <QrCode className="w-4 h-4" />
                     Gate Pass Scanner
                   </Link>
+                ) : (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-sky-600 text-white"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      Candidate Dashboard
+                    </Link>
+                    <Link
+                      to="/register-hackathon"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-slate-900 border border-slate-800 text-slate-200"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      Register Project
+                    </Link>
+                  </>
                 )}
-                <Link
-                  to="/register-hackathon"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-slate-900 border border-slate-800 text-slate-200"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  Register Team
-                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-950/30"

@@ -42,7 +42,17 @@ const Login = () => {
       setLoading(true);
       const res = await login(formData.email.trim().toLowerCase(), formData.password);
       if (res.success) {
-        navigate(from, { replace: true });
+        // Role-based destination routing
+        const userRole = res.user?.role;
+        let defaultPath = '/dashboard';
+        if (userRole === 'admin') defaultPath = '/admin';
+        else if (userRole === 'evaluator') defaultPath = '/judge';
+        else if (userRole === 'volunteer') defaultPath = '/verify-pass';
+        else defaultPath = '/dashboard';
+
+        // Only redirect to 'from' if it was explicitly non-dashboard or matches role
+        const destination = from && from !== '/dashboard' ? from : defaultPath;
+        navigate(destination, { replace: true });
       } else {
         setError(res.message || 'Login failed');
       }

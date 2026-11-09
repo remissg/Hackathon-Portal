@@ -117,7 +117,23 @@ const Dashboard = () => {
     isJustRegistered ? 'Congratulations! Your hackathon registration has been confirmed and emailed.' : ''
   );
 
+  // Enforce RBAC Role Guard: Non-users (admin, evaluator, volunteer) must not view candidate participant dashboard
+  useEffect(() => {
+    if (user && user.role && user.role !== 'user') {
+      if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'evaluator') {
+        navigate('/judge', { replace: true });
+      } else if (user.role === 'volunteer') {
+        navigate('/verify-pass', { replace: true });
+      }
+    }
+  }, [user, navigate]);
+
   const fetchMyEntry = async () => {
+    if (user && user.role && user.role !== 'user') {
+      return;
+    }
     try {
       setLoading(true);
       const res = await api.get('/hackathon/my-entry');
@@ -135,11 +151,13 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    fetchMyEntry();
+    if (!user || user.role === 'user') {
+      fetchMyEntry();
+    }
     if (searchParams.get('already_registered') === 'true') {
       setNotification('You already have an active hackathon registration. You can edit or manage your submission below.');
     }
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   const handleEdit = () => {
     navigate('/register-hackathon', { state: { editEntry: entry } });
@@ -276,6 +294,18 @@ const Dashboard = () => {
     !entry ||
     entry.userId?.toString() === user?.id ||
     entry.email?.toLowerCase() === user?.email?.toLowerCase();
+
+  // If a non-user role opens /dashboard, do not show candidate UI
+  if (user && user.role && user.role !== 'user') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-400 text-sm">Redirecting to your authorized dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 sm:px-6 lg:px-8">
