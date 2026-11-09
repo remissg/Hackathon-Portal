@@ -486,7 +486,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row w-full max-w-full min-w-0 overflow-x-hidden">
       {/* Mobile Sidebar Overlay Backdrop */}
       {sidebarOpen && (
         <div
@@ -808,7 +808,7 @@ const AdminDashboard = () => {
       <div
         className={`${
           isCollapsed ? 'md:pl-20' : 'md:pl-72'
-        } flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out`}
+        } flex-1 min-w-0 max-w-full w-full flex flex-col min-h-screen transition-all duration-300 ease-in-out`}
       >
         {/* Sticky Top Header */}
         <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3.5 flex items-center justify-between">
@@ -886,7 +886,7 @@ const AdminDashboard = () => {
         </header>
 
         {/* Content Body */}
-        <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1">
+        <main className="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 min-w-0 max-w-full w-full">
           {/* Toast Notification */}
           {notification && (
             <div className="fixed top-20 right-6 z-50 flex items-center gap-3 bg-sky-950/90 border border-sky-500/50 text-white px-5 py-3.5 rounded-xl shadow-2xl backdrop-blur-md animate-fade-in">
@@ -907,11 +907,11 @@ const AdminDashboard = () => {
           {activeTab === 'submissions' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {/* Card 1: Total Registrations */}
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition-all">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-full blur-2xl group-hover:bg-sky-500/10 transition-all" />
+              <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm relative overflow-hidden group hover:border-sky-500/40 transition-all shadow-lg">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-all pointer-events-none" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Submissions</span>
-                  <div className="p-2.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">Total Submissions</span>
+                  <div className="p-2.5 rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/30 shadow-sm shadow-sky-500/10">
                     <FileSpreadsheet className="w-4 h-4" />
                   </div>
                 </div>
@@ -919,19 +919,19 @@ const AdminDashboard = () => {
                   <span className="text-3xl font-extrabold text-white">
                     {stats?.totalRegistrations ?? registrations.length}
                   </span>
-                  <span className="text-xs text-slate-400">projects</span>
+                  <span className="text-xs text-sky-400 font-medium">projects</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-slate-400 mt-2 font-medium">
                   {stats?.soloCount || 0} Solo Innovators • {stats?.teamCount || 0} Teams
                 </p>
               </div>
 
               {/* Card 2: Total Participants */}
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition-all">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all" />
+              <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm relative overflow-hidden group hover:border-indigo-500/40 transition-all shadow-lg">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all pointer-events-none" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Innovators</span>
-                  <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">Total Innovators</span>
+                  <div className="p-2.5 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 shadow-sm shadow-indigo-500/10">
                     <Users className="w-4 h-4" />
                   </div>
                 </div>
@@ -939,17 +939,17 @@ const AdminDashboard = () => {
                   <span className="text-3xl font-extrabold text-white">
                     {stats?.totalParticipants ?? registrations.reduce((acc, r) => acc + (r.teamSize || 1), 0)}
                   </span>
-                  <span className="text-xs text-slate-400">candidates</span>
+                  <span className="text-xs text-indigo-400 font-medium">candidates</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Across dynamic 1–5 member teams</p>
+                <p className="text-xs text-slate-400 mt-2 font-medium">Across dynamic 1–5 member teams</p>
               </div>
 
               {/* Card 3: Shortlisted / Finalists */}
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition-all">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:bg-emerald-500/10 transition-all" />
+              <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm relative overflow-hidden group hover:border-emerald-500/40 transition-all shadow-lg">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Shortlisted / Finalists</span>
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">Shortlisted / Finalists</span>
+                  <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
                     <Award className="w-4 h-4" />
                   </div>
                 </div>
@@ -959,17 +959,17 @@ const AdminDashboard = () => {
                   </span>
                   <span className="text-xs text-emerald-400 font-medium">advanced</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-slate-400 mt-2 font-medium">
                   {stats?.statusCounts?.Shortlisted || 0} Shortlisted • {stats?.statusCounts?.Finalist || 0} Finalists
                 </p>
               </div>
 
               {/* Card 4: Under Review */}
-              <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-sm relative overflow-hidden group hover:border-slate-700 transition-all">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:bg-amber-500/10 transition-all" />
+              <div className="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm relative overflow-hidden group hover:border-amber-500/40 transition-all shadow-lg">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all pointer-events-none" />
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Under Review</span>
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">Under Review</span>
+                  <div className="p-2.5 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-sm shadow-amber-500/10">
                     <Clock className="w-4 h-4" />
                   </div>
                 </div>
@@ -979,7 +979,7 @@ const AdminDashboard = () => {
                   </span>
                   <span className="text-xs text-amber-400 font-medium">in evaluation</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className="text-xs text-slate-400 mt-2 font-medium">
                   {stats?.statusCounts?.Submitted || 0} pending initial review
                 </p>
               </div>
@@ -989,7 +989,7 @@ const AdminDashboard = () => {
         {activeTab === 'submissions' ? (
           <>
             {/* Filter & Search Bar */}
-            <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-4">
+            <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4 shadow-lg w-full max-w-full">
           <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
             {/* Search Input */}
             <div className="relative flex-1">
@@ -1063,7 +1063,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Submissions Data Table */}
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden shadow-xl">
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl w-full max-w-full">
           <div className="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <FileText className="w-4 h-4 text-sky-400" />
@@ -1086,8 +1086,8 @@ const AdminDashboard = () => {
               <p className="text-xs text-slate-500">Try adjusting your search terms or filters above.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[950px]">
                 <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800/80">
                   <tr>
                     <th scope="col" className="px-5 py-3.5">ID / Date</th>
@@ -1327,7 +1327,7 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        <div className="rounded-2xl bg-slate-900/60 border border-slate-800/80 overflow-hidden shadow-xl">
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden shadow-xl w-full max-w-full">
           <div className="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               <UserCog className="w-4 h-4 text-indigo-400" />
@@ -1346,8 +1346,8 @@ const AdminDashboard = () => {
           ) : filteredUsers.length === 0 ? (
             <div className="p-16 text-center text-slate-400">No registered users found matching query.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[750px]">
                 <thead className="bg-slate-950/60 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800/80">
                   <tr>
                     <th className="px-5 py-3.5">User Profile</th>
