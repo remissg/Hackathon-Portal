@@ -59,7 +59,7 @@
 6. **Live Public Competition Leaderboard (`/leaderboard`)**:
    - Interactive leaderboard with track filtering, average judge scores, evaluation count metrics, and Gold/Silver/Bronze podium styling.
 7. **Enterprise Admin Governance Console (`/admin/*`)**:
-   - Modular multi-page console: Submissions (`/admin`), Problem Statements (`/admin/problems`), Access & Role RBAC (`/admin/roles`), and Admin Security (`/admin/security`).
+   - Modular multi-page console: Submissions (`/admin`), Problem Statements (`/admin/problems`), and Access & Role RBAC (`/admin/roles`), with sidebar role deactivation for Co-Admins.
    - Collapsible icon sidebar (`Ctrl+B` shortcut + `localStorage` persistence) with live badge counts.
    - **Dedicated Staff Provisioning & Restricted Candidate Removal**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`). Competing candidates self-register via OTP and stay isolated from staff roles. Account deletion (`DELETE /api/user/admin/:id`) enforces strict safeguards: any candidate linked to a `HackathonRegistration` (lead or teammate) is permanently locked, OTP-verified candidates are protected from routine Co-Admin deletion (Super Admin restricted purge only), and every removal requires a 3-factor audit confirmation modal (exact email, `"PERMANENTLY REMOVE"` phrase, and >= 10-character reason).
    - **Role Deactivation & Self-Service Security**: Administrators can deactivate or reactivate staff access with 1 click, and staff members can securely change their password or deactivate their own role.
@@ -171,8 +171,8 @@ Hackathon Portal/
 │   │   │   └── pages/              # GateScannerPage, VolunteerSecurityPage
 │   │   ├── admin/                  # Admin Governance Console (/admin/*)
 │   │   │   ├── layout/             # AdminLayout, AdminSidebar (collapsible + Ctrl+B)
-│   │   │   ├── components/         # KpiSummaryCards, SubmissionDetailModal, ProblemFormModal, ProvisionStaffModal
-│   │   │   └── pages/              # AdminSubmissionsPage, AdminProblemsPage, AdminStaffRolesPage, AdminSecurityPage
+│   │   │   ├── components/         # KpiSummaryCards, SubmissionDetailModal, ProblemFormModal, ProvisionStaffModal, RestrictedRemoveCandidateModal, DeactivateAdminRoleModal
+│   │   │   └── pages/              # AdminSubmissionsPage, AdminProblemsPage, AdminStaffRolesPage
 │   │   ├── App.jsx                 # React.lazy() nested multi-portal router
 │   │   ├── main.jsx                # React root mount
 │   │   └── index.css               # Tailwind directives, custom scrollbars, print media

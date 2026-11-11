@@ -228,13 +228,6 @@ const AdminLayout = () => {
         isSubmissions: false,
       };
     }
-    if (location.pathname.includes('/admin/security')) {
-      return {
-        crumb: 'Admin Security',
-        title: 'Administrator Credentials & Governance',
-        isSubmissions: false,
-      };
-    }
     return {
       crumb: 'Project Submissions',
       title: 'Candidate Submissions & Evaluation',
@@ -371,3 +364,4 @@ const AdminLayout = () => {
 };
 
 export default AdminLayout;
+

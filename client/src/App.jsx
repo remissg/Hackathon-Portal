@@ -35,7 +35,6 @@ const VolunteerSecurityPage = lazy(() => import('./volunteer/pages/VolunteerSecu
 const AdminSubmissionsPage = lazy(() => import('./admin/pages/AdminSubmissionsPage'));
 const AdminProblemsPage = lazy(() => import('./admin/pages/AdminProblemsPage'));
 const AdminStaffRolesPage = lazy(() => import('./admin/pages/AdminStaffRolesPage'));
-const AdminSecurityPage = lazy(() => import('./admin/pages/AdminSecurityPage'));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6">
@@ -124,7 +123,7 @@ function App() {
               <Route index element={<AdminSubmissionsPage />} />
               <Route path="problems" element={<AdminProblemsPage />} />
               <Route path="roles" element={<AdminStaffRolesPage />} />
-              <Route path="security" element={<AdminSecurityPage />} />
+              <Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
 
             {/* Fallback */}

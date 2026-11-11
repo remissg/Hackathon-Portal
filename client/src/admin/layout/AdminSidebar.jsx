@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
+import DeactivateAdminRoleModal from '../components/DeactivateAdminRoleModal';
 import {
   ArrowRight,
   Award,
   ExternalLink,
   FileText,
   Globe,
-  Key,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
+  Power,
   QrCode,
   ShieldAlert,
   Target,
@@ -27,6 +28,9 @@ const AdminSidebar = ({
   user,
   onLogout,
 }) => {
+  const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const isSuperAdmin =
+    user?.email?.trim().toLowerCase() === 'matrucareai@gmail.com';
   return (
     <>
       {/* Mobile Sidebar Overlay Backdrop */}
@@ -213,26 +217,6 @@ const AdminSidebar = ({
                   </>
                 )}
               </NavLink>
-
-              <NavLink
-                to="/admin/security"
-                onClick={() => setSidebarOpen(false)}
-                title="Admin Security & Access"
-                className={({ isActive }) =>
-                  `w-full flex items-center ${
-                    isCollapsed ? 'md:justify-center md:px-0' : 'justify-between px-3.5'
-                  } py-2.5 rounded-xl text-xs font-semibold transition group relative ${
-                    isActive
-                      ? 'bg-rose-600 text-white font-bold shadow-md shadow-rose-600/30'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                  }`
-                }
-              >
-                <div className={`flex items-center ${isCollapsed ? 'md:gap-0' : 'gap-3'}`}>
-                  <Key className="w-4 h-4 flex-shrink-0" />
-                  <span className={isCollapsed ? 'md:hidden' : 'block'}>Admin Security</span>
-                </div>
-              </NavLink>
             </div>
           </div>
 
@@ -343,20 +327,47 @@ const AdminSidebar = ({
             </div>
           </div>
 
-          <button
-            onClick={onLogout}
-            title="Sign Out"
-            className={`w-full flex items-center justify-center gap-2 py-2 ${
-              isCollapsed ? 'md:px-0' : 'px-3'
-            } rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-800/50 text-xs font-semibold transition`}
-          >
-            <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className={isCollapsed ? 'md:hidden' : 'block'}>Sign Out</span>
-          </button>
+          <div className="space-y-2">
+            {user && !isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSidebarOpen(false);
+                  setDeactivateModalOpen(true);
+                }}
+                title="Deactivate My Co-Admin Role"
+                className={`w-full flex items-center justify-center gap-2 py-2 ${
+                  isCollapsed ? 'md:px-0' : 'px-3'
+                } rounded-xl bg-amber-950/30 hover:bg-rose-950/50 text-amber-300 hover:text-rose-300 border border-amber-800/40 hover:border-rose-800/60 text-xs font-semibold transition`}
+              >
+                <Power className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className={isCollapsed ? 'md:hidden' : 'block'}>Deactivate Role</span>
+              </button>
+            )}
+
+            <button
+              onClick={onLogout}
+              title="Sign Out"
+              className={`w-full flex items-center justify-center gap-2 py-2 ${
+                isCollapsed ? 'md:px-0' : 'px-3'
+              } rounded-xl bg-slate-900 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-800 hover:border-rose-800/50 text-xs font-semibold transition`}
+            >
+              <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className={isCollapsed ? 'md:hidden' : 'block'}>Sign Out</span>
+            </button>
+          </div>
         </div>
       </aside>
+
+      <DeactivateAdminRoleModal
+        isOpen={deactivateModalOpen}
+        onClose={() => setDeactivateModalOpen(false)}
+        user={user}
+        onLogout={onLogout}
+      />
     </>
   );
 };
 
 export default AdminSidebar;
+
