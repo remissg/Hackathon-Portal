@@ -166,14 +166,51 @@ export const updateProfile = async (req, res) => {
  */
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({})
-      .select('-password')
-      .sort({ createdAt: -1 });
+    const [users, registrations] = await Promise.all([
+      User.find({}).select('-password').sort({ createdAt: -1 }).lean(),
+      HackathonRegistration.find({})
+        .select('userId email projectName teamMembers.email')
+        .lean(),
+    ]);
+
+    const submissionByUserId = new Map();
+    const submissionByEmail = new Map();
+
+    for (const reg of registrations) {
+      const projectName = reg.projectName || 'Active Team Registration';
+      if (reg.userId) {
+        submissionByUserId.set(reg.userId.toString(), projectName);
+      }
+      if (reg.email) {
+        submissionByEmail.set(reg.email.trim().toLowerCase(), projectName);
+      }
+      if (Array.isArray(reg.teamMembers)) {
+        for (const member of reg.teamMembers) {
+          if (member?.email) {
+            submissionByEmail.set(member.email.trim().toLowerCase(), projectName);
+          }
+        }
+      }
+    }
+
+    const enrichedUsers = users.map((u) => {
+      const normalizedEmail = u.email ? u.email.trim().toLowerCase() : '';
+      const linkedProjectName =
+        submissionByUserId.get(u._id.toString()) ||
+        submissionByEmail.get(normalizedEmail) ||
+        null;
+
+      return {
+        ...u,
+        hasSubmission: Boolean(linkedProjectName),
+        linkedProjectName,
+      };
+    });
 
     return res.status(200).json({
       success: true,
-      count: users.length,
-      users,
+      count: enrichedUsers.length,
+      users: enrichedUsers,
     });
   } catch (error) {
     console.error('[Get All Users Error]:', error);
@@ -446,7 +483,7 @@ export const deactivateMyRole = async (req, res) => {
 };
 
 /**
- * @desc    Admin removes an unlinked/test user account
+ * @desc    Restricted removal of unlinked/unverified candidate accounts
  * @route   DELETE /api/user/admin/:id
  * @access  Private/Admin
  */
@@ -457,7 +494,11 @@ export const deleteUserAccount = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User account not found' });
     }
 
-    if (targetUser.email.toLowerCase() === 'matrucareai@gmail.com') {
+    const targetEmail = (targetUser.email || '').trim().toLowerCase();
+    const operatorEmail = (req.user.email || '').trim().toLowerCase();
+    const isOperatorSuperAdmin = operatorEmail === 'matrucareai@gmail.com';
+
+    if (targetEmail === 'matrucareai@gmail.com') {
       return res.status(403).json({
         success: false,
         message: 'The primary Super Admin account is permanently protected and cannot be deleted',
@@ -471,20 +512,76 @@ export const deleteUserAccount = async (req, res) => {
       });
     }
 
-    const hasRegistration = await HackathonRegistration.exists({ userId: targetUser._id });
-    if (hasRegistration) {
+    if (targetUser.role && targetUser.role !== 'user') {
       return res.status(400).json({
         success: false,
-        message: `Cannot delete account "${targetUser.email}" because it owns an active Hackathon Registration. Remove or withdraw their submission first.`,
+        message: 'Staff role accounts cannot be deleted directly. Use Deactivate Access instead.',
       });
     }
 
-    await Otp.deleteMany({ email: targetUser.email.toLowerCase() });
+    const escapedEmail = targetEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const emailRegex = new RegExp(`^${escapedEmail}$`, 'i');
+
+    const linkedRegistration = await HackathonRegistration.findOne({
+      $or: [
+        { userId: targetUser._id },
+        { email: emailRegex },
+        { 'teamMembers.email': emailRegex },
+      ],
+    }).select('projectName');
+
+    if (linkedRegistration) {
+      return res.status(403).json({
+        success: false,
+        message: `Locked: "${targetUser.email}" is linked to active team registration "${
+          linkedRegistration.projectName || 'Hackathon Submission'
+        }". Withdraw or remove that submission first.`,
+      });
+    }
+
+    if (targetUser.isVerified && !isOperatorSuperAdmin) {
+      return res.status(403).json({
+        success: false,
+        message:
+          'OTP-verified candidate accounts are locked against routine removal. Only the Super Admin may execute a restricted purge.',
+      });
+    }
+
+    const { confirmEmail, confirmationPhrase, reason } = req.body || {};
+
+    if (!confirmEmail || confirmEmail.trim().toLowerCase() !== targetEmail) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification failed: typed email does not match the candidate account email.',
+      });
+    }
+
+    if (!confirmationPhrase || confirmationPhrase.trim() !== 'PERMANENTLY REMOVE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification failed: confirmation phrase must exactly match "PERMANENTLY REMOVE".',
+      });
+    }
+
+    if (!reason || reason.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification failed: provide an audit reason of at least 10 characters.',
+      });
+    }
+
+    await Otp.deleteMany({ email: targetEmail });
     await User.deleteOne({ _id: targetUser._id });
+
+    console.warn(
+      `[AUDIT] ${isOperatorSuperAdmin ? 'Super Admin' : 'Admin'} (${operatorEmail}) permanently removed candidate "${targetUser.fullName}" (${targetEmail}) [verified=${Boolean(
+        targetUser.isVerified
+      )}]. Reason: ${reason.trim()}`
+    );
 
     return res.status(200).json({
       success: true,
-      message: `Account "${targetUser.fullName}" (${targetUser.email}) has been permanently removed.`,
+      message: `Candidate account "${targetUser.fullName}" (${targetUser.email}) has been permanently removed.`,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

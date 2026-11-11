@@ -3,11 +3,13 @@ import { Link, useOutletContext } from 'react-router-dom';
 import api from '../../shared/services/api';
 import { useAuth } from '../../shared/context/AuthContext';
 import ProvisionStaffModal from '../components/ProvisionStaffModal';
+import RestrictedRemoveCandidateModal from '../components/RestrictedRemoveCandidateModal';
 import {
   Award,
   CheckCircle,
   ExternalLink,
   GraduationCap,
+  Lock,
   Power,
   QrCode,
   RefreshCw,
@@ -22,11 +24,15 @@ import {
 
 const AdminStaffRolesPage = () => {
   const { user: currentUser } = useAuth();
+  const isOperatorSuperAdmin =
+    currentUser?.email?.trim().toLowerCase() === 'matrucareai@gmail.com';
   const { users, setUsers, loadingUsers, fetchUsers, showToast } = useOutletContext();
 
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [staffFilterTab, setStaffFilterTab] = useState('staff');
-  const [deletingUserId, setDeletingUserId] = useState(null);
+  const [removeTargetUser, setRemoveTargetUser] = useState(null);
+  const [removingCandidate, setRemovingCandidate] = useState(false);
+  const [removeCandidateError, setRemoveCandidateError] = useState('');
   const [togglingActiveId, setTogglingActiveId] = useState(null);
 
   const [provisionModalOpen, setProvisionModalOpen] = useState(false);
@@ -151,27 +157,31 @@ const AdminStaffRolesPage = () => {
     }
   };
 
-  const handleDeleteUserAccount = async (targetUser) => {
-    if (
-      !window.confirm(
-        `Permanently remove account for "${targetUser.fullName}" (${targetUser.email})? This cannot be undone.`
-      )
-    ) {
-      return;
-    }
+  const handleOpenRemoveCandidateModal = (targetUser) => {
+    setRemoveCandidateError('');
+    setRemoveTargetUser(targetUser);
+  };
 
-    setDeletingUserId(targetUser._id);
+  const handleConfirmRemoveCandidate = async ({ confirmEmail, confirmationPhrase, reason }) => {
+    if (!removeTargetUser) return;
+    setRemovingCandidate(true);
+    setRemoveCandidateError('');
     try {
-      const res = await api.delete(`/user/admin/${targetUser._id}`);
+      const res = await api.delete(`/user/admin/${removeTargetUser._id}`, {
+        data: { confirmEmail, confirmationPhrase, reason },
+      });
       if (res.data.success) {
-        setUsers((prev) => prev.filter((u) => u._id !== targetUser._id));
-        showToast(res.data.message || `Account "${targetUser.email}" removed.`);
+        setUsers((prev) => prev.filter((u) => u._id !== removeTargetUser._id));
+        showToast(res.data.message || `Account "${removeTargetUser.email}" removed.`);
+        setRemoveTargetUser(null);
       }
     } catch (err) {
       console.error('[Delete Account Error]:', err);
-      alert(err.response?.data?.message || 'Failed to delete user account.');
+      setRemoveCandidateError(
+        err.response?.data?.message || 'Failed to remove candidate account.'
+      );
     } finally {
-      setDeletingUserId(null);
+      setRemovingCandidate(false);
     }
   };
 
@@ -304,7 +314,7 @@ const AdminStaffRolesPage = () => {
             <div>
               <h4 className="font-bold text-white text-sm">Registered Candidate Innovators</h4>
               <p className="text-slate-300 mt-1 leading-relaxed">
-                Candidates register themselves publicly and verify their accounts using a 6-digit email OTP. Competing candidate accounts remain strictly separated from event staff. Unlinked or inactive test candidate accounts can be permanently removed below.
+                Candidates register themselves publicly and verify their accounts using a 6-digit email OTP. Active team members linked to a project registration are permanently locked against deletion, and OTP-verified candidates are protected from routine removal. Only unlinked accounts may be purged via strict 3-factor audit confirmation.
               </p>
             </div>
           </div>
@@ -506,17 +516,48 @@ const AdminStaffRolesPage = () => {
                                 <span>{isActive ? 'Deactivate' : 'Reactivate'}</span>
                               </button>
                             </div>
+                          ) : u.hasSubmission ? (
+                            <div
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-950/30 text-emerald-300 border border-emerald-800/40 ml-auto cursor-not-allowed"
+                              title={
+                                u.linkedProjectName
+                                  ? `Protected: Linked to team registration "${u.linkedProjectName}"`
+                                  : 'Protected: Linked to an active hackathon submission'
+                              }
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                              <span>Active Team • Protected</span>
+                            </div>
+                          ) : u.isVerified ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <span
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800/80 text-slate-300 border border-slate-700"
+                                title="OTP-verified candidate accounts are locked against routine deletion"
+                              >
+                                <Lock className="w-3.5 h-3.5 text-emerald-400" />
+                                <span>Verified • Protected</span>
+                              </span>
+                              {isOperatorSuperAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenRemoveCandidateModal(u)}
+                                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-rose-950/60 text-slate-500 hover:text-rose-300 border border-slate-800 hover:border-rose-800/60 transition"
+                                  title="Super Admin Restricted Purge (requires 3-factor confirmation)"
+                                  aria-label={`Restricted purge for ${u.email}`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
                           ) : (
-                            /* Candidate row: Strictly isolated from staff appointment; allow safe account cleanup */
                             <button
                               type="button"
-                              disabled={deletingUserId === u._id}
-                              onClick={() => handleDeleteUserAccount(u)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 flex items-center gap-1.5 ml-auto transition disabled:opacity-50"
-                              title="Remove unlinked or test candidate account"
+                              onClick={() => handleOpenRemoveCandidateModal(u)}
+                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-950/30 hover:bg-rose-950/50 text-amber-300 hover:text-rose-300 border border-amber-800/50 hover:border-rose-800/60 flex items-center gap-1.5 ml-auto transition"
+                              title="Remove unverified Pending OTP candidate (requires 3-factor confirmation)"
                             >
-                              <Trash2 className={`w-3.5 h-3.5 ${deletingUserId === u._id ? 'animate-pulse' : ''}`} />
-                              <span>{deletingUserId === u._id ? 'Removing...' : 'Remove Account'}</span>
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Remove Unverified</span>
                             </button>
                           )}
                         </td>
@@ -544,6 +585,19 @@ const AdminStaffRolesPage = () => {
         onGeneratePassword={generateRandomPassword}
         onOpenProvisionModal={handleOpenProvisionModal}
         onSubmit={handleProvisionStaff}
+      />
+
+      <RestrictedRemoveCandidateModal
+        targetUser={removeTargetUser}
+        onClose={() => {
+          if (!removingCandidate) {
+            setRemoveCandidateError('');
+            setRemoveTargetUser(null);
+          }
+        }}
+        onConfirm={handleConfirmRemoveCandidate}
+        removing={removingCandidate}
+        error={removeCandidateError}
       />
     </div>
   );

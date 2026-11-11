@@ -61,7 +61,7 @@
 7. **Enterprise Admin Governance Console (`/admin/*`)**:
    - Modular multi-page console: Submissions (`/admin`), Problem Statements (`/admin/problems`), Access & Role RBAC (`/admin/roles`), and Admin Security (`/admin/security`).
    - Collapsible icon sidebar (`Ctrl+B` shortcut + `localStorage` persistence) with live badge counts.
-   - **Dedicated Staff Provisioning & Candidate Isolation**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`). Competing candidates self-register via OTP and stay isolated from staff roles, with safe `"Remove Account"` cleanup (`DELETE /api/user/admin/:id`) for unlinked/test accounts.
+   - **Dedicated Staff Provisioning & Restricted Candidate Removal**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`). Competing candidates self-register via OTP and stay isolated from staff roles. Account deletion (`DELETE /api/user/admin/:id`) enforces strict safeguards: any candidate linked to a `HackathonRegistration` (lead or teammate) is permanently locked, OTP-verified candidates are protected from routine Co-Admin deletion (Super Admin restricted purge only), and every removal requires a 3-factor audit confirmation modal (exact email, `"PERMANENTLY REMOVE"` phrase, and >= 10-character reason).
    - **Role Deactivation & Self-Service Security**: Administrators can deactivate or reactivate staff access with 1 click, and staff members can securely change their password or deactivate their own role.
    - Real-time KPI metric cards, track distribution analytics, live status stepper controls, and 1-click CSV data export.
 
@@ -350,7 +350,7 @@ In strict accordance with assignment requirements:
 | `PUT` | `/api/user/update` | Private | Updates academic details, developer links, skills, bio, or changes password |
 | `POST` | `/api/user/admin/provision-staff` | Private (Admin) | Provisions dedicated non-candidate staff (Judge, Volunteer, Co-Admin); rejects candidate email conversion |
 | `PATCH` | `/api/user/admin/:id/toggle-active` | Private (Admin) | Toggles staff account active or deactivated access status (protects Super Admin) |
-| `DELETE` | `/api/user/admin/:id` | Private (Admin) | Permanently removes unlinked or test accounts (blocks Super Admin, self, and linked registrations) |
+| `DELETE` | `/api/user/admin/:id` | Private (Admin) | Restricted candidate removal with team-link lock, Super-Admin lock for verified users, and 3-factor audit confirmation |
 | `POST` | `/api/user/deactivate-role` | Private (Staff) | Self-service staff role deactivation (logs out user and revokes active staff session) |
 
 ---
