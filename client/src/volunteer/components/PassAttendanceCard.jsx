@@ -31,9 +31,9 @@ const PassAttendanceCard = ({
           <div className="bg-[#0b132b]/95 border-2 border-emerald-500/40 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-md">
             
             {/* Top Verification Seal Header */}
-            <div className="bg-gradient-to-r from-emerald-950/80 via-cyan-950/70 to-slate-900 border-b border-emerald-500/30 px-6 py-5 flex items-center justify-between gap-4">
+            <div className="bg-gradient-to-r from-emerald-950/80 via-cyan-950/70 to-slate-900 border-b border-emerald-500/30 px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 shrink-0">
                   <CheckCircle2 className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
@@ -46,20 +46,20 @@ const PassAttendanceCard = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-900 border border-slate-700 text-slate-300">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-slate-900 border border-slate-700 text-slate-300">
                   Attendance: <strong className="text-cyan-400">{passData.admittedMembers || (passData.isCheckedIn ? 1 : 0)}</strong> / {passData.totalMembers || (1 + (passData.teamMembers?.length || 0))} Present
                 </span>
                 {passData.admittedMembers === passData.totalMembers && passData.totalMembers > 0 ? (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                     ✓ Full Team Inside
                   </span>
                 ) : passData.admittedMembers > 0 ? (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
                     Partial Attendance
                   </span>
                 ) : (
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                  <span className="px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
                     Valid for Gate Entry
                   </span>
                 )}
@@ -67,21 +67,21 @@ const PassAttendanceCard = ({
             </div>
 
             {/* Main Pass Content */}
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="p-4 sm:p-8 space-y-5 sm:space-y-6">
 
               {/* Targeted Late Member Banner (if scanned via personal member pass) */}
               {passData.targetedMember && (
-                <div className="p-4 rounded-2xl bg-cyan-950/80 border-2 border-cyan-400 text-cyan-100 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl animate-fade-in">
-                  <div className="flex items-center gap-3">
+                <div className="p-4 rounded-2xl bg-cyan-950/80 border-2 border-cyan-400 text-cyan-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl animate-fade-in">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300 font-bold shrink-0">
                       <Zap className="w-5 h-5 text-cyan-400" />
                     </div>
-                    <div>
-                      <span className="text-[10px] font-extrabold tracking-wider uppercase text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[10px] font-extrabold tracking-wider uppercase text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800 inline-block">
                         Late Arrival Member Pass Scanned
                       </span>
-                      <h3 className="text-base font-bold text-white mt-1">{passData.targetedMember.name}</h3>
-                      <p className="text-xs text-slate-300 font-mono">
+                      <h3 className="text-base font-bold text-white mt-1 truncate">{passData.targetedMember.name}</h3>
+                      <p className="text-xs text-slate-300 font-mono break-all">
                         {passData.targetedMember.email} • {passData.targetedMember.isLeader ? 'Team Leader' : 'Team Member'}
                       </p>
                     </div>
@@ -91,7 +91,7 @@ const PassAttendanceCard = ({
                       type="button"
                       onClick={() => onCheckInToggle('admit-member', passData.targetedMember.email)}
                       disabled={checkingIn}
-                      className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shrink-0 ${
+                      className={`w-full sm:w-auto justify-center min-h-[42px] px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shrink-0 ${
                         passData.targetedMember.isCheckedIn
                           ? 'bg-slate-800 text-emerald-400 border border-emerald-500/40 cursor-default'
                           : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black'
@@ -114,19 +114,19 @@ const PassAttendanceCard = ({
               )}
               
               {/* Pass ID Banner with Copy */}
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
-                <div>
+              <div className="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-slate-900/90 border border-slate-800">
+                <div className="min-w-0">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
                     Admission Pass ID
                   </span>
-                  <span className="font-mono text-cyan-400 font-extrabold text-xl tracking-wider">
+                  <span className="font-mono text-cyan-400 font-extrabold text-lg sm:text-xl tracking-wider break-all">
                     {passData.ticketId}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => onCopyId(passData.ticketId)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition"
                 >
                   {copied ? (
                     <>
@@ -147,24 +147,24 @@ const PassAttendanceCard = ({
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   Project Title
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
+                <h2 className="text-xl sm:text-3xl font-extrabold text-white break-words">
                   {passData.projectName}
                 </h2>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-950/60 text-cyan-300 border border-cyan-800/60">
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                     {passData.domain}
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-950/60 text-purple-300 border border-purple-800/60">
-                    <Award className="w-3.5 h-3.5 text-purple-400" />
+                    <Award className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                     Status: {passData.status}
                   </span>
                 </div>
               </div>
 
               {/* Academic & College Background */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-800">
                   <span className="text-[11px] font-semibold text-slate-400 uppercase block mb-1">
                     College / Institute
                   </span>
@@ -176,7 +176,7 @@ const PassAttendanceCard = ({
                   </p>
                 </div>
 
-                <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+                <div className="bg-slate-900/60 p-3.5 sm:p-4 rounded-xl border border-slate-800">
                   <span className="text-[11px] font-semibold text-slate-400 uppercase block mb-1">
                     Programme
                   </span>
@@ -187,26 +187,26 @@ const PassAttendanceCard = ({
               </div>
 
               {/* Team Lead Card with Individual Check-In */}
-              <div className={`p-4 rounded-xl border transition ${
+              <div className={`p-3.5 sm:p-4 rounded-xl border transition ${
                 passData.leaderIsCheckedIn
                   ? 'bg-emerald-950/20 border-emerald-500/40'
                   : 'bg-slate-900/80 border-slate-800'
-              } flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
-                <div className="flex items-center gap-3">
+              } flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3`}>
+                <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                   <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold flex items-center justify-center shrink-0">
                     {(passData.teamLeadName || 'L').charAt(0)}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">Team Leader</span>
                       <span className="text-slate-500">•</span>
                       <span className="text-[10px] text-slate-400">Primary Submitter</span>
                     </div>
-                    <p className="text-sm font-bold text-white">{passData.teamLeadName}</p>
-                    <p className="text-xs text-slate-400">{passData.teamLeadEmail}</p>
+                    <p className="text-sm font-bold text-white truncate">{passData.teamLeadName}</p>
+                    <p className="text-xs text-slate-400 break-all">{passData.teamLeadEmail}</p>
                     <div className="flex items-center gap-1.5 text-[11px] text-cyan-400 mt-0.5">
                       <GraduationCap className="w-3 h-3 text-cyan-400 shrink-0" />
-                      <span className="font-medium">{passData.collegeName}</span>
+                      <span className="font-medium truncate">{passData.collegeName}</span>
                     </div>
                     {passData.leaderIsCheckedIn && passData.leaderCheckedInAt && (
                       <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
@@ -217,13 +217,13 @@ const PassAttendanceCard = ({
                 </div>
 
                 {canCheckIn && (
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                     {passData.leaderIsCheckedIn ? (
                       <button
                         type="button"
                         onClick={() => onCheckInToggle('toggle-leader')}
                         disabled={checkingIn}
-                        className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 text-xs font-semibold transition"
+                        className="w-full sm:w-auto justify-center min-h-[40px] px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 text-xs font-semibold transition"
                       >
                         Undo Entry
                       </button>
@@ -232,7 +232,7 @@ const PassAttendanceCard = ({
                         type="button"
                         onClick={() => onCheckInToggle('toggle-leader')}
                         disabled={checkingIn}
-                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 shadow-sm transition"
+                        className="w-full sm:w-auto justify-center min-h-[40px] px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
                       >
                         <Check className="w-3.5 h-3.5" />
                         <span>Admit Leader</span>
@@ -244,7 +244,7 @@ const PassAttendanceCard = ({
 
               {/* Team Roster with Individual Member Controls */}
               <div>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Teammates Roster ({passData.teamMembers?.length || 0})
                   </span>
@@ -262,19 +262,19 @@ const PassAttendanceCard = ({
                     {passData.teamMembers.map((m, idx) => (
                       <div
                         key={idx}
-                        className={`p-3.5 rounded-xl border text-sm transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                        className={`p-3.5 rounded-xl border text-sm transition flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${
                           m.isCheckedIn
                             ? 'bg-emerald-950/20 border-emerald-500/40'
                             : 'bg-slate-900/50 border-slate-800/80'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                           <div className="w-8 h-8 rounded-full bg-slate-800 text-cyan-400 font-bold text-xs flex items-center justify-center shrink-0">
                             #{idx + 1}
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-white">{m.name}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-white truncate">{m.name}</p>
                               <span
                                 className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                                   m.status === 'Accepted'
@@ -285,10 +285,10 @@ const PassAttendanceCard = ({
                                 {m.status || 'Pending'}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-400">{m.email}</p>
+                            <p className="text-xs text-slate-400 break-all">{m.email}</p>
                             <div className="flex items-center gap-1.5 text-[11px] text-cyan-400 mt-0.5">
                               <GraduationCap className="w-3 h-3 text-cyan-400 shrink-0" />
-                              <span className="font-medium">{m.collegeName || passData.collegeName}</span>
+                              <span className="font-medium truncate">{m.collegeName || passData.collegeName}</span>
                             </div>
                             {m.isCheckedIn && m.checkedInAt && (
                               <p className="text-[10px] text-emerald-400 font-mono mt-0.5">
@@ -299,13 +299,13 @@ const PassAttendanceCard = ({
                         </div>
 
                         {canCheckIn && (
-                          <div className="flex items-center gap-2 self-end sm:self-auto">
+                          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
                             {m.isCheckedIn ? (
                               <button
                                 type="button"
                                 onClick={() => onCheckInToggle('toggle-member', m.email)}
                                 disabled={checkingIn}
-                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 text-xs font-semibold transition"
+                                className="w-full sm:w-auto justify-center min-h-[40px] px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 text-xs font-semibold transition"
                               >
                                 Undo Entry
                               </button>
@@ -314,7 +314,7 @@ const PassAttendanceCard = ({
                                 type="button"
                                 onClick={() => onCheckInToggle('toggle-member', m.email)}
                                 disabled={checkingIn}
-                                className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold flex items-center gap-1 shadow-sm transition"
+                                className="w-full sm:w-auto justify-center min-h-[40px] px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
                               >
                                 <Check className="w-3.5 h-3.5" />
                                 <span>Admit Member</span>
@@ -330,10 +330,10 @@ const PassAttendanceCard = ({
 
               {/* Gate Volunteer & Admin Master Check-In Control Box */}
               {canCheckIn && (
-                <div className="p-5 rounded-2xl bg-slate-900 border-2 border-cyan-500/50 shadow-2xl space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border-2 border-cyan-500/50 shadow-2xl space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-800">
                     <div className="flex items-center gap-2">
-                      <ShieldAlert className="w-5 h-5 text-cyan-400" />
+                      <ShieldAlert className="w-5 h-5 text-cyan-400 shrink-0" />
                       <div>
                         <span className="text-xs font-bold text-white uppercase tracking-wider block">
                           Venue Gate Master Controls
@@ -360,7 +360,7 @@ const PassAttendanceCard = ({
                       type="button"
                       onClick={() => onCheckInToggle('admit-all')}
                       disabled={checkingIn}
-                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition"
+                      className="min-h-[46px] px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition"
                     >
                       <Check className="w-4 h-4" />
                       <span>Admit All Present Members (1-Click)</span>
@@ -370,7 +370,7 @@ const PassAttendanceCard = ({
                       type="button"
                       onClick={() => onCheckInToggle('undo-all')}
                       disabled={checkingIn}
-                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-950/40 hover:text-rose-300 border border-slate-700 text-slate-300 text-xs font-semibold transition"
+                      className="min-h-[42px] px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-950/40 hover:text-rose-300 border border-slate-700 text-slate-300 text-xs font-semibold transition"
                     >
                       Reset All Gate Entries
                     </button>

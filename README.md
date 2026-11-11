@@ -59,9 +59,10 @@
 6. **Live Public Competition Leaderboard (`/leaderboard`)**:
    - Interactive leaderboard with track filtering, average judge scores, evaluation count metrics, and Gold/Silver/Bronze podium styling.
 7. **Enterprise Admin Governance Console (`/admin/*`)**:
-   - Modular multi-page console: Submissions (`/admin`), Problem Statements (`/admin/problems`), and Access & Role RBAC (`/admin/roles`), with sidebar role deactivation for Co-Admins.
+   - Modular multi-page console: Submissions (`/admin`), Problem Statements (`/admin/problems`), Access & Role RBAC (`/admin/roles`), and immutable Activity Logs (`/admin/logs`), with sidebar role deactivation for Co-Admins.
    - Collapsible icon sidebar (`Ctrl+B` shortcut + `localStorage` persistence) with live badge counts.
    - **Dedicated Staff Provisioning & Restricted Candidate Removal**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`). Competing candidates self-register via OTP and stay isolated from staff roles. Account deletion (`DELETE /api/user/admin/:id`) enforces strict safeguards: any candidate linked to a `HackathonRegistration` (lead or teammate) is permanently locked, OTP-verified candidates are protected from routine Co-Admin deletion (Super Admin restricted purge only), and every removal requires a 3-factor audit confirmation modal (exact email, `"PERMANENTLY REMOVE"` phrase, and >= 10-character reason).
+   - **Immutable System Audit Trail & Role Isolation**: Every state-changing event across Admin RBAC, Submissions, Gate Check-Ins, Judge Evaluations, Events/Problems, and Auth is logged with actor identity, target, diff, and timestamp (`/admin/logs`, read-only). Both Judge and Volunteer portals are responsive on mobile screens, and their staff `/security` routes are hidden/blocked when inspected by an Admin.
    - **Role Deactivation & Self-Service Security**: Administrators can deactivate or reactivate staff access with 1 click, and staff members can securely change their password or deactivate their own role.
    - Real-time KPI metric cards, track distribution analytics, live status stepper controls, and 1-click CSV data export.
 
@@ -172,7 +173,7 @@ Hackathon Portal/
 │   │   ├── admin/                  # Admin Governance Console (/admin/*)
 │   │   │   ├── layout/             # AdminLayout, AdminSidebar (collapsible + Ctrl+B)
 │   │   │   ├── components/         # KpiSummaryCards, SubmissionDetailModal, ProblemFormModal, ProvisionStaffModal, RestrictedRemoveCandidateModal, DeactivateAdminRoleModal
-│   │   │   └── pages/              # AdminSubmissionsPage, AdminProblemsPage, AdminStaffRolesPage
+│   │   │   └── pages/              # AdminSubmissionsPage, AdminProblemsPage, AdminStaffRolesPage, AdminAuditLogsPage
 │   │   ├── App.jsx                 # React.lazy() nested multi-portal router
 │   │   ├── main.jsx                # React root mount
 │   │   └── index.css               # Tailwind directives, custom scrollbars, print media
@@ -188,9 +189,11 @@ Hackathon Portal/
     │   ├── db.js                   # MongoDB Atlas Mongoose connection
     │   └── nodemailer.js           # Nodemailer SMTP transporter (matrucareai@gmail.com)
     ├── controllers/
-    │   ├── authController.js       # Signup, OTP verify, resend OTP, login
-    │   ├── userController.js       # Get profile, update candidate academic profile
+    │   ├── authController.js       # Signup, OTP verify, resend OTP, login, forgot/reset password
+    │   ├── userController.js       # Profile, staff provisioning, activation, restricted deletion
     │   ├── hackathonController.js  # Registration CRUD, multi-checkin, judge evaluation, CSV
+    │   ├── eventController.js      # Hackathon events & problem statements CRUD
+    │   ├── auditLogController.js   # Read-only paginated audit trail query handler
     │   └── contactController.js    # Contact form dispatcher
     ├── middleware/
     │   ├── authMiddleware.js       # JWT authorization guard & role verification
@@ -198,11 +201,14 @@ Hackathon Portal/
     ├── models/
     │   ├── User.js                 # User schema (roles: user, volunteer, evaluator, admin)
     │   ├── Otp.js                  # 6-digit OTP schema with 10-min TTL index
-    │   └── HackathonRegistration.js # Dynamic team schema with individual attendance states
+    │   ├── HackathonRegistration.js # Dynamic team schema with individual attendance states
+    │   └── AuditLog.js             # Append-only activity & governance log schema
     ├── routes/
     │   ├── authRoutes.js           # /api/auth/*
     │   ├── userRoutes.js           # /api/user/*
     │   ├── hackathonRoutes.js      # /api/hackathon/*
+    │   ├── eventRoutes.js          # /api/events/*
+    │   └── auditRoutes.js          # /api/audit-logs/* (read-only Admin)
     │   └── contactRoutes.js        # /api/contact
     ├── utils/
     │   ├── generateOtp.js          # 6-digit cryptographic random OTP generator
@@ -380,7 +386,7 @@ In strict accordance with assignment requirements:
 
 ---
 
-### 5. Admin Governance Endpoints (`/api/hackathon/admin`)
+### 5. Admin Governance & Audit Trail Endpoints (`/api/hackathon/admin` & `/api/audit-logs`)
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -390,6 +396,7 @@ In strict accordance with assignment requirements:
 | `GET` | `/api/hackathon/admin/export/csv` | Private (Admin) | Streams a complete CSV export of all participant records |
 | `GET` | `/api/hackathon/admin/users` | Private (Admin) | Lists all registered accounts with role assignments |
 | `PATCH` | `/api/hackathon/admin/users/:id/role` | Private (Admin) | Updates user role (`user`, `volunteer`, `evaluator`, `admin`) |
+| `GET` | `/api/audit-logs` | Private (Admin) | Returns paginated immutable activity logs with category, severity, and search filters |
 
 ---
 

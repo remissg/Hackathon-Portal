@@ -54,6 +54,7 @@ const AdminLayout = () => {
   const [adminEvents, setAdminEvents] = useState([]);
   const [adminProblems, setAdminProblems] = useState([]);
   const [loadingProblems, setLoadingProblems] = useState(false);
+  const [auditRefreshTick, setAuditRefreshTick] = useState(0);
 
   const showToast = (msg) => {
     setNotification(msg);
@@ -208,6 +209,8 @@ const AdminLayout = () => {
       fetchAdminProblems();
     } else if (location.pathname.includes('/admin/roles')) {
       fetchUsers();
+    } else if (location.pathname.includes('/admin/logs')) {
+      setAuditRefreshTick((prev) => prev + 1);
     } else {
       fetchData();
     }
@@ -225,6 +228,13 @@ const AdminLayout = () => {
       return {
         crumb: 'Access & Roles',
         title: 'Role-Based Access Control (RBAC)',
+        isSubmissions: false,
+      };
+    }
+    if (location.pathname.includes('/admin/logs')) {
+      return {
+        crumb: 'Activity Logs',
+        title: 'System Audit Trail & Accountability',
         isSubmissions: false,
       };
     }
@@ -354,6 +364,7 @@ const AdminLayout = () => {
               adminProblems,
               loadingProblems,
               fetchAdminProblems,
+              auditRefreshTick,
               showToast,
             }}
           />

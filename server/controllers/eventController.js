@@ -1,5 +1,6 @@
 import HackathonEvent from '../models/HackathonEvent.js';
 import HackathonRegistration from '../models/HackathonRegistration.js';
+import { recordAuditLog } from '../utils/auditLogger.js';
 
 /**
  * Seed default hackathon event and curated problem statements if DB is empty
@@ -288,6 +289,15 @@ export const createHackathonEvent = async (req, res) => {
       problemStatements: [],
     });
 
+    await recordAuditLog({
+      req,
+      category: 'problems',
+      action: 'EVENT_CREATED',
+      severity: 'info',
+      target: { type: 'event', id: event._id, label: event.title },
+      summary: `Created hackathon event "${event.title}" (Status: ${event.status})`,
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Hackathon created successfully',
@@ -322,6 +332,15 @@ export const updateHackathonEvent = async (req, res) => {
       });
     }
 
+    await recordAuditLog({
+      req,
+      category: 'problems',
+      action: 'EVENT_UPDATED',
+      severity: 'info',
+      target: { type: 'event', id: event._id, label: event.title },
+      summary: `Updated hackathon event details for "${event.title}"`,
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Hackathon event updated successfully',
@@ -352,6 +371,15 @@ export const deleteHackathonEvent = async (req, res) => {
         message: 'Hackathon event not found',
       });
     }
+
+    await recordAuditLog({
+      req,
+      category: 'problems',
+      action: 'EVENT_DELETED',
+      severity: 'critical',
+      target: { type: 'event', id: event._id, label: event.title },
+      summary: `Deleted hackathon event "${event.title}"`,
+    });
 
     return res.status(200).json({
       success: true,
@@ -413,10 +441,29 @@ export const addProblemStatement = async (req, res) => {
     event.problemStatements.push(newProblem);
     await event.save();
 
+    const createdProblem = event.problemStatements[event.problemStatements.length - 1];
+
+    await recordAuditLog({
+      req,
+      category: 'problems',
+      action: 'PROBLEM_CREATED',
+      severity: 'info',
+      target: {
+        type: 'problem',
+        id: createdProblem._id,
+        label: `${createdProblem.psId}: ${createdProblem.title}`,
+      },
+      summary: `Added problem statement ${createdProblem.psId} ("${createdProblem.title}") to "${event.title}"`,
+      changes: {
+        category: createdProblem.category,
+        difficulty: createdProblem.difficulty,
+      },
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Problem statement added successfully',
-      problemStatement: event.problemStatements[event.problemStatements.length - 1],
+      problemStatement: createdProblem,
       event,
     });
   } catch (error) {
@@ -472,6 +519,23 @@ export const updateProblemStatement = async (req, res) => {
 
     await event.save();
 
+    await recordAuditLog({
+      req,
+      category: 'problems',
+      action: 'PROBLEM_UPDATED',
+      severity: 'info',
+      target: {
+        type: 'problem',
+        id: problem._id,
+        label: `${problem.psId}: ${problem.title}`,
+      },
+      summary: `Updated problem statement ${problem.psId} ("${problem.title}")`,
+      changes: {
+        category: problem.category,
+        difficulty: problem.difficulty,
+      },
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Problem statement updated successfully',
@@ -504,10 +568,30 @@ export const deleteProblemStatement = async (req, res) => {
       });
     }
 
+    const removedProblem = event.problemStatements.find(
+      (ps) => ps._id.toString() === problemId
+    );
     event.problemStatements = event.problemStatements.filter(
       (ps) => ps._id.toString() !== problemId
     );
     await event.save();
+
+    await recordAuditLog({
+      req,
+      category: 'problems',
+      action: 'PROBLEM_DELETED',
+      severity: 'warning',
+      target: {
+        type: 'problem',
+        id: problemId,
+        label: removedProblem
+          ? `${removedProblem.psId}: ${removedProblem.title}`
+          : problemId,
+      },
+      summary: removedProblem
+        ? `Deleted problem statement ${removedProblem.psId} ("${removedProblem.title}")`
+        : `Deleted problem statement ${problemId}`,
+    });
 
     return res.status(200).json({
       success: true,

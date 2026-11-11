@@ -135,83 +135,32 @@ const JudgeLayout = () => {
 
   const completedCount = submissions.filter((s) => s.hasEvaluated).length;
   const pendingCount = submissions.length - completedCount;
+  const isAdminUser =
+    user?.role === 'admin' ||
+    user?.email?.trim().toLowerCase() === 'matrucareai@gmail.com';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#020617] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#020617] text-slate-100 overflow-x-hidden">
       {/* Sticky Judge Portal Top Shell */}
-      <header className="sticky top-0 z-40 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          {/* Brand & Portal Identity */}
-          <div className="flex items-center gap-3 min-w-0">
-            <Link to="/judge" className="flex items-center gap-2.5 group shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
-                <Award className="w-4 h-4" />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-base font-bold text-white tracking-tight block leading-none">
-                  Hack<span className="text-amber-400">Sphere</span>
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
-                  Judge Portal
-                </span>
-              </div>
-            </Link>
+      <header className="sticky top-0 z-40 bg-[#020617]/95 backdrop-blur-xl border-b border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:min-h-[64px] flex flex-wrap items-center justify-between gap-2.5 sm:gap-4">
+          {/* Brand */}
+          <Link to="/judge" className="flex items-center gap-2.5 group shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
+              <Award className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-sm sm:text-base font-bold text-white tracking-tight block leading-none">
+                Hack<span className="text-amber-400">Sphere</span>
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                Judge Portal
+              </span>
+            </div>
+          </Link>
 
-            {/* Primary Judge Sub-Navigation */}
-            <nav className="flex items-center gap-1 ml-2 sm:ml-6 bg-slate-900/90 border border-slate-800 p-1 rounded-xl">
-              <NavLink
-                to="/judge"
-                end
-                className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    isActive
-                      ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`
-                }
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Queue</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-950/20 font-bold">
-                  {pendingCount}
-                </span>
-              </NavLink>
-
-              <NavLink
-                to="/judge/completed"
-                className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    isActive
-                      ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`
-                }
-              >
-                <ClipboardCheck className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Completed</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-950/20 font-bold">
-                  {completedCount}
-                </span>
-              </NavLink>
-
-              <NavLink
-                to="/judge/security"
-                className={({ isActive }) =>
-                  `px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                    isActive
-                      ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-white'
-                  }`
-                }
-              >
-                <Key className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Security</span>
-              </NavLink>
-            </nav>
-          </div>
-
-          {/* Right Quick Actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Right Quick Actions (stays top-right on mobile row 1) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 sm:order-last">
             <Link
               to="/leaderboard"
               className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 hover:text-white transition"
@@ -226,10 +175,10 @@ const JudgeLayout = () => {
               <Globe2 className="w-3.5 h-3.5 text-sky-400" />
               <span>Public Site</span>
             </Link>
-            {user?.role === 'admin' && (
+            {isAdminUser && (
               <Link
                 to="/admin"
-                className="px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/25 text-xs font-semibold transition"
+                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/25 text-[11px] sm:text-xs font-semibold transition whitespace-nowrap"
               >
                 Admin Console
               </Link>
@@ -250,11 +199,65 @@ const JudgeLayout = () => {
               <LogOut className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Primary Judge Sub-Navigation (full width row 2 on mobile, inline on sm+) */}
+          <nav className="w-full sm:w-auto flex items-center gap-1 bg-slate-900/90 border border-slate-800 p-1 rounded-xl sm:mr-auto sm:ml-4">
+            <NavLink
+              to="/judge"
+              end
+              className={({ isActive }) =>
+                `flex-1 sm:flex-initial justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`
+              }
+            >
+              <Layers className="w-3.5 h-3.5 shrink-0" />
+              <span>Queue</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-950/20 font-bold">
+                {pendingCount}
+              </span>
+            </NavLink>
+
+            <NavLink
+              to="/judge/completed"
+              className={({ isActive }) =>
+                `flex-1 sm:flex-initial justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`
+              }
+            >
+              <ClipboardCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>Completed</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-950/20 font-bold">
+                {completedCount}
+              </span>
+            </NavLink>
+
+            {!isAdminUser && (
+              <NavLink
+                to="/judge/security"
+                className={({ isActive }) =>
+                  `flex-1 sm:flex-initial justify-center px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-sky-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`
+                }
+              >
+                <Key className="w-3.5 h-3.5 shrink-0" />
+                <span>Security</span>
+              </NavLink>
+            )}
+          </nav>
         </div>
       </header>
 
       {/* Main Judge Workspace Content */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
         {successToast && (
           <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-3 text-emerald-300 text-sm animate-fade-in">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -295,3 +298,4 @@ const JudgeLayout = () => {
 };
 
 export default JudgeLayout;
+

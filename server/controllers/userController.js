@@ -3,6 +3,7 @@ import Otp from '../models/Otp.js';
 import HackathonRegistration from '../models/HackathonRegistration.js';
 import { sendMail } from '../config/nodemailer.js';
 import { generateStaffOnboardingEmailTemplate } from '../utils/emailTemplates.js';
+import { recordAuditLog } from '../utils/auditLogger.js';
 
 /**
  * @desc    Get current user profile
@@ -106,6 +107,7 @@ export const updateProfile = async (req, res) => {
     }
 
     // Optional Password Change
+    let passwordUpdated = false;
     if (newPassword && newPassword.trim()) {
       if (!currentPassword) {
         return res.status(400).json({
@@ -127,9 +129,22 @@ export const updateProfile = async (req, res) => {
         });
       }
       user.password = newPassword.trim();
+      passwordUpdated = true;
     }
 
     const updatedUser = await user.save();
+
+    if (passwordUpdated) {
+      await recordAuditLog({
+        req,
+        category: 'auth',
+        action: 'PASSWORD_CHANGED',
+        severity: 'warning',
+        target: { type: 'user', id: updatedUser._id, label: updatedUser.email },
+        summary: `${updatedUser.fullName} (${updatedUser.email}) updated their account password`,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
@@ -252,8 +267,23 @@ export const updateUserRole = async (req, res) => {
       });
     }
 
+    const oldRole = targetUser.role;
     targetUser.role = role;
     await targetUser.save();
+
+    await recordAuditLog({
+      req,
+      category: 'rbac',
+      action: 'USER_ROLE_UPDATED',
+      severity: 'warning',
+      target: {
+        type: 'user',
+        id: targetUser._id,
+        label: `${targetUser.fullName} (${targetUser.email})`,
+      },
+      summary: `Updated role for ${targetUser.email} from "${oldRole}" to "${role}"`,
+      changes: { from: oldRole, to: role },
+    });
 
     return res.status(200).json({
       success: true,
@@ -315,6 +345,7 @@ export const provisionStaff = async (req, res) => {
     let existingUser = await User.findOne({ email: normalizedEmail });
 
     let provisionedUser;
+    let isReactivation = false;
     if (existingUser) {
       if (!existingUser.role || existingUser.role === 'user') {
         return res.status(400).json({
@@ -330,6 +361,7 @@ export const provisionStaff = async (req, res) => {
         });
       }
 
+      isReactivation = true;
       // Reactivate or update existing staff account
       existingUser.role = role;
       existingUser.fullName = fullName.trim();
@@ -377,6 +409,23 @@ export const provisionStaff = async (req, res) => {
         console.error('[Staff Welcome Email Error]:', mailErr);
       }
     }
+
+    await recordAuditLog({
+      req,
+      category: 'rbac',
+      action: isReactivation ? 'STAFF_REPROVISIONED' : 'STAFF_PROVISIONED',
+      severity: 'info',
+      target: {
+        type: 'user',
+        id: provisionedUser._id,
+        label: `${provisionedUser.fullName} (${provisionedUser.email})`,
+      },
+      summary: `${isReactivation ? 'Updated/reactivated' : 'Provisioned'} staff account ${provisionedUser.email} with role "${provisionedUser.role}"`,
+      changes: {
+        role: provisionedUser.role,
+        emailDispatched,
+      },
+    });
 
     return res.status(201).json({
       success: true,
@@ -433,6 +482,24 @@ export const toggleStaffActive = async (req, res) => {
     targetUser.isActive = targetUser.isActive === false ? true : false;
     await targetUser.save();
 
+    await recordAuditLog({
+      req,
+      category: 'rbac',
+      action: targetUser.isActive ? 'STAFF_REACTIVATED' : 'STAFF_DEACTIVATED',
+      severity: targetUser.isActive ? 'info' : 'warning',
+      target: {
+        type: 'user',
+        id: targetUser._id,
+        label: `${targetUser.fullName} (${targetUser.email})`,
+      },
+      summary: `${targetUser.isActive ? 'Reactivated' : 'Deactivated'} ${targetUser.role} access for ${targetUser.email}`,
+      changes: {
+        role: targetUser.role,
+        fromActive: !targetUser.isActive,
+        toActive: targetUser.isActive,
+      },
+    });
+
     return res.status(200).json({
       success: true,
       message: `Account for ${targetUser.fullName} (${targetUser.email}) is now ${targetUser.isActive ? 'ACTIVE' : 'DEACTIVATED'}`,
@@ -472,6 +539,20 @@ export const deactivateMyRole = async (req, res) => {
 
     user.isActive = false;
     await user.save();
+
+    await recordAuditLog({
+      req,
+      category: 'rbac',
+      action: 'ROLE_SELF_DEACTIVATED',
+      severity: 'warning',
+      target: {
+        type: 'user',
+        id: user._id,
+        label: `${user.fullName} (${user.email})`,
+      },
+      summary: `${user.fullName} (${user.email}) self-deactivated their "${user.role}" role access`,
+      changes: { role: user.role },
+    });
 
     return res.status(200).json({
       success: true,
@@ -572,6 +653,23 @@ export const deleteUserAccount = async (req, res) => {
 
     await Otp.deleteMany({ email: targetEmail });
     await User.deleteOne({ _id: targetUser._id });
+
+    await recordAuditLog({
+      req,
+      category: 'rbac',
+      action: 'CANDIDATE_REMOVED',
+      severity: 'critical',
+      target: {
+        type: 'user',
+        id: targetUser._id,
+        label: `${targetUser.fullName} (${targetEmail})`,
+      },
+      summary: `${isOperatorSuperAdmin ? 'Super Admin' : 'Admin'} permanently removed candidate account ${targetEmail}`,
+      reason: reason.trim(),
+      changes: {
+        wasVerified: Boolean(targetUser.isVerified),
+      },
+    });
 
     console.warn(
       `[AUDIT] ${isOperatorSuperAdmin ? 'Super Admin' : 'Admin'} (${operatorEmail}) permanently removed candidate "${targetUser.fullName}" (${targetEmail}) [verified=${Boolean(

@@ -35,6 +35,7 @@ const VolunteerSecurityPage = lazy(() => import('./volunteer/pages/VolunteerSecu
 const AdminSubmissionsPage = lazy(() => import('./admin/pages/AdminSubmissionsPage'));
 const AdminProblemsPage = lazy(() => import('./admin/pages/AdminProblemsPage'));
 const AdminStaffRolesPage = lazy(() => import('./admin/pages/AdminStaffRolesPage'));
+const AdminAuditLogsPage = lazy(() => import('./admin/pages/AdminAuditLogsPage'));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6">
@@ -95,7 +96,19 @@ function App() {
             >
               <Route index element={<JudgeQueuePage />} />
               <Route path="completed" element={<JudgeHistoryPage />} />
-              <Route path="security" element={<JudgeSecurityPage />} />
+              <Route
+                path="security"
+                element={
+                  <RoleRoute
+                    allowedRoles={['evaluator']}
+                    disallowRoles={['admin']}
+                    redirectOnDisallowed="/judge"
+                    portalName="Evaluator Security Settings"
+                  >
+                    <JudgeSecurityPage />
+                  </RoleRoute>
+                }
+              />
             </Route>
 
             {/* 3. VOLUNTEER PORTAL: Gate Check-In & QR Scanner */}
@@ -108,7 +121,19 @@ function App() {
               }
             >
               <Route index element={<GateScannerPage />} />
-              <Route path="security" element={<VolunteerSecurityPage />} />
+              <Route
+                path="security"
+                element={
+                  <RoleRoute
+                    allowedRoles={['volunteer']}
+                    disallowRoles={['admin']}
+                    redirectOnDisallowed="/volunteer"
+                    portalName="Volunteer Security Settings"
+                  >
+                    <VolunteerSecurityPage />
+                  </RoleRoute>
+                }
+              />
             </Route>
 
             {/* 4. ADMIN CONSOLE: Event Governance & RBAC */}
@@ -123,6 +148,7 @@ function App() {
               <Route index element={<AdminSubmissionsPage />} />
               <Route path="problems" element={<AdminProblemsPage />} />
               <Route path="roles" element={<AdminStaffRolesPage />} />
+              <Route path="logs" element={<AdminAuditLogsPage />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
 

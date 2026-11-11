@@ -7,6 +7,7 @@ import {
   generateOtpEmailTemplate,
   generatePasswordResetOtpTemplate,
 } from '../utils/emailTemplates.js';
+import { recordAuditLog } from '../utils/auditLogger.js';
 
 /**
  * Generate JWT Token helper
@@ -167,6 +168,21 @@ export const verifyOtp = async (req, res) => {
 
     // Invalidate/delete verification OTP after successful verification
     await Otp.deleteMany({ email: normalizedEmail, purpose: { $ne: 'password_reset' } });
+
+    await recordAuditLog({
+      req,
+      actor: {
+        userId: user._id,
+        name: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+      category: 'auth',
+      action: 'ACCOUNT_VERIFIED',
+      severity: 'info',
+      target: { type: 'user', id: user._id, label: user.email },
+      summary: `Candidate account ${user.email} completed email OTP verification`,
+    });
 
     return res.status(200).json({
       success: true,
@@ -499,6 +515,21 @@ export const resetPasswordWithOtp = async (req, res) => {
 
     // Invalidate all password reset OTPs for this email
     await Otp.deleteMany({ email: normalizedEmail, purpose: 'password_reset' });
+
+    await recordAuditLog({
+      req,
+      actor: {
+        userId: user._id,
+        name: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+      category: 'auth',
+      action: 'PASSWORD_RESET_OTP',
+      severity: 'warning',
+      target: { type: 'user', id: user._id, label: user.email },
+      summary: `Account ${user.email} completed OTP-verified password reset`,
+    });
 
     return res.status(200).json({
       success: true,

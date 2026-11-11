@@ -6,6 +6,7 @@ import {
   generateTeammateInviteEmailTemplate,
   generateStatusUpdateEmailTemplate,
 } from '../utils/emailTemplates.js';
+import { recordAuditLog } from '../utils/auditLogger.js';
 
 /**
  * Validate URL helper
@@ -233,6 +234,23 @@ export const registerHackathon = async (req, res) => {
       await Promise.allSettled(invitePromises);
     }
 
+    await recordAuditLog({
+      req,
+      category: 'submissions',
+      action: 'SUBMISSION_CREATED',
+      severity: 'info',
+      target: {
+        type: 'registration',
+        id: registration._id,
+        label: `${registration.projectName} (${registration.ticketId || `MCAI-2026-${registration._id.toString().slice(-4).toUpperCase()}`})`,
+      },
+      summary: `Team submission "${registration.projectName}" registered under track "${registration.domain}" (Team size: ${registration.teamSize})`,
+      changes: {
+        domain: registration.domain,
+        teamSize: registration.teamSize,
+      },
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Hackathon registration submitted successfully! A confirmation email has been sent.',
@@ -380,6 +398,19 @@ export const updateEntry = async (req, res) => {
 
     const updatedEntry = await entry.save();
 
+    await recordAuditLog({
+      req,
+      category: 'submissions',
+      action: 'SUBMISSION_UPDATED',
+      severity: 'info',
+      target: {
+        type: 'registration',
+        id: updatedEntry._id,
+        label: updatedEntry.projectName,
+      },
+      summary: `Updated submission details for "${updatedEntry.projectName}"`,
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Registration entry updated successfully',
@@ -423,6 +454,24 @@ export const deleteEntry = async (req, res) => {
     }
 
     await HackathonRegistration.findByIdAndDelete(req.params.id);
+
+    await recordAuditLog({
+      req,
+      category: 'submissions',
+      action: 'SUBMISSION_DELETED',
+      severity: 'critical',
+      target: {
+        type: 'registration',
+        id: entry._id,
+        label: `${entry.projectName} (${entry.email})`,
+      },
+      summary: `${isAdmin && entry.userId.toString() !== req.user._id.toString() ? 'Admin removed' : 'Team lead withdrew'} hackathon registration "${entry.projectName}"`,
+      changes: {
+        domain: entry.domain,
+        previousStatus: entry.status,
+        leadEmail: entry.email,
+      },
+    });
 
     return res.status(200).json({
       success: true,
@@ -570,6 +619,22 @@ export const updateRegistrationStatus = async (req, res) => {
     const oldStatus = entry.status;
     entry.status = status;
     const updated = await entry.save();
+
+    if (oldStatus !== status) {
+      await recordAuditLog({
+        req,
+        category: 'submissions',
+        action: 'SUBMISSION_STATUS_CHANGED',
+        severity: status === 'Rejected' ? 'warning' : 'info',
+        target: {
+          type: 'registration',
+          id: entry._id,
+          label: `${entry.projectName} (${entry.ticketId || `MCAI-2026-${entry._id.toString().slice(-4).toUpperCase()}`})`,
+        },
+        summary: `Changed submission "${entry.projectName}" status from "${oldStatus}" to "${status}"`,
+        changes: { from: oldStatus, to: status },
+      });
+    }
 
     // If status changed, send milestone email notifications to team lead & accepted teammates
     if (oldStatus !== status) {
@@ -894,6 +959,25 @@ export const checkInPass = async (req, res) => {
     const totalMembers = 1 + (entry.teamMembers?.length || 0);
     const admittedMembers = (entry.leaderIsCheckedIn ? 1 : 0) + (entry.teamMembers?.filter((m) => m.isCheckedIn).length || 0);
 
+    await recordAuditLog({
+      req,
+      category: 'gate',
+      action: 'GATE_CHECKIN_UPDATED',
+      severity: action === 'undo-all' || action === 'undo' ? 'warning' : 'info',
+      target: {
+        type: 'registration',
+        id: entry._id,
+        label: `${entry.projectName} (${entry.ticketId || `MCAI-2026-${entry._id.toString().slice(-4).toUpperCase()}`})`,
+      },
+      summary: responseMsg,
+      changes: {
+        gateAction: action,
+        memberEmail: memberEmail || null,
+        admittedMembers,
+        totalMembers,
+      },
+    });
+
     return res.status(200).json({
       success: true,
       message: responseMsg,
@@ -1041,6 +1125,20 @@ export const respondToInvitation = async (req, res) => {
 
     await entry.save();
 
+    await recordAuditLog({
+      req,
+      category: 'submissions',
+      action: 'TEAM_INVITE_RESPONDED',
+      severity: 'info',
+      target: {
+        type: 'registration',
+        id: entry._id,
+        label: entry.projectName,
+      },
+      summary: `${userEmail} ${newStatus.toLowerCase()} team invitation for "${entry.projectName}"`,
+      changes: { memberEmail: userEmail, decision: newStatus },
+    });
+
     return res.status(200).json({
       success: true,
       message:
@@ -1127,6 +1225,30 @@ export const submitEvaluation = async (req, res) => {
     entry.evaluationCount = entry.evaluations.length;
 
     await entry.save();
+
+    await recordAuditLog({
+      req,
+      category: 'evaluation',
+      action: existingIndex >= 0 ? 'EVALUATION_UPDATED' : 'EVALUATION_SUBMITTED',
+      severity: 'info',
+      target: {
+        type: 'registration',
+        id: entry._id,
+        label: entry.projectName,
+      },
+      summary: `${existingIndex >= 0 ? 'Updated' : 'Submitted'} rubric evaluation for "${entry.projectName}" (${totalScore}/40 — ${recommendation})`,
+      changes: {
+        totalScore,
+        averageScore: entry.averageScore,
+        recommendation,
+        breakdown: {
+          innovation: cleanInnovation,
+          technicalExecution: cleanTechnical,
+          healthcareImpact: cleanImpact,
+          presentation: cleanPresentation,
+        },
+      },
+    });
 
     return res.status(200).json({
       success: true,

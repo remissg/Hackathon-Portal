@@ -12,6 +12,7 @@ import {
   PanelLeftOpen,
   Power,
   QrCode,
+  ScrollText,
   ShieldAlert,
   Target,
   Trophy,
@@ -216,6 +217,26 @@ const AdminSidebar = ({
                     </span>
                   </>
                 )}
+              </NavLink>
+
+              <NavLink
+                to="/admin/logs"
+                onClick={() => setSidebarOpen(false)}
+                title="Activity & Audit Logs"
+                className={({ isActive }) =>
+                  `w-full flex items-center ${
+                    isCollapsed ? 'md:justify-center md:px-0' : 'justify-between px-3.5'
+                  } py-2.5 rounded-xl text-xs font-semibold transition group relative ${
+                    isActive
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/25'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  }`
+                }
+              >
+                <div className={`flex items-center ${isCollapsed ? 'md:gap-0' : 'gap-3'}`}>
+                  <ScrollText className="w-4 h-4 flex-shrink-0" />
+                  <span className={isCollapsed ? 'md:hidden' : 'block'}>Activity Logs</span>
+                </div>
               </NavLink>
             </div>
           </div>

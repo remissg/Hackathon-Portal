@@ -14,7 +14,13 @@ const ROLE_META = {
  * RoleRoute Guard
  * Restricts nested portal routes to specific authorized roles.
  */
-const RoleRoute = ({ allowedRoles = ['admin'], portalName = 'Restricted Portal', children }) => {
+const RoleRoute = ({
+  allowedRoles = ['admin'],
+  disallowRoles = [],
+  redirectOnDisallowed = '',
+  portalName = 'Restricted Portal',
+  children,
+}) => {
   const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -36,7 +42,17 @@ const RoleRoute = ({ allowedRoles = ['admin'], portalName = 'Restricted Portal',
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  const currentRole = user?.role || 'user';
+  const isSuperAdminEmail =
+    user?.email?.trim().toLowerCase() === 'matrucareai@gmail.com';
+  const currentRole = isSuperAdminEmail ? 'admin' : user?.role || 'user';
+
+  if (disallowRoles.includes(currentRole)) {
+    const targetPath =
+      redirectOnDisallowed ||
+      (ROLE_META[currentRole] || ROLE_META.user).fallbackPath;
+    return <Navigate to={targetPath} replace />;
+  }
+
   if (!allowedRoles.includes(currentRole)) {
     const roleMeta = ROLE_META[currentRole] || ROLE_META.user;
     const requiredLabels = allowedRoles.map((r) => ROLE_META[r]?.label || r).join(' or ');
@@ -90,3 +106,4 @@ const RoleRoute = ({ allowedRoles = ['admin'], portalName = 'Restricted Portal',
 };
 
 export default RoleRoute;
+

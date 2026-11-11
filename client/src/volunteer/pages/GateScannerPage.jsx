@@ -153,7 +153,11 @@ const GateScannerPage = () => {
           { facingMode: 'environment' },
           {
             fps: 15,
-            qrbox: { width: 250, height: 250 },
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+              const size = Math.max(180, Math.floor(minEdge * 0.72));
+              return { width: size, height: size };
+            },
             aspectRatio: 1.0,
           },
           (decodedText) => {
@@ -254,26 +258,26 @@ const GateScannerPage = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-[#070d19] text-slate-150 ${outletCtx.embeddedInVolunteerLayout ? 'pt-8' : 'pt-28'} pb-16 px-4 sm:px-6 lg:px-8`}>
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className={`min-h-screen bg-[#070d19] text-slate-150 ${outletCtx.embeddedInVolunteerLayout ? 'pt-5 sm:pt-8' : 'pt-24 sm:pt-28'} pb-14 px-3.5 sm:px-6 lg:px-8`}>
+      <div className="max-w-2xl mx-auto space-y-6 sm:space-y-8">
         
         {/* Top Header */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-800/40 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/40 text-cyan-400 text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-3 shadow-sm">
+            <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
             Official Pass Registry &amp; Verification
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
             Event Pass Verification
           </h1>
-          <p className="mt-2 text-slate-400 text-sm sm:text-base">
+          <p className="mt-1.5 sm:mt-2 text-slate-400 text-xs sm:text-base">
             HackSphere National Innovation Hackathon 2026
           </p>
         </div>
 
         {/* Global Live Scan Toast */}
         {checkInMsg && (
-          <div className="p-4 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 text-emerald-300 text-sm flex items-center gap-3 animate-fade-in shadow-2xl">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 text-emerald-300 text-xs sm:text-sm flex items-center gap-3 animate-fade-in shadow-2xl">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
             <span className="font-bold">{checkInMsg}</span>
           </div>
@@ -293,13 +297,13 @@ const GateScannerPage = () => {
 
         {/* Quick Scanner Action Bar */}
         {!scannerOpen && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={startScanner}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-sm flex items-center gap-2.5 shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5"
+              className="w-full sm:w-auto justify-center min-h-[48px] px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-sm flex items-center gap-2.5 shadow-lg shadow-cyan-500/25 transition active:scale-[0.99]"
             >
-              <Camera className="w-4 h-4 text-slate-950" />
+              <Camera className="w-4 h-4 text-slate-950 shrink-0" />
               <span>Scan QR with Device Camera</span>
             </button>
 
@@ -312,17 +316,17 @@ const GateScannerPage = () => {
                   setPassData(null);
                   setError('');
                 }}
-                className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition"
+                className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition"
               >
                 Clear / Manual Lookup
               </button>
             )}
 
-            {canCheckIn && (
+            {isVolunteer && !isAdmin && (
               <button
                 type="button"
                 onClick={() => setSecurityModalOpen(true)}
-                className="px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition flex items-center gap-2"
+                className="w-full sm:w-auto justify-center min-h-[44px] px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition flex items-center gap-2"
                 title="Staff Account Security & Password"
               >
                 <Key className="w-4 h-4 text-cyan-400" />
@@ -406,11 +410,13 @@ const GateScannerPage = () => {
         />
 
       </div>
-      {/* Account Security Modal */}
-      <AccountSecurityModal
-        isOpen={securityModalOpen}
-        onClose={() => setSecurityModalOpen(false)}
-      />
+      {/* Volunteer-Only Account Security Modal (blocked for Admin visitors) */}
+      {isVolunteer && !isAdmin && (
+        <AccountSecurityModal
+          isOpen={securityModalOpen}
+          onClose={() => setSecurityModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

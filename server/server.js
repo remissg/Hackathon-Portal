@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import hackathonRoutes from './routes/hackathonRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
+import auditRoutes from './routes/auditRoutes.js';
 
 // Middleware imports
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
@@ -56,6 +57,8 @@ app.get('/', (req, res) => {
       user: '/api/user',
       hackathon: '/api/hackathon',
       contact: '/api/contact',
+      events: '/api/events',
+      auditLogs: '/api/audit-logs',
     },
     version: '1.0.0',
     timestamp: new Date().toISOString(),
@@ -87,6 +90,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/hackathon', hackathonRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
