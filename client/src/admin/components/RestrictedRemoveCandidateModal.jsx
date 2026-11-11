@@ -220,3 +220,4 @@ const RestrictedRemoveCandidateModal = ({
 };
 
 export default RestrictedRemoveCandidateModal;
+
