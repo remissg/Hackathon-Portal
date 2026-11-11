@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../shared/context/AuthContext';
 import { Sparkles, KeyRound, AlertCircle, CheckCircle2, RotateCw, ArrowRight } from 'lucide-react';
 
 const VerifyOtp = () => {

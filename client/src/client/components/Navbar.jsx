@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../shared/context/AuthContext';
 import {
   Menu,
   X,
@@ -23,7 +23,7 @@ import {
   Target,
   Key,
 } from 'lucide-react';
-import AccountSecurityModal from './AccountSecurityModal';
+import AccountSecurityModal from '../../shared/components/AccountSecurityModal';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,7 +66,7 @@ const Navbar = () => {
         message: 'Point any phone camera at your pass QR code to test instant pass verification.',
         time: '5m ago',
         read: false,
-        link: '/verify-pass',
+        link: '/volunteer',
       },
       {
         id: '3',
@@ -226,9 +226,9 @@ const Navbar = () => {
                   </Link>
                 ) : isVolunteer ? (
                   <Link
-                    to="/verify-pass"
+                    to="/volunteer"
                     className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      isActive('/verify-pass')
+                      (isActive('/volunteer') || isActive('/verify-pass'))
                         ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
                         : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20'
                     }`}
@@ -401,7 +401,7 @@ const Navbar = () => {
                               <span>Judge Portal</span>
                             </Link>
                             <Link
-                              to="/verify-pass"
+                              to="/volunteer"
                               onClick={() => setUserDropdownOpen(false)}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/30 transition-colors"
                             >
@@ -420,7 +420,7 @@ const Navbar = () => {
                               <span>Judge Scoring Rubric</span>
                             </Link>
                             <Link
-                              to="/verify-pass"
+                              to="/volunteer"
                               onClick={() => setUserDropdownOpen(false)}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-emerald-300 hover:text-white hover:bg-emerald-950/30 transition-colors"
                             >
@@ -430,7 +430,7 @@ const Navbar = () => {
                           </>
                         ) : isVolunteer ? (
                           <Link
-                            to="/verify-pass"
+                            to="/volunteer"
                             onClick={() => setUserDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-emerald-300 hover:text-white hover:bg-emerald-950/30 transition-colors"
                           >
@@ -603,7 +603,7 @@ const Navbar = () => {
                   </Link>
                 ) : isVolunteer ? (
                   <Link
-                    to="/verify-pass"
+                    to="/volunteer"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-600 text-white font-bold"
                   >

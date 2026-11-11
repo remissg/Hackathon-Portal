@@ -417,3 +417,47 @@ matrucareai@gmail.com
 
   return { html, text };
 };
+
+/**
+ * Password Reset OTP Template
+ */
+export const generatePasswordResetOtpTemplate = ({ fullName = 'Participant', otp, expiryMinutes = 10 }) => {
+  const text = `HackSphere — Password Reset Verification Code
+
+Hello ${fullName},
+
+We received a request to reset the password for your HackSphere 2026 account.
+
+Your 6-digit password reset OTP is: ${otp}
+
+This code expires in ${expiryMinutes} minutes. Do not share this code with anyone.
+If you did not request a password reset, you can safely ignore this email — your password will remain unchanged.
+
+— HackSphere Security Team
+matrucareai@gmail.com`;
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <h2 style="font-size: 20px; font-weight: 700; color: #0284c7; margin: 0 0 16px 0;">HackSphere • Password Reset</h2>
+      <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 14px 0;">
+        Hello <strong>${fullName}</strong>,
+      </p>
+      <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
+        Use the 6-digit verification code below to reset your password for the <strong>HackSphere 2026 Portal</strong>:
+      </p>
+      <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 16px; text-align: center; margin: 20px 0;">
+        <span style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0284c7; font-family: monospace;">${otp}</span>
+        <p style="font-size: 12px; color: #64748b; margin: 6px 0 0 0;">Valid for ${expiryMinutes} minutes only</p>
+      </div>
+      <p style="font-size: 13px; line-height: 1.5; color: #64748b; margin: 0 0 20px 0;">
+        If you did not request a password reset, no action is needed — your existing credentials stay secure.
+      </p>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+        HackSphere Security • <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+      </p>
+    </div>
+  `;
+
+  return { html, text };
+};

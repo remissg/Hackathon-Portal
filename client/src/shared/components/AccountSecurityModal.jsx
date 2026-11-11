@@ -17,7 +17,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 
-const AccountSecurityModal = ({ isOpen, onClose }) => {
+const AccountSecurityModal = ({ isOpen, onClose, inline = false }) => {
   const { user, logout, updateUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState('password'); // 'password' | 'role'
@@ -38,7 +38,7 @@ const AccountSecurityModal = ({ isOpen, onClose }) => {
   const [deactivating, setDeactivating] = useState(false);
   const [deactivateError, setDeactivateError] = useState('');
 
-  if (!isOpen || !user) return null;
+  if ((!inline && !isOpen) || !user) return null;
 
   const isStaffRole = user.role && user.role !== 'user';
   const isSuperAdmin = user.email?.toLowerCase() === 'matrucareai@gmail.com';
@@ -104,8 +104,18 @@ const AccountSecurityModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      className={
+        inline
+          ? 'w-full'
+          : 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in'
+      }
+    >
+      <div
+        className={`w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col ${
+          inline ? 'max-w-2xl mx-auto shadow-xl' : 'max-w-lg shadow-2xl max-h-[90vh]'
+        }`}
+      >
         {/* Modal Header */}
         <div className="px-6 py-5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/50">
           <div className="flex items-center gap-3">
@@ -117,13 +127,15 @@ const AccountSecurityModal = ({ isOpen, onClose }) => {
               <p className="text-xs text-slate-400 font-mono truncate max-w-xs">{user.email}</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!inline && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Tab Switcher */}

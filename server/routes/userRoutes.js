@@ -7,6 +7,7 @@ import {
   provisionStaff,
   toggleStaffActive,
   deactivateMyRole,
+  deleteUserAccount,
 } from '../controllers/userController.js';
 import { protect, adminProtect } from '../middleware/authMiddleware.js';
 
@@ -21,6 +22,7 @@ router.get('/admin/all', protect, adminProtect, getAllUsers);
 router.post('/admin/provision-staff', protect, adminProtect, provisionStaff);
 router.patch('/admin/:id/toggle-active', protect, adminProtect, toggleStaffActive);
 router.patch('/admin/:id/role', protect, adminProtect, updateUserRole);
+router.delete('/admin/:id', protect, adminProtect, deleteUserAccount);
 
 export default router;
 

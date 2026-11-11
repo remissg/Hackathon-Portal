@@ -1,450 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Html5Qrcode } from 'html5-qrcode';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import React from 'react';
+import { Link } from 'react-router-dom';
 import {
-  ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
-  QrCode,
-  Users,
-  GraduationCap,
-  Calendar,
-  Layers,
-  Copy,
-  Check,
-  ExternalLink,
-  Sparkles,
-  Award,
-  Clock,
   ArrowRight,
-  ShieldAlert,
+  Award,
   Camera,
-  CameraOff,
+  Check,
+  CheckCircle2,
+  Clock,
+  Copy,
+  GraduationCap,
+  ShieldAlert,
+  Sparkles,
   Zap,
-  X,
-  Volume2,
-  Key,
 } from 'lucide-react';
-import AccountSecurityModal from '../components/AccountSecurityModal';
 
-const VerifyPass = () => {
-  const [searchParams] = useSearchParams();
-  const ticketIdParam = searchParams.get('ticketId') || '';
-  const memberParam = searchParams.get('member') || searchParams.get('memberEmail') || '';
-
-  const { user, isAuthenticated } = useAuth();
-  const isAdmin =
-    user?.role === 'admin' ||
-    user?.email?.toLowerCase() === 'matrucareai@gmail.com';
-  const isVolunteer = user?.role === 'volunteer';
-  const canCheckIn = isAdmin || isVolunteer;
-
-  const [inputTicketId, setInputTicketId] = useState(ticketIdParam);
-  const [activeTicketId, setActiveTicketId] = useState(ticketIdParam);
-  const [targetedMemberEmail, setTargetedMemberEmail] = useState(memberParam);
-
-  const [loading, setLoading] = useState(!!ticketIdParam);
-  const [passData, setPassData] = useState(null);
-  const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [checkingIn, setCheckingIn] = useState(false);
-  const [checkInMsg, setCheckInMsg] = useState('');
-
-  // Live Camera Scanner State
-  const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannerStarting, setScannerStarting] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [autoCheckIn, setAutoCheckIn] = useState(false);
-  const [securityModalOpen, setSecurityModalOpen] = useState(false);
-  const scannerInstanceRef = useRef(null);
-
-  // Audio Confirmation Chime on scan
-  const playScanBeep = () => {
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-    } catch (_) {}
-  };
-
-  // Cleanup scanner on component unmount
-  useEffect(() => {
-    return () => {
-      if (scannerInstanceRef.current) {
-        try {
-          scannerInstanceRef.current
-            .stop()
-            .then(() => scannerInstanceRef.current.clear())
-            .catch(() => {});
-        } catch (_) {}
-      }
-    };
-  }, []);
-
-  const stopScanner = async () => {
-    if (scannerInstanceRef.current) {
-      try {
-        await scannerInstanceRef.current.stop();
-        scannerInstanceRef.current.clear();
-      } catch (_) {}
-      scannerInstanceRef.current = null;
-    }
-    setScannerOpen(false);
-    setScannerStarting(false);
-  };
-
-  const handleScanSuccess = async (scannedId, memberEmail = '') => {
-    playScanBeep();
-    await stopScanner();
-    setInputTicketId(scannedId);
-    setActiveTicketId(scannedId);
-    setTargetedMemberEmail(memberEmail);
-
-    // If auto-admit on scan is enabled and user is gate staff, check in immediately!
-    if (autoCheckIn && canCheckIn) {
-      try {
-        setCheckingIn(true);
-        const action = memberEmail ? 'admit-member' : 'admit-all';
-        const res = await api.post('/hackathon/admin/check-in', {
-          passId: scannedId,
-          action,
-          memberEmail,
-        });
-        if (res.data.success) {
-          setCheckInMsg(
-            `⚡ Instant Gate Admission: ${res.data.message || scannedId}`
-          );
-          setTimeout(() => setCheckInMsg(''), 5000);
-        }
-      } catch (err) {
-        console.error('[Auto Check-in Error]:', err);
-      } finally {
-        setCheckingIn(false);
-      }
-    }
-  };
-
-  const startScanner = async () => {
-    setCameraError('');
-    setScannerStarting(true);
-    setScannerOpen(true);
-
-    setTimeout(async () => {
-      try {
-        const qr = new Html5Qrcode('qr-camera-viewport');
-        scannerInstanceRef.current = qr;
-
-        await qr.start(
-          { facingMode: 'environment' },
-          {
-            fps: 15,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
-          },
-          (decodedText) => {
-            let extractedId = decodedText.trim();
-            let scannedMember = '';
-            if (extractedId.includes('ticketId=')) {
-              try {
-                const u = new URL(extractedId, window.location.origin);
-                scannedMember = u.searchParams.get('member') || u.searchParams.get('memberEmail') || '';
-                extractedId = u.searchParams.get('ticketId') || extractedId;
-              } catch (_) {
-                if (extractedId.includes('member=')) {
-                  scannedMember = extractedId.split('member=')[1]?.split('&')[0] || '';
-                }
-                extractedId = extractedId.split('ticketId=')[1]?.split('&')[0] || extractedId;
-              }
-            } else if (extractedId.includes('/verify-pass/')) {
-              extractedId = extractedId.split('/verify-pass/')[1]?.split('?')[0] || extractedId;
-            }
-            handleScanSuccess(extractedId, scannedMember);
-          },
-          () => {} // frame scan miss, silence
-        );
-      } catch (err) {
-        console.error('[Camera Init Error]:', err);
-        setCameraError(
-          'Could not access camera. Please allow camera permissions in your browser or connect a webcam.'
-        );
-      } finally {
-        setScannerStarting(false);
-      }
-    }, 200);
-  };
-
-  const fetchPass = async (id, memberEmail = targetedMemberEmail) => {
-    if (!id) return;
-    setLoading(true);
-    setError('');
-    try {
-      const query = memberEmail ? `?member=${encodeURIComponent(memberEmail)}` : '';
-      const res = await api.get(`/hackathon/verify-pass/${id.trim()}${query}`);
-      if (res.data.success && res.data.verified) {
-        setPassData(res.data.pass);
-      } else {
-        setError(res.data.message || 'Pass ID verification failed');
-      }
-    } catch (err) {
-      console.error('[Verify Pass Error]:', err);
-      setError(
-        err.response?.data?.message ||
-          'Invalid or unregistered Pass ID. This pass could not be authenticated against the HackSphere registry.'
-      );
-      setPassData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTicketId) {
-      fetchPass(activeTicketId, targetedMemberEmail);
-    }
-  }, [activeTicketId, targetedMemberEmail]);
-
-  const handleLookup = (e) => {
-    e.preventDefault();
-    if (inputTicketId.trim()) {
-      setActiveTicketId(inputTicketId.trim());
-    }
-  };
-
-  const handleCopyId = (id) => {
-    navigator.clipboard.writeText(id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleCheckInToggle = async (action = 'admit-all', memberEmail = null) => {
-    if (!passData?.ticketId) return;
-    setCheckingIn(true);
-    try {
-      const res = await api.post('/hackathon/admin/check-in', {
-        passId: passData.ticketId,
-        action,
-        memberEmail,
-      });
-      if (res.data.success) {
-        setCheckInMsg(res.data.message);
-        await fetchPass(passData.ticketId, targetedMemberEmail);
-        setTimeout(() => setCheckInMsg(''), 5000);
-      }
-    } catch (err) {
-      console.error('[Check-In Error]:', err);
-      alert(err.response?.data?.message || 'Failed to update check-in status');
-    } finally {
-      setCheckingIn(false);
-    }
-  };
+const PassAttendanceCard = ({
+  passData,
+  isAdmin,
+  canCheckIn,
+  checkingIn,
+  copied,
+  onCopyId,
+  onCheckInToggle,
+  onScanNext,
+}) => {
+  if (!passData) return null;
 
   return (
-    <div className="min-h-screen bg-[#070d19] text-slate-150 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto space-y-8">
-        
-        {/* Top Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-800/40 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm">
-            <ShieldCheck className="w-4 h-4 text-cyan-400" />
-            Official Pass Registry &amp; Verification
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-            Event Pass Verification
-          </h1>
-          <p className="mt-2 text-slate-400 text-sm sm:text-base">
-            HackSphere National Innovation Hackathon 2026
-          </p>
-        </div>
-
-        {/* Global Live Scan Toast */}
-        {checkInMsg && (
-          <div className="p-4 rounded-2xl bg-emerald-950/80 border-2 border-emerald-500 text-emerald-300 text-sm flex items-center gap-3 animate-fade-in shadow-2xl">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <span className="font-bold">{checkInMsg}</span>
-          </div>
-        )}
-
-        {/* Camera Scanner Viewfinder Card */}
-        {scannerOpen && (
-          <div className="bg-[#0b132b]/95 border-2 border-cyan-500/50 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl text-center space-y-4 animate-fade-in relative">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-left">
-                <Camera className="w-5 h-5 text-cyan-400" />
-                <div>
-                  <h3 className="text-sm font-bold text-white">Live Camera QR Scanner</h3>
-                  <p className="text-[11px] text-slate-400">Position the candidate QR code inside the frame to scan</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={stopScanner}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                title="Close camera"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Error if camera blocked */}
-            {cameraError && (
-              <div className="p-3.5 rounded-xl bg-rose-950/60 border border-rose-800 text-rose-300 text-xs">
-                {cameraError}
-              </div>
-            )}
-
-            {/* HTML5 QR Code Video Target */}
-            <div className="relative mx-auto max-w-sm rounded-2xl overflow-hidden border-2 border-dashed border-cyan-500/40 bg-black min-h-[280px] flex items-center justify-center shadow-inner">
-              {scannerStarting && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-950/80 z-10 text-xs text-cyan-400">
-                  <div className="w-7 h-7 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="font-semibold">Starting camera sensor...</span>
-                </div>
-              )}
-              <div id="qr-camera-viewport" className="w-full"></div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-400">
-              <span className="flex items-center gap-1.5 text-[11px]">
-                <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
-                Audio chime enabled on scan detection
-              </span>
-
-              {canCheckIn && (
-                <label className="flex items-center gap-2 cursor-pointer bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-cyan-500/50 transition">
-                  <input
-                    type="checkbox"
-                    checked={autoCheckIn}
-                    onChange={(e) => setAutoCheckIn(e.target.checked)}
-                    className="accent-cyan-500 rounded"
-                  />
-                  <span className="text-[11px] font-bold text-cyan-300 flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-cyan-400" /> Instant Check-In on Scan
-                  </span>
-                </label>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={stopScanner}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
-            >
-              Cancel &amp; Close Camera
-            </button>
-          </div>
-        )}
-
-        {/* Quick Scanner Action Bar */}
-        {!scannerOpen && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={startScanner}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-sm flex items-center gap-2.5 shadow-lg shadow-cyan-500/25 transition transform hover:-translate-y-0.5"
-            >
-              <Camera className="w-4 h-4 text-slate-950" />
-              <span>Scan QR with Device Camera</span>
-            </button>
-
-            {activeTicketId && (
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTicketId('');
-                  setInputTicketId('');
-                  setPassData(null);
-                  setError('');
-                }}
-                className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition"
-              >
-                Clear / Manual Lookup
-              </button>
-            )}
-
-            {canCheckIn && (
-              <button
-                type="button"
-                onClick={() => setSecurityModalOpen(true)}
-                className="px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition flex items-center gap-2"
-                title="Staff Account Security & Password"
-              >
-                <Key className="w-4 h-4 text-cyan-400" />
-                <span>Staff Security</span>
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Manual Lookup Form if no ID provided in URL */}
-        {!activeTicketId && (
-          <div className="bg-[#0b132b]/80 border border-slate-800 rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-xl text-center">
-            <QrCode className="w-12 h-12 text-cyan-400 mx-auto mb-3" />
-            <h2 className="text-xl font-bold text-white mb-2">Verify Admission Pass</h2>
-            <p className="text-sm text-slate-300 mb-6">
-              Enter the 6-character Pass ID printed on the physical or digital pass (e.g. <span className="font-mono text-cyan-400 font-bold">MCAI-2026-F947</span>):
-            </p>
-            <form onSubmit={handleLookup} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="text"
-                placeholder="e.g. MCAI-2026-F947"
-                value={inputTicketId}
-                onChange={(e) => setInputTicketId(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 font-mono focus:outline-none focus:border-cyan-500"
-                required
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl transition shadow-lg shadow-cyan-500/20"
-              >
-                Verify Pass
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Loading Spinner */}
-        {loading && (
-          <div className="bg-[#0b132b]/80 border border-slate-800 rounded-2xl p-12 text-center animate-pulse">
-            <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-slate-300 font-medium">Validating pass against official registry...</p>
-          </div>
-        )}
-
-        {/* Invalid Pass Alert */}
-        {error && !loading && (
-          <div className="bg-rose-950/40 border border-rose-800/60 rounded-2xl p-6 sm:p-8 text-center space-y-4 shadow-xl">
-            <AlertTriangle className="w-12 h-12 text-rose-400 mx-auto" />
-            <h2 className="text-xl font-bold text-rose-200">Unverified or Invalid Pass</h2>
-            <p className="text-sm text-rose-300 max-w-md mx-auto">{error}</p>
-            <div className="pt-2">
-              <button
-                onClick={() => {
-                  setError('');
-                  setActiveTicketId('');
-                  setInputTicketId('');
-                }}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold border border-slate-700 transition"
-              >
-                Try Another Pass ID
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Verified Pass Card */}
-        {passData && !loading && (
           <div className="bg-[#0b132b]/95 border-2 border-emerald-500/40 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-md">
             
             {/* Top Verification Seal Header */}
@@ -506,7 +88,7 @@ const VerifyPass = () => {
                   {canCheckIn && (
                     <button
                       type="button"
-                      onClick={() => handleCheckInToggle('admit-member', passData.targetedMember.email)}
+                      onClick={() => onCheckInToggle('admit-member', passData.targetedMember.email)}
                       disabled={checkingIn}
                       className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shrink-0 ${
                         passData.targetedMember.isCheckedIn
@@ -542,7 +124,7 @@ const VerifyPass = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleCopyId(passData.ticketId)}
+                  onClick={() => onCopyId(passData.ticketId)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition"
                 >
                   {copied ? (
@@ -638,7 +220,7 @@ const VerifyPass = () => {
                     {passData.leaderIsCheckedIn ? (
                       <button
                         type="button"
-                        onClick={() => handleCheckInToggle('toggle-leader')}
+                        onClick={() => onCheckInToggle('toggle-leader')}
                         disabled={checkingIn}
                         className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 text-xs font-semibold transition"
                       >
@@ -647,7 +229,7 @@ const VerifyPass = () => {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleCheckInToggle('toggle-leader')}
+                        onClick={() => onCheckInToggle('toggle-leader')}
                         disabled={checkingIn}
                         className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 shadow-sm transition"
                       >
@@ -720,7 +302,7 @@ const VerifyPass = () => {
                             {m.isCheckedIn ? (
                               <button
                                 type="button"
-                                onClick={() => handleCheckInToggle('toggle-member', m.email)}
+                                onClick={() => onCheckInToggle('toggle-member', m.email)}
                                 disabled={checkingIn}
                                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/50 text-slate-300 hover:text-rose-300 border border-slate-700 text-xs font-semibold transition"
                               >
@@ -729,7 +311,7 @@ const VerifyPass = () => {
                             ) : (
                               <button
                                 type="button"
-                                onClick={() => handleCheckInToggle('toggle-member', m.email)}
+                                onClick={() => onCheckInToggle('toggle-member', m.email)}
                                 disabled={checkingIn}
                                 className="px-3.5 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold flex items-center gap-1 shadow-sm transition"
                               >
@@ -775,7 +357,7 @@ const VerifyPass = () => {
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <button
                       type="button"
-                      onClick={() => handleCheckInToggle('admit-all')}
+                      onClick={() => onCheckInToggle('admit-all')}
                       disabled={checkingIn}
                       className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition"
                     >
@@ -785,7 +367,7 @@ const VerifyPass = () => {
 
                     <button
                       type="button"
-                      onClick={() => handleCheckInToggle('undo-all')}
+                      onClick={() => onCheckInToggle('undo-all')}
                       disabled={checkingIn}
                       className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-950/40 hover:text-rose-300 border border-slate-700 text-slate-300 text-xs font-semibold transition"
                     >
@@ -813,8 +395,7 @@ const VerifyPass = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setPassData(null);
-                    startScanner();
+                    onScanNext();
                   }}
                   className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
                 >
@@ -838,17 +419,7 @@ const VerifyPass = () => {
 
             </div>
           </div>
-        )}
-
-      </div>
-      {/* Account Security Modal */}
-      <AccountSecurityModal
-        isOpen={securityModalOpen}
-        onClose={() => setSecurityModalOpen(false)}
-      />
-    </div>
   );
 };
 
-export default VerifyPass;
-
+export default PassAttendanceCard;

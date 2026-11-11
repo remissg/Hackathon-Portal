@@ -1,4 +1,6 @@
 import User from '../models/User.js';
+import Otp from '../models/Otp.js';
+import HackathonRegistration from '../models/HackathonRegistration.js';
 import { sendMail } from '../config/nodemailer.js';
 import { generateStaffOnboardingEmailTemplate } from '../utils/emailTemplates.js';
 
@@ -277,6 +279,13 @@ export const provisionStaff = async (req, res) => {
 
     let provisionedUser;
     if (existingUser) {
+      if (!existingUser.role || existingUser.role === 'user') {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot appoint an existing competing candidate email ("${normalizedEmail}") as staff. Staff accounts must use dedicated non-candidate emails.`,
+        });
+      }
+
       if (existingUser.role === role && existingUser.isActive !== false) {
         return res.status(400).json({
           success: false,
@@ -284,7 +293,7 @@ export const provisionStaff = async (req, res) => {
         });
       }
 
-      // If user exists (e.g. was a candidate or deactivated staff), upgrade/reactivate them
+      // Reactivate or update existing staff account
       existingUser.role = role;
       existingUser.fullName = fullName.trim();
       existingUser.password = startingPassword; // will be hashed by pre-save
@@ -430,6 +439,52 @@ export const deactivateMyRole = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Your role access has been deactivated. You will now be signed out.',
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Admin removes an unlinked/test user account
+ * @route   DELETE /api/user/admin/:id
+ * @access  Private/Admin
+ */
+export const deleteUserAccount = async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User account not found' });
+    }
+
+    if (targetUser.email.toLowerCase() === 'matrucareai@gmail.com') {
+      return res.status(403).json({
+        success: false,
+        message: 'The primary Super Admin account is permanently protected and cannot be deleted',
+      });
+    }
+
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own active session account',
+      });
+    }
+
+    const hasRegistration = await HackathonRegistration.exists({ userId: targetUser._id });
+    if (hasRegistration) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete account "${targetUser.email}" because it owns an active Hackathon Registration. Remove or withdraw their submission first.`,
+      });
+    }
+
+    await Otp.deleteMany({ email: targetUser.email.toLowerCase() });
+    await User.deleteOne({ _id: targetUser._id });
+
+    return res.status(200).json({
+      success: true,
+      message: `Account "${targetUser.fullName}" (${targetUser.email}) has been permanently removed.`,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

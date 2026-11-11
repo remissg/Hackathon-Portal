@@ -3,7 +3,10 @@ import User from '../models/User.js';
 import Otp from '../models/Otp.js';
 import { generateOtp } from '../utils/generateOtp.js';
 import { sendMail } from '../config/nodemailer.js';
-import { generateOtpEmailTemplate } from '../utils/emailTemplates.js';
+import {
+  generateOtpEmailTemplate,
+  generatePasswordResetOtpTemplate,
+} from '../utils/emailTemplates.js';
 
 /**
  * Generate JWT Token helper
@@ -77,13 +80,14 @@ export const signup = async (req, res) => {
     const otpCode = generateOtp();
     console.log(`[AUTH] Created OTP: ${otpCode} for user: ${normalizedEmail}`);
 
-    // Invalidate existing OTPs for this email
-    await Otp.deleteMany({ email: normalizedEmail });
+    // Invalidate existing verification OTPs for this email
+    await Otp.deleteMany({ email: normalizedEmail, purpose: { $ne: 'password_reset' } });
 
     // Store new OTP in DB with 10-minute expiry
     await Otp.create({
       email: normalizedEmail,
       otp: otpCode,
+      purpose: 'verification',
     });
 
     // Send OTP via Nodemailer
@@ -133,10 +137,11 @@ export const verifyOtp = async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
     const cleanOtp = otp.toString().trim();
 
-    // Find OTP record
+    // Find verification OTP record
     const otpRecord = await Otp.findOne({
       email: normalizedEmail,
       otp: cleanOtp,
+      purpose: { $ne: 'password_reset' },
     });
 
     if (!otpRecord) {
@@ -160,8 +165,8 @@ export const verifyOtp = async (req, res) => {
       });
     }
 
-    // Invalidate/delete OTP after successful verification
-    await Otp.deleteMany({ email: normalizedEmail });
+    // Invalidate/delete verification OTP after successful verification
+    await Otp.deleteMany({ email: normalizedEmail, purpose: { $ne: 'password_reset' } });
 
     return res.status(200).json({
       success: true,
@@ -212,13 +217,14 @@ export const resendOtp = async (req, res) => {
     // Generate new OTP
     const otpCode = generateOtp();
 
-    // Clear old OTPs
-    await Otp.deleteMany({ email: normalizedEmail });
+    // Clear old verification OTPs
+    await Otp.deleteMany({ email: normalizedEmail, purpose: { $ne: 'password_reset' } });
 
     // Save new OTP
     await Otp.create({
       email: normalizedEmail,
       otp: otpCode,
+      purpose: 'verification',
     });
 
     // Send email
@@ -333,6 +339,176 @@ export const login = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error during login',
+    });
+  }
+};
+
+/**
+ * @desc    Send a 6-digit password reset OTP to verified account email
+ * @route   POST /api/auth/forgot-password
+ * @access  Public
+ */
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter your registered email address',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No account found with this email address',
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: 'This account has not been verified yet. Please verify your signup OTP first.',
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'This account access has been deactivated by the administrator. Please contact support.',
+      });
+    }
+
+    const otpCode = generateOtp();
+
+    // Clear previous password reset OTPs for this email
+    await Otp.deleteMany({ email: normalizedEmail, purpose: 'password_reset' });
+
+    await Otp.create({
+      email: normalizedEmail,
+      otp: otpCode,
+      purpose: 'password_reset',
+    });
+
+    const resetEmail = generatePasswordResetOtpTemplate({
+      fullName: user.fullName || 'Participant',
+      otp: otpCode,
+      expiryMinutes: 10,
+    });
+
+    const mailResult = await sendMail({
+      to: normalizedEmail,
+      subject: 'HackSphere — Password Reset OTP Verification Code',
+      html: resetEmail.html,
+      text: resetEmail.text,
+    });
+
+    console.log(
+      `[AUTH] Password reset OTP for ${normalizedEmail}:`,
+      mailResult.success ? 'Delivered' : `Failed: ${mailResult.error}`
+    );
+
+    if (!mailResult.success) {
+      return res.status(503).json({
+        success: false,
+        message: 'Unable to dispatch OTP email right now. Please contact matrucareai@gmail.com or try again shortly.',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `A 6-digit password reset OTP has been sent to ${normalizedEmail}. Check your Inbox and Spam folder.`,
+      email: normalizedEmail,
+    });
+  } catch (error) {
+    console.error('[Forgot Password Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while initiating password reset',
+    });
+  }
+};
+
+/**
+ * @desc    Verify reset OTP and update user password
+ * @route   POST /api/auth/reset-password
+ * @access  Public
+ */
+export const resetPasswordWithOtp = async (req, res) => {
+  try {
+    const { email, otp, newPassword, confirmPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email, 6-digit OTP, and new password are required',
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long',
+      });
+    }
+
+    if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Passwords do not match',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const cleanOtp = otp.toString().trim();
+
+    const otpRecord = await Otp.findOne({
+      email: normalizedEmail,
+      otp: cleanOtp,
+      purpose: 'password_reset',
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset OTP. Please request a fresh code.',
+      });
+    }
+
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User account not found',
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'This account has been deactivated by the administrator.',
+      });
+    }
+
+    // Password is automatically hashed by User pre-save hook
+    user.password = newPassword;
+    await user.save();
+
+    // Invalidate all password reset OTPs for this email
+    await Otp.deleteMany({ email: normalizedEmail, purpose: 'password_reset' });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password reset successful! You can now sign in with your new password.',
+    });
+  } catch (error) {
+    console.error('[Reset Password Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error while resetting password',
     });
   }
 };

@@ -35,8 +35,9 @@
 
 1. **Email-Verified Identity & Authentication**:
    - Real-time signup with single-use, 6-digit cryptographic OTP generation delivered via **Nodemailer** from `matrucareai@gmail.com`.
-   - 10-minute auto-expiry backed by MongoDB TTL index, rate-limiting, and resend protection.
-   - Stateless JWT authentication with salted `bcryptjs` password hashing (10 rounds).
+   - 10-minute auto-expiry backed by MongoDB TTL index, resend protection, and purpose-isolated OTP validation.
+   - **Self-Service Forgot Password & OTP Reset (`/login`)**: Verified active accounts (Candidates & Staff) can request a dedicated 6-digit password reset OTP via email and verify it to set a new password.
+   - Stateless JWT authentication with salted `bcryptjs` password hashing (10 rounds) and dedicated role guards (`RoleRoute`, `ProtectedRoute`).
 2. **Adaptive Hackathon Registration Form**:
    - Full CRUD support with client-side and server-side validation for 10-digit Indian mobile numbers, Google Drive PPTs, and prototype links.
    - Dynamic team composition (1–5 members) with **cross-college / inter-institutional support** (each member can belong to a distinct college or university).
@@ -45,21 +46,23 @@
    - Ultra-sleek vertical conference lanyard pass with realistic metallic hardware clip and iridescent holographic security foil bar.
    - Dynamic **Attendee Switcher** allowing team leaders and teammates to view and download their individual, persona-tagged badge (`👑 TEAM LEADER • MASTER PASS` vs `⚡ INNOVATION HACKER`).
    - Studio-grade **Save Badge (PNG)** export at 3x retina resolution with borderless, zero-shadow clipping, alongside a **Print Badge / PDF** view.
-4. **Dynamic Hybrid Gate Attendance System (`/verify-pass`)**:
+4. **Gate Volunteer Portal & Hybrid Attendance System (`/volunteer/*` & `/verify-pass`)**:
+   - Dedicated multi-page `/volunteer` console (`GateScannerPage`, `/volunteer/security`) plus backward-compatible public QR link verification at `/verify-pass?ticketId=...`.
    - Live camera QR scanner powered by `html5-qrcode` with audible scan verification chime.
    - **Team Lead Master Check-In**: Scanning the team lead's pass displays the entire roster with physical college ID reminders and provides a 1-click **"Admit All Present Members"** action.
    - **Targeted Late Entrant Detection**: When a teammate arrives late, their personal QR code triggers an instant latecomer banner with 1-click individual admission.
    - Live venue attendance counter (`X / Y Present`) with full audit logging (timestamp and gate staff identity).
-5. **Evaluator & Judge Scoring Portal (`/judge`)**:
-   - Role-guarded scoring portal with 4 rubrics: Innovation (25), Technical Execution (25), Practical Impact (25), and Presentation & Demo (25).
+5. **Evaluator & Judge Scoring Portal (`/judge/*`)**:
+   - Role-guarded multi-page portal: Evaluation Queue (`/judge`), Completed Reviews (`/judge/completed`), and Role Security (`/judge/security`).
+   - 4-pillar scoring rubric (Innovation, Technical Execution, Healthcare Impact, Presentation — up to 40 points total) with recommendation verdict & feedback.
    - Real-time score aggregation with automatic rank recalculation.
 6. **Live Public Competition Leaderboard (`/leaderboard`)**:
    - Interactive leaderboard with track filtering, average judge scores, evaluation count metrics, and Gold/Silver/Bronze podium styling.
-7. **Enterprise Admin Governance Console (`/admin`)**:
-   - Collapsible icon sidebar with smooth transition animations.
-   - Multi-role **Role-Based Access Control (RBAC)**: Admin, Evaluator, Volunteer, Candidate.
-   - **Dedicated Staff Provisioning & Lifecycle Governance**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`), while public candidates self-register via email OTP.
-   - **Role Deactivation & Self-Service Security**: Administrators can deactivate or reactivate staff access with 1 click, and staff members can securely change their starting password or deactivate their own role from their Security Settings panel.
+7. **Enterprise Admin Governance Console (`/admin/*`)**:
+   - Modular multi-page console: Submissions (`/admin`), Problem Statements (`/admin/problems`), Access & Role RBAC (`/admin/roles`), and Admin Security (`/admin/security`).
+   - Collapsible icon sidebar (`Ctrl+B` shortcut + `localStorage` persistence) with live badge counts.
+   - **Dedicated Staff Provisioning & Candidate Isolation**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`). Competing candidates self-register via OTP and stay isolated from staff roles, with safe `"Remove Account"` cleanup (`DELETE /api/user/admin/:id`) for unlinked/test accounts.
+   - **Role Deactivation & Self-Service Security**: Administrators can deactivate or reactivate staff access with 1 click, and staff members can securely change their password or deactivate their own role.
    - Real-time KPI metric cards, track distribution analytics, live status stepper controls, and 1-click CSV data export.
 
 ---
@@ -145,29 +148,32 @@ Hackathon Portal/
 ├── client/                         # Frontend Application (React + Vite + Tailwind)
 │   ├── public/                     # Static assets
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx          # Role-aware responsive navigation & mobile menu
-│   │   │   ├── Footer.jsx          # MatruCare AI branding, social, contact
-│   │   │   └── ProtectedRoute.jsx  # Client-side route & RBAC authentication guard
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx     # Global auth state, token management, profile sync
-│   │   ├── pages/
-│   │   │   ├── Home.jsx            # Hero, highlights, timeline, prizes, FAQ, CTA
-│   │   │   ├── Signup.jsx          # Candidate registration
-│   │   │   ├── VerifyOtp.jsx       # 6-digit OTP verification with countdown timer
-│   │   │   ├── Login.jsx           # Email & password login
-│   │   │   ├── Dashboard.jsx       # Candidate hub, profile editor, Lanyard Badge modal
-│   │   │   ├── HackathonRegister.jsx # Dynamic registration (1-5 members, cross-college)
-│   │   │   ├── VerifyPass.jsx      # Live camera scanner & hybrid gate attendance console
-│   │   │   ├── JudgePortal.jsx     # Evaluator scoring rubrics & rubric submission
-│   │   │   ├── Leaderboard.jsx     # Public competition rankings & track filter
-│   │   │   ├── AdminDashboard.jsx  # Admin console, KPI cards, collapsible sidebar, CSV export
-│   │   │   ├── ProblemStatements.jsx # Live challenge briefs
-│   │   │   ├── TeamInviteAcceptance.jsx # Teammate invitation confirmation flow
-│   │   │   └── Contact.jsx         # Contact form to matrucareai@gmail.com
-│   │   ├── services/
-│   │   │   └── api.js              # Axios instance with JWT bearer token interceptor
-│   │   ├── App.jsx                 # Route definitions & RBAC routing table
+│   │   ├── shared/                 # Cross-portal auth, API client, and guards
+│   │   │   ├── components/
+│   │   │   │   ├── AccountSecurityModal.jsx # Modal & inline password/role deactivation
+│   │   │   │   ├── ProtectedRoute.jsx       # Authenticated participant route guard
+│   │   │   │   └── RoleRoute.jsx            # Strict RBAC portal guard (admin, evaluator, volunteer)
+│   │   │   ├── context/
+│   │   │   │   └── AuthContext.jsx          # Global auth state, token sync, OTP helpers
+│   │   │   └── services/
+│   │   │       └── api.js                   # Axios instance with JWT & deactivation interceptors
+│   │   ├── client/                 # Client Root: Public Website & Candidate Portal
+│   │   │   ├── layout/ClientLayout.jsx
+│   │   │   ├── components/         # Navbar, Footer, LanyardBadgeModal, CandidateProfileModal
+│   │   │   └── pages/              # Home, Problems, Leaderboard, Contact, Login (+OTP reset), Signup, VerifyOtp, Dashboard, HackathonRegister, TeamInviteAcceptance
+│   │   ├── judge/                  # Judge Evaluation Portal (/judge/*)
+│   │   │   ├── layout/JudgeLayout.jsx
+│   │   │   ├── components/ScoreRubricModal.jsx
+│   │   │   └── pages/              # JudgeQueuePage, JudgeHistoryPage, JudgeSecurityPage
+│   │   ├── volunteer/              # Gate Volunteer Portal (/volunteer/* & /verify-pass)
+│   │   │   ├── layout/VolunteerLayout.jsx
+│   │   │   ├── components/         # QrCameraScanner, PassAttendanceCard
+│   │   │   └── pages/              # GateScannerPage, VolunteerSecurityPage
+│   │   ├── admin/                  # Admin Governance Console (/admin/*)
+│   │   │   ├── layout/             # AdminLayout, AdminSidebar (collapsible + Ctrl+B)
+│   │   │   ├── components/         # KpiSummaryCards, SubmissionDetailModal, ProblemFormModal, ProvisionStaffModal
+│   │   │   └── pages/              # AdminSubmissionsPage, AdminProblemsPage, AdminStaffRolesPage, AdminSecurityPage
+│   │   ├── App.jsx                 # React.lazy() nested multi-portal router
 │   │   ├── main.jsx                # React root mount
 │   │   └── index.css               # Tailwind directives, custom scrollbars, print media
 │   ├── index.html                  # HTML entry point
@@ -298,9 +304,9 @@ For live evaluation, test accounts representing each platform role are available
 
 | Role | Email Address | Access Passkey | Accessible Views |
 | :--- | :--- | :--- | :--- |
-| **Official Admin** | `matrucareai@gmail.com` | `MatruCare@2026` | Full Admin Console (`/admin`), Status Management, RBAC, CSV Export |
-| **Gate Volunteer** | `volunteer@hackathon.com` | `Volunteer@2026` | Pass Scanner (`/verify-pass`), Master & Late Attendance Check-In |
-| **Evaluator / Judge** | `judge@hackathon.com` | `Judge@2026` | Judge Portal (`/judge`), Scoring Rubrics, Evaluation Submission |
+| **Official Admin** | `matrucareai@gmail.com` | `MatruCare@2026` | Full Admin Console (`/admin/*`), Status Management, RBAC, CSV Export |
+| **Gate Volunteer** | `volunteer@hackathon.com` | `Volunteer@2026` | Gate Volunteer Portal (`/volunteer`, `/verify-pass`), Master & Late Attendance Check-In |
+| **Evaluator / Judge** | `judge@hackathon.com` | `Judge@2026` | Judge Portal (`/judge/*`), Scoring Rubrics, Evaluation Submission |
 | **Candidate (Lead)** | Self-register via Signup | Set during signup | Candidate Dashboard (`/dashboard`), Lanyard Badge, Project Edit/Withdraw |
 
 ---
@@ -331,6 +337,8 @@ In strict accordance with assignment requirements:
 | `POST` | `/api/auth/verify-otp` | Public | Validates 6-digit OTP code, marks user as verified, enables login |
 | `POST` | `/api/auth/resend-otp` | Public | Dispatches a fresh 6-digit OTP code with reset 10-minute validity timer |
 | `POST` | `/api/auth/login` | Public | Authenticates credentials with bcrypt, returns JWT bearer token and user role |
+| `POST` | `/api/auth/forgot-password` | Public | Sends a dedicated 6-digit password reset OTP to verified active user emails |
+| `POST` | `/api/auth/reset-password` | Public | Verifies the 6-digit reset OTP and updates the user's hashed password |
 
 ---
 
@@ -340,8 +348,9 @@ In strict accordance with assignment requirements:
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/user/me` | Private | Retrieves authenticated user profile, academic records, and role |
 | `PUT` | `/api/user/update` | Private | Updates academic details, developer links, skills, bio, or changes password |
-| `POST` | `/api/user/admin/provision-staff` | Private (Admin) | Provisions event staff (Judge, Volunteer, Co-Admin) with a starting password and optional onboarding email |
+| `POST` | `/api/user/admin/provision-staff` | Private (Admin) | Provisions dedicated non-candidate staff (Judge, Volunteer, Co-Admin); rejects candidate email conversion |
 | `PATCH` | `/api/user/admin/:id/toggle-active` | Private (Admin) | Toggles staff account active or deactivated access status (protects Super Admin) |
+| `DELETE` | `/api/user/admin/:id` | Private (Admin) | Permanently removes unlinked or test accounts (blocks Super Admin, self, and linked registrations) |
 | `POST` | `/api/user/deactivate-role` | Private (Staff) | Self-service staff role deactivation (logs out user and revokes active staff session) |
 
 ---
