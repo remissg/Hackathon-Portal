@@ -395,6 +395,7 @@ const GateScannerPage = () => {
           isAdmin={isAdmin}
           canCheckIn={canCheckIn}
           checkingIn={checkingIn}
+          checkInMsg={checkInMsg}
           copied={copied}
           onCopyId={handleCopyId}
           onCheckInToggle={handleCheckInToggle}

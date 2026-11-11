@@ -19,6 +19,7 @@ const PassAttendanceCard = ({
   isAdmin,
   canCheckIn,
   checkingIn,
+  checkInMsg,
   copied,
   onCopyId,
   onCheckInToggle,

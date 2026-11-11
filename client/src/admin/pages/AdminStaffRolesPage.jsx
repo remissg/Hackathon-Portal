@@ -366,7 +366,10 @@ const AdminStaffRolesPage = () => {
                     const isSuperAdminUser = u.email?.toLowerCase() === 'matrucareai@gmail.com';
                     const isStaff = u.role && u.role !== 'user';
                     const isActive = u.isActive !== false;
-                    const isSelf = user?._id === u._id;
+                    const isSelf =
+                      currentUser?._id === u._id ||
+                      currentUser?.id === u._id ||
+                      currentUser?.email?.toLowerCase() === u.email?.toLowerCase();
 
                     return (
                       <tr key={u._id} className="hover:bg-slate-800/30 transition-colors">
