@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import api from '../../shared/services/api';
 import ScoreRubricModal from '../components/ScoreRubricModal';
+import SectionLoader from '../../shared/components/SectionLoader';
 import {
   Award,
   CheckCircle2,
@@ -265,15 +266,17 @@ const JudgeLayout = () => {
           </div>
         )}
 
-        <Outlet
-          context={{
-            submissions,
-            loading,
-            error,
-            fetchSubmissions,
-            handleOpenScoring,
-          }}
-        />
+        <Suspense fallback={<SectionLoader label="Loading judge panel..." accentClass="border-t-amber-400" />}>
+          <Outlet
+            context={{
+              submissions,
+              loading,
+              error,
+              fetchSubmissions,
+              handleOpenScoring,
+            }}
+          />
+        </Suspense>
       </main>
 
       {/* Subtle Footer */}

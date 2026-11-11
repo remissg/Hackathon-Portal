@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
+import SectionLoader from '../../shared/components/SectionLoader';
 import {
   QrCode,
   Key,
@@ -114,7 +115,9 @@ const VolunteerLayout = () => {
       </header>
 
       <main className="flex-grow">
-        <Outlet context={{ embeddedInVolunteerLayout: true }} />
+        <Suspense fallback={<SectionLoader label="Loading gate workspace..." accentClass="border-t-cyan-400" />}>
+          <Outlet context={{ embeddedInVolunteerLayout: true }} />
+        </Suspense>
       </main>
 
       <footer className="border-t border-slate-800/60 py-4 px-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../shared/services/api';
 import { useAuth } from '../../shared/context/AuthContext';
 import AdminSidebar from './AdminSidebar';
+import SectionLoader from '../../shared/components/SectionLoader';
 import {
   AlertTriangle,
   CheckCircle,
@@ -124,6 +125,14 @@ const AdminLayout = () => {
     fetchData();
     fetchUsers();
     fetchAdminProblems();
+
+    // Warm up Admin child route chunks so sidebar switches happen immediately
+    Promise.all([
+      import('../pages/AdminSubmissionsPage'),
+      import('../pages/AdminProblemsPage'),
+      import('../pages/AdminStaffRolesPage'),
+      import('../pages/AdminAuditLogsPage'),
+    ]).catch(() => {});
   }, []);
 
   const handleExportCSV = () => {
@@ -349,25 +358,27 @@ const AdminLayout = () => {
             </div>
           )}
 
-          <Outlet
-            context={{
-              registrations,
-              setRegistrations,
-              stats,
-              loading,
-              fetchData,
-              users,
-              setUsers,
-              loadingUsers,
-              fetchUsers,
-              adminEvents,
-              adminProblems,
-              loadingProblems,
-              fetchAdminProblems,
-              auditRefreshTick,
-              showToast,
-            }}
-          />
+          <Suspense fallback={<SectionLoader label="Loading admin section..." accentClass="border-t-rose-400" />}>
+            <Outlet
+              context={{
+                registrations,
+                setRegistrations,
+                stats,
+                loading,
+                fetchData,
+                users,
+                setUsers,
+                loadingUsers,
+                fetchUsers,
+                adminEvents,
+                adminProblems,
+                loadingProblems,
+                fetchAdminProblems,
+                auditRefreshTick,
+                showToast,
+              }}
+            />
+          </Suspense>
         </main>
       </div>
     </div>
