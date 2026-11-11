@@ -21,12 +21,15 @@ import {
   Award,
   Trophy,
   Target,
+  Key,
 } from 'lucide-react';
+import AccountSecurityModal from './AccountSecurityModal';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
   
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
@@ -456,8 +459,19 @@ const Navbar = () => {
                         )}
                       </div>
 
-                      {/* Logout Link */}
-                      <div className="pt-1.5 px-2">
+                      {/* Security Settings & Logout Links */}
+                      <div className="pt-1.5 px-2 border-t border-slate-800/80 space-y-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            setSecurityModalOpen(true);
+                          }}
+                          className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
+                        >
+                          <Key className="w-4 h-4 text-sky-400" />
+                          <span>Security &amp; Password</span>
+                        </button>
                         <button
                           onClick={handleLogout}
                           className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-950/40 transition-colors"
@@ -617,6 +631,17 @@ const Navbar = () => {
                   </>
                 )}
                 <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setSecurityModalOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:bg-slate-800"
+                >
+                  <Key className="w-4 h-4 text-sky-400" />
+                  Security &amp; Password
+                </button>
+                <button
                   onClick={handleLogout}
                   className="flex w-full items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-rose-400 hover:bg-rose-950/30"
                 >
@@ -645,6 +670,11 @@ const Navbar = () => {
           </div>
         </div>
       )}
+      {/* Account & Security Modal */}
+      <AccountSecurityModal
+        isOpen={securityModalOpen}
+        onClose={() => setSecurityModalOpen(false)}
+      />
     </nav>
   );
 };

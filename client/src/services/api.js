@@ -64,6 +64,17 @@ api.interceptors.response.use(
         window.location.href = '/login?expired=true';
       }
     }
+    if (
+      error.response &&
+      error.response.status === 403 &&
+      error.response.data?.message?.toLowerCase().includes('deactivated')
+    ) {
+      if (localStorage.getItem('token') && !window.location.pathname.includes('/login')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login?deactivated=true';
+      }
+    }
     return Promise.reject(error);
   }
 );

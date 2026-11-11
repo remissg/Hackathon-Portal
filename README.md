@@ -58,6 +58,8 @@
 7. **Enterprise Admin Governance Console (`/admin`)**:
    - Collapsible icon sidebar with smooth transition animations.
    - Multi-role **Role-Based Access Control (RBAC)**: Admin, Evaluator, Volunteer, Candidate.
+   - **Dedicated Staff Provisioning & Lifecycle Governance**: Admins explicitly authorize staff roles (Judge/Evaluator, Gate Volunteer, Co-Admin) with email and starting passwords (dispatched via `matrucareai@gmail.com`), while public candidates self-register via email OTP.
+   - **Role Deactivation & Self-Service Security**: Administrators can deactivate or reactivate staff access with 1 click, and staff members can securely change their starting password or deactivate their own role from their Security Settings panel.
    - Real-time KPI metric cards, track distribution analytics, live status stepper controls, and 1-click CSV data export.
 
 ---
@@ -332,12 +334,15 @@ In strict accordance with assignment requirements:
 
 ---
 
-### 2. Candidate & Profile Endpoints (`/api/user`)
+### 2. Candidate, Profile & Staff Governance Endpoints (`/api/user`)
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/user/me` | Private | Retrieves authenticated user profile, academic records, and role |
 | `PUT` | `/api/user/update` | Private | Updates academic details, developer links, skills, bio, or changes password |
+| `POST` | `/api/user/admin/provision-staff` | Private (Admin) | Provisions event staff (Judge, Volunteer, Co-Admin) with a starting password and optional onboarding email |
+| `PATCH` | `/api/user/admin/:id/toggle-active` | Private (Admin) | Toggles staff account active or deactivated access status (protects Super Admin) |
+| `POST` | `/api/user/deactivate-role` | Private (Staff) | Self-service staff role deactivation (logs out user and revokes active staff session) |
 
 ---
 

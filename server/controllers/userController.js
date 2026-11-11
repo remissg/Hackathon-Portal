@@ -1,4 +1,6 @@
 import User from '../models/User.js';
+import { sendMail } from '../config/nodemailer.js';
+import { generateStaffOnboardingEmailTemplate } from '../utils/emailTemplates.js';
 
 /**
  * @desc    Get current user profile
@@ -20,6 +22,7 @@ export const getMe = async (req, res) => {
         email: user.email,
         isVerified: user.isVerified,
         role: user.role,
+        isActive: user.isActive !== false,
         mobileNumber: user.mobileNumber || '',
         collegeName: user.collegeName || '',
         course: user.course || '',
@@ -135,6 +138,7 @@ export const updateProfile = async (req, res) => {
         email: updatedUser.email,
         isVerified: updatedUser.isVerified,
         role: updatedUser.role,
+        isActive: updatedUser.isActive !== false,
         mobileNumber: updatedUser.mobileNumber || '',
         collegeName: updatedUser.collegeName || '',
         course: updatedUser.course || '',
@@ -225,6 +229,209 @@ export const updateUserRole = async (req, res) => {
     });
   } catch (error) {
     console.error('[Update User Role Error]:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Provision an Event Staff Member (Judge, Volunteer, Co-Admin)
+ * @route   POST /api/user/admin/provision-staff
+ * @access  Private / Admin
+ */
+export const provisionStaff = async (req, res) => {
+  try {
+    const { fullName, email, role, startingPassword, sendEmail = true } = req.body;
+
+    if (!fullName || !fullName.trim()) {
+      return res.status(400).json({ success: false, message: 'Full name is required' });
+    }
+
+    if (!email || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+      return res.status(400).json({ success: false, message: 'A valid email address is required' });
+    }
+
+    const allowedStaffRoles = ['evaluator', 'volunteer', 'admin'];
+    if (!allowedStaffRoles.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid staff role. Allowed staff roles: evaluator (Judge), volunteer (Gate Staff), admin (Co-Admin)',
+      });
+    }
+
+    if (!startingPassword || startingPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Starting password must be at least 6 characters long',
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail === 'matrucareai@gmail.com') {
+      return res.status(403).json({
+        success: false,
+        message: 'The primary Super Admin account is protected and cannot be modified via staff provisioning',
+      });
+    }
+
+    let existingUser = await User.findOne({ email: normalizedEmail });
+
+    let provisionedUser;
+    if (existingUser) {
+      if (existingUser.role === role && existingUser.isActive !== false) {
+        return res.status(400).json({
+          success: false,
+          message: `Staff member with email "${normalizedEmail}" already exists and is active as "${role}"`,
+        });
+      }
+
+      // If user exists (e.g. was a candidate or deactivated staff), upgrade/reactivate them
+      existingUser.role = role;
+      existingUser.fullName = fullName.trim();
+      existingUser.password = startingPassword; // will be hashed by pre-save
+      existingUser.isVerified = true;
+      existingUser.isActive = true;
+      existingUser.provisionedBy = req.user.email || 'Admin';
+      existingUser.provisionedAt = new Date();
+      provisionedUser = await existingUser.save();
+    } else {
+      // Create new staff account
+      provisionedUser = await User.create({
+        fullName: fullName.trim(),
+        email: normalizedEmail,
+        role,
+        password: startingPassword, // will be hashed by pre-save
+        isVerified: true,
+        isActive: true,
+        provisionedBy: req.user.email || 'Admin',
+        provisionedAt: new Date(),
+      });
+    }
+
+    // Optionally dispatch welcome onboarding email with starting credentials
+    let emailDispatched = false;
+    if (sendEmail) {
+      try {
+        const portalUrl = process.env.CLIENT_URL || 'https://client-seven-gold-99.vercel.app';
+        const mailContent = generateStaffOnboardingEmailTemplate({
+          fullName: provisionedUser.fullName,
+          email: provisionedUser.email,
+          role: provisionedUser.role,
+          startingPassword,
+          portalUrl,
+        });
+
+        const mailResult = await sendMail({
+          to: provisionedUser.email,
+          subject: `Official Staff Authorization — HackSphere 2026 (${role.toUpperCase()})`,
+          html: mailContent.html,
+          text: mailContent.text,
+        });
+        emailDispatched = !!mailResult?.success;
+      } catch (mailErr) {
+        console.error('[Staff Welcome Email Error]:', mailErr);
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: `Staff member "${provisionedUser.fullName}" provisioned successfully as "${provisionedUser.role}"!`,
+      emailDispatched,
+      user: {
+        _id: provisionedUser._id,
+        id: provisionedUser._id,
+        fullName: provisionedUser.fullName,
+        email: provisionedUser.email,
+        role: provisionedUser.role,
+        isActive: provisionedUser.isActive !== false,
+        isVerified: provisionedUser.isVerified,
+        provisionedAt: provisionedUser.provisionedAt,
+        provisionedBy: provisionedUser.provisionedBy,
+      },
+    });
+  } catch (error) {
+    console.error('[Provision Staff Error]:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to provision staff role' });
+  }
+};
+
+/**
+ * @desc    Toggle Staff Account Active / Deactivated Status
+ * @route   PATCH /api/user/admin/:id/toggle-active
+ * @access  Private / Admin
+ */
+export const toggleStaffActive = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const targetUser = await User.findById(id);
+
+    if (!targetUser) {
+      return res.status(404).json({ success: false, message: 'User account not found' });
+    }
+
+    // Safety guard: Protect Super Admin from deactivation
+    if (targetUser.email.toLowerCase() === 'matrucareai@gmail.com') {
+      return res.status(403).json({
+        success: false,
+        message: 'The official Super Admin account cannot be deactivated',
+      });
+    }
+
+    // Safety guard: Admin cannot deactivate their own account
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot deactivate your own active admin account',
+      });
+    }
+
+    targetUser.isActive = targetUser.isActive === false ? true : false;
+    await targetUser.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Account for ${targetUser.fullName} (${targetUser.email}) is now ${targetUser.isActive ? 'ACTIVE' : 'DEACTIVATED'}`,
+      user: {
+        _id: targetUser._id,
+        id: targetUser._id,
+        fullName: targetUser.fullName,
+        email: targetUser.email,
+        role: targetUser.role,
+        isActive: targetUser.isActive,
+      },
+    });
+  } catch (error) {
+    console.error('[Toggle Staff Active Error]:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * @desc    Deactivate current staff session / role (Self-service)
+ * @route   POST /api/user/deactivate-role
+ * @access  Private
+ */
+export const deactivateMyRole = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user.email.toLowerCase() === 'matrucareai@gmail.com') {
+      return res.status(403).json({
+        success: false,
+        message: 'The primary Super Admin account cannot self-deactivate',
+      });
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Your role access has been deactivated. You will now be signed out.',
+    });
+  } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };

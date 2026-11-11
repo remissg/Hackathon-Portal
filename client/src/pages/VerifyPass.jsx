@@ -25,7 +25,9 @@ import {
   Zap,
   X,
   Volume2,
+  Key,
 } from 'lucide-react';
+import AccountSecurityModal from '../components/AccountSecurityModal';
 
 const VerifyPass = () => {
   const [searchParams] = useSearchParams();
@@ -55,6 +57,7 @@ const VerifyPass = () => {
   const [scannerStarting, setScannerStarting] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [autoCheckIn, setAutoCheckIn] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
   const scannerInstanceRef = useRef(null);
 
   // Audio Confirmation Chime on scan
@@ -367,6 +370,18 @@ const VerifyPass = () => {
                 className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition"
               >
                 Clear / Manual Lookup
+              </button>
+            )}
+
+            {canCheckIn && (
+              <button
+                type="button"
+                onClick={() => setSecurityModalOpen(true)}
+                className="px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs border border-slate-800 transition flex items-center gap-2"
+                title="Staff Account Security & Password"
+              >
+                <Key className="w-4 h-4 text-cyan-400" />
+                <span>Staff Security</span>
               </button>
             )}
           </div>
@@ -826,6 +841,11 @@ const VerifyPass = () => {
         )}
 
       </div>
+      {/* Account Security Modal */}
+      <AccountSecurityModal
+        isOpen={securityModalOpen}
+        onClose={() => setSecurityModalOpen(false)}
+      />
     </div>
   );
 };

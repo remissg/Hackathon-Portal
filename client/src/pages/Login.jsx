@@ -7,6 +7,7 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const isJustVerified = searchParams.get('verified') === 'true';
   const isExpired = searchParams.get('expired') === 'true';
+  const isDeactivated = searchParams.get('deactivated') === 'true';
   const emailParam = searchParams.get('email') || '';
   const redirectParam = searchParams.get('redirect') || '';
 
@@ -110,6 +111,13 @@ const Login = () => {
             <div className="mb-6 p-4 rounded-xl bg-amber-950/60 border border-amber-800/80 text-amber-200 text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
               <span>Your session has expired. Please sign in again.</span>
+            </div>
+          )}
+
+          {isDeactivated && (
+            <div className="mb-6 p-4 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-200 text-sm flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+              <span>Your role access has been deactivated. Contact the HackSphere admin if access is required.</span>
             </div>
           )}
 

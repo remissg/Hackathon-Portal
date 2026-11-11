@@ -284,6 +284,14 @@ export const login = async (req, res) => {
       });
     }
 
+    // Check if account is active (not deactivated by admin)
+    if (user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account access has been deactivated by the administrator. Please contact event support.',
+      });
+    }
+
     // Check password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
@@ -306,6 +314,7 @@ export const login = async (req, res) => {
         email: user.email,
         isVerified: user.isVerified,
         role: user.role || 'user',
+        isActive: user.isActive !== false,
         mobileNumber: user.mobileNumber || '',
         collegeName: user.collegeName || '',
         course: user.course || '',

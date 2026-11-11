@@ -328,3 +328,92 @@ matrucareai@gmail.com`;
 
   return { html, text };
 };
+
+/**
+ * Staff Role Provisioning & Onboarding Email Template
+ */
+export const generateStaffOnboardingEmailTemplate = ({
+  fullName,
+  email,
+  role,
+  startingPassword,
+  portalUrl = 'https://client-seven-gold-99.vercel.app',
+}) => {
+  const roleDisplayNames = {
+    evaluator: 'Official Evaluator & Judge',
+    volunteer: 'Gate Attendance Volunteer',
+    admin: 'Co-Administrator',
+  };
+  const roleName = roleDisplayNames[role] || 'Event Staff';
+
+  const roleUrls = {
+    evaluator: `${portalUrl}/judge`,
+    volunteer: `${portalUrl}/verify-pass`,
+    admin: `${portalUrl}/admin`,
+  };
+  const destinationUrl = roleUrls[role] || `${portalUrl}/login`;
+
+  const text = `
+HackSphere 2026 — Official Staff Appointment
+
+Hello ${fullName},
+
+You have been officially provisioned as a "${roleName}" for HackSphere National Innovation Hackathon 2026.
+
+Your Official Staff Credentials:
+- Assigned Role: ${roleName}
+- Login Email: ${email}
+- Starting Password: ${startingPassword}
+- Direct Portal Link: ${destinationUrl}
+
+For security, please log in and change your starting password from your profile settings.
+
+Authorized by HackSphere Admin Team
+matrucareai@gmail.com
+  `.trim();
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px; color: #1e293b; background-color: #ffffff;">
+      <div style="margin-bottom: 20px;">
+        <h2 style="font-size: 22px; font-weight: 800; color: #0284c7; margin: 0 0 4px 0; letter-spacing: -0.5px;">HackSphere 2026</h2>
+        <p style="font-size: 13px; color: #64748b; margin: 0;">Official Staff Provisioning &amp; Access Authorization</p>
+      </div>
+
+      <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 14px 0;">
+        Hello <strong>${fullName}</strong>,
+      </p>
+      <p style="font-size: 15px; line-height: 1.5; color: #334155; margin: 0 0 16px 0;">
+        You have been officially appointed and authorized as a <strong>${roleName}</strong> for the HackSphere National Innovation Hackathon 2026.
+      </p>
+
+      <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+        <span style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #0284c7; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Authorized Credentials</span>
+        <p style="margin: 4px 0; font-size: 14px;"><strong>Assigned Role:</strong> <span style="background-color: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 600;">${roleName}</span></p>
+        <p style="margin: 6px 0; font-size: 14px;"><strong>Login Email:</strong> <span style="font-family: monospace; font-weight: 600; color: #334155;">${email}</span></p>
+        <p style="margin: 6px 0; font-size: 14px;"><strong>Starting Password:</strong> <span style="font-family: monospace; font-weight: 700; color: #0284c7; background-color: #f1f5f9; padding: 3px 8px; border-radius: 4px;">${startingPassword}</span></p>
+      </div>
+
+      <p style="font-size: 14px; line-height: 1.5; color: #475569; margin: 0 0 20px 0;">
+        🔒 <em>Security Notice:</em> Please sign in at the official portal and update your starting password to a personal password in your profile.
+      </p>
+
+      <div style="margin: 24px 0;">
+        <a href="${destinationUrl}" style="background-color: #0284c7; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 700; display: inline-block; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);">
+          Launch ${roleName} Console →
+        </a>
+      </div>
+
+      <p style="font-size: 12px; color: #64748b; margin: 16px 0 0 0;">
+        Direct Login Link: <br/>
+        <a href="${portalUrl}/login" style="color: #0284c7; word-break: break-all;">${portalUrl}/login</a>
+      </p>
+
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
+      <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+        HackSphere Governance Committee • Authorized via <a href="mailto:matrucareai@gmail.com" style="color: #0284c7; text-decoration: none;">matrucareai@gmail.com</a>
+      </p>
+    </div>
+  `;
+
+  return { html, text };
+};

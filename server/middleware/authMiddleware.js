@@ -31,6 +31,13 @@ export const protect = async (req, res, next) => {
         });
       }
 
+      if (req.user.isActive === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account access has been deactivated by the administrator. Please contact event support.',
+        });
+      }
+
       next();
     } catch (error) {
       console.error('[Auth Middleware Error]:', error.message);

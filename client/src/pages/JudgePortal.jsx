@@ -21,7 +21,9 @@ import {
   RefreshCw,
   Sliders,
   TrendingUp,
+  Key,
 } from 'lucide-react';
+import AccountSecurityModal from '../components/AccountSecurityModal';
 
 const TRACK_OPTIONS = [
   'All',
@@ -47,6 +49,7 @@ const JudgePortal = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTrack, setSelectedTrack] = useState('All');
   const [filterPendingOnly, setFilterPendingOnly] = useState(false);
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
 
   // Active Scoring Modal State
   const [activeProject, setActiveProject] = useState(null);
@@ -226,6 +229,15 @@ const JudgePortal = () => {
           </div>
 
           <div className="flex items-center gap-3 z-10 shrink-0">
+            <button
+              type="button"
+              onClick={() => setSecurityModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 border border-slate-700 transition"
+              title="Account & Security"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-400" />
+              <span>Account &amp; Security</span>
+            </button>
             <button
               onClick={fetchSubmissions}
               disabled={loading}
@@ -685,6 +697,11 @@ const JudgePortal = () => {
         </div>
       )}
 
+      {/* Account Security Modal */}
+      <AccountSecurityModal
+        isOpen={securityModalOpen}
+        onClose={() => setSecurityModalOpen(false)}
+      />
     </div>
   );
 };

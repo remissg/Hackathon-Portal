@@ -85,6 +85,18 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    provisionedBy: {
+      type: String,
+      default: null,
+    },
+    provisionedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
