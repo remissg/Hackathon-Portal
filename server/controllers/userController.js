@@ -4,6 +4,7 @@ import HackathonRegistration from '../models/HackathonRegistration.js';
 import { sendMail } from '../config/nodemailer.js';
 import { generateStaffOnboardingEmailTemplate } from '../utils/emailTemplates.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
+import { createNotification } from '../utils/notificationService.js';
 
 /**
  * @desc    Get current user profile
@@ -285,6 +286,15 @@ export const updateUserRole = async (req, res) => {
       changes: { from: oldRole, to: role },
     });
 
+    createNotification({
+      recipient: targetUser._id,
+      recipientEmail: targetUser.email,
+      title: `🛡️ Role Privilege Updated: ${role.toUpperCase()}`,
+      message: `Your account role was updated to "${role}". You now have access to the assigned portal workspace.`,
+      type: 'role',
+      link: role === 'admin' ? '/admin' : role === 'evaluator' ? '/judge' : role === 'volunteer' ? '/volunteer' : '/dashboard',
+    });
+
     return res.status(200).json({
       success: true,
       message: `User ${targetUser.fullName} role updated to "${role}"`,
@@ -427,6 +437,15 @@ export const provisionStaff = async (req, res) => {
       },
     });
 
+    createNotification({
+      recipient: provisionedUser._id,
+      recipientEmail: provisionedUser.email,
+      title: `🛡️ Appointed as ${provisionedUser.role.toUpperCase()}`,
+      message: `You have been provisioned as a ${provisionedUser.role} for HackSphere 2026. Access your specialized portal to begin operations.`,
+      type: 'role',
+      link: provisionedUser.role === 'admin' ? '/admin' : provisionedUser.role === 'evaluator' ? '/judge' : '/volunteer',
+    });
+
     return res.status(201).json({
       success: true,
       message: `Staff member "${provisionedUser.fullName}" provisioned successfully as "${provisionedUser.role}"!`,
@@ -498,6 +517,17 @@ export const toggleStaffActive = async (req, res) => {
         fromActive: !targetUser.isActive,
         toActive: targetUser.isActive,
       },
+    });
+
+    createNotification({
+      recipient: targetUser._id,
+      recipientEmail: targetUser.email,
+      title: targetUser.isActive ? `✅ Staff Access Active` : `⚠️ Staff Access Suspended`,
+      message: targetUser.isActive
+        ? `Your ${targetUser.role} clearance is active. You may access your portal workspace.`
+        : `Your ${targetUser.role} authorization was temporarily suspended by an administrator.`,
+      type: targetUser.isActive ? 'success' : 'warning',
+      link: targetUser.isActive ? (targetUser.role === 'evaluator' ? '/judge' : targetUser.role === 'volunteer' ? '/volunteer' : '/admin') : '/dashboard',
     });
 
     return res.status(200).json({

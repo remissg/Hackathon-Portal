@@ -10,6 +10,7 @@ import hackathonRoutes from './routes/hackathonRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 // Middleware imports
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
@@ -59,6 +60,7 @@ app.get('/', (req, res) => {
       contact: '/api/contact',
       events: '/api/events',
       auditLogs: '/api/audit-logs',
+      notifications: '/api/notifications',
     },
     version: '1.0.0',
     timestamp: new Date().toISOString(),
@@ -91,6 +93,7 @@ app.use('/api/hackathon', hackathonRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/audit-logs', auditRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);

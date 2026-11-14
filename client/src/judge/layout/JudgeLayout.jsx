@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/context/AuthContext';
 import api from '../../shared/services/api';
 import ScoreRubricModal from '../components/ScoreRubricModal';
 import SectionLoader from '../../shared/components/SectionLoader';
+import NotificationBell from '../../shared/components/NotificationBell';
 import {
   Award,
   CheckCircle2,
@@ -192,6 +193,7 @@ const JudgeLayout = () => {
                 {user?.fullName}
               </span>
             </div>
+            <NotificationBell />
             <button
               onClick={handleLogout}
               className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-rose-500/40 hover:bg-rose-950/30 text-slate-400 hover:text-rose-400 transition"

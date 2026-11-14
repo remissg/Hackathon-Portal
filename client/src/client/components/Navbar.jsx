@@ -24,15 +24,14 @@ import {
   Key,
 } from 'lucide-react';
 import AccountSecurityModal from '../../shared/components/AccountSecurityModal';
+import NotificationBell from '../../shared/components/NotificationBell';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [securityModalOpen, setSecurityModalOpen] = useState(false);
   
   const dropdownRef = useRef(null);
-  const notifRef = useRef(null);
 
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -44,66 +43,11 @@ const Navbar = () => {
   const isJudge = user?.role === 'evaluator' || isAdmin;
   const isVolunteer = user?.role === 'volunteer';
 
-  // Notification Center State (persisted per user)
-  const userStorageKey = `mcai_notifs_${user?.email || 'guest'}`;
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const saved = localStorage.getItem(userStorageKey);
-      if (saved) return JSON.parse(saved);
-    } catch (_) {}
-    return [
-      {
-        id: '1',
-        title: '🎉 Admission Pass Ready',
-        message: 'Your official QR-code admission pass is ready to view and scan on your dashboard.',
-        time: 'Just now',
-        read: false,
-        link: '/dashboard',
-      },
-      {
-        id: '2',
-        title: '🛡️ Pass Scanner Live',
-        message: 'Point any phone camera at your pass QR code to test instant pass verification.',
-        time: '5m ago',
-        read: false,
-        link: '/volunteer',
-      },
-      {
-        id: '3',
-        title: '✉️ Deliverability Optimized',
-        message: 'All hackathon invitations & milestone emails are configured with direct inbox delivery.',
-        time: '1h ago',
-        read: true,
-        link: '/dashboard',
-      },
-    ];
-  });
-
-  // Save notifications to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(userStorageKey, JSON.stringify(notifications));
-    } catch (_) {}
-  }, [notifications, userStorageKey]);
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-  };
-
   // Close dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setUserDropdownOpen(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
-        setNotifDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -114,7 +58,6 @@ const Navbar = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
-    setNotifDropdownOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -250,93 +193,8 @@ const Navbar = () => {
                   </Link>
                 )}
 
-                {/* Real-Time Notification Bell Center */}
-                <div className="relative" ref={notifRef}>
-                  <button
-                    type="button"
-                    onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                    className="relative p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all"
-                    title="Notifications"
-                  >
-                    <Bell className="w-4 h-4" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-cyan-500 text-slate-950 font-extrabold text-[10px] flex items-center justify-center animate-pulse shadow-sm shadow-cyan-500/50">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* Notifications Floating Dropdown */}
-                  {notifDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-80 sm:w-88 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl py-3 z-50 animate-fade-in divide-y divide-slate-800/80">
-                      <div className="px-4 pb-2.5 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Bell className="w-4 h-4 text-cyan-400" />
-                          <span className="text-xs font-bold text-white">Notifications</span>
-                          {unreadCount > 0 && (
-                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-950 text-cyan-400 border border-cyan-800/50">
-                              {unreadCount} new
-                            </span>
-                          )}
-                        </div>
-                        {unreadCount > 0 && (
-                          <button
-                            type="button"
-                            onClick={markAllAsRead}
-                            className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-medium transition"
-                          >
-                            <CheckCheck className="w-3.5 h-3.5" />
-                            Mark read
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Notification List */}
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-800/40 py-1">
-                        {notifications.length === 0 ? (
-                          <div className="py-6 text-center text-xs text-slate-500">
-                            No notifications at this time
-                          </div>
-                        ) : (
-                          notifications.map((n) => (
-                            <Link
-                              key={n.id}
-                              to={n.link}
-                              onClick={() => {
-                                setNotifications((prev) =>
-                                  prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
-                                );
-                                setNotifDropdownOpen(false);
-                              }}
-                              className={`block px-4 py-3 transition hover:bg-slate-800/60 ${
-                                !n.read ? 'bg-cyan-950/20' : ''
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-2 mb-1">
-                                <p className="text-xs font-semibold text-white leading-snug">{n.title}</p>
-                                <span className="text-[10px] text-slate-500 shrink-0">{n.time}</span>
-                              </div>
-                              <p className="text-[11px] text-slate-300 line-clamp-2 leading-relaxed">{n.message}</p>
-                            </Link>
-                          ))
-                        )}
-                      </div>
-
-                      {notifications.length > 0 && (
-                        <div className="px-4 pt-2 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-500">HackSphere Live Alerts</span>
-                          <button
-                            type="button"
-                            onClick={clearAllNotifications}
-                            className="text-slate-400 hover:text-rose-400 flex items-center gap-1 transition"
-                          >
-                            <Trash2 className="w-3 h-3" /> Clear
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {/* Real-Time Database Connected Notification Bell Center */}
+                <NotificationBell />
 
                 {/* Modern User Avatar Dropdown */}
                 <div className="relative" ref={dropdownRef}>
@@ -353,7 +211,10 @@ const Navbar = () => {
 
                   {/* Dropdown Menu */}
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900/95 border border-slate-800 shadow-2xl backdrop-blur-xl py-2 z-50 animate-fade-in divide-y divide-slate-800/80">
+                    <div
+                      className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#090e1a] border border-slate-700 shadow-2xl shadow-black ring-1 ring-slate-700/80 py-2 z-[100] animate-fade-in divide-y divide-slate-800"
+                      style={{ backgroundColor: '#090e1a', opacity: 1 }}
+                    >
                       
                       {/* User Header Info */}
                       <div className="px-4 py-3">
@@ -504,8 +365,9 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="flex lg:hidden">
+          {/* Mobile Controls (Notification Bell & Hamburger) */}
+          <div className="flex lg:hidden items-center gap-2">
+            {isAuthenticated && <NotificationBell align="right" />}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"

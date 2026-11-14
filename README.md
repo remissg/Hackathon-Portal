@@ -400,6 +400,18 @@ In strict accordance with assignment requirements:
 
 ---
 
+### 6. Real-Time In-App Notification Endpoints (`/api/notifications`)
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/notifications` | Private | Retrieves persistent notifications with unread count & pagination for the authenticated user |
+| `PATCH` | `/api/notifications/mark-all-read` | Private | Marks all unread notifications as read for current user |
+| `PATCH` | `/api/notifications/:id/read` | Private | Marks a specific notification as read and records timestamp |
+| `DELETE` | `/api/notifications/:id` | Private | Deletes a specific notification belonging to current user |
+| `DELETE` | `/api/notifications/clear-all` | Private | Clears all notifications for the authenticated user |
+
+---
+
 ## 📋 Evaluation Criteria Mapping (100 / 100 Marks)
 
 | Criteria | Max Marks | Implementation Highlights |

@@ -4,6 +4,7 @@ import api from '../../shared/services/api';
 import { useAuth } from '../../shared/context/AuthContext';
 import AdminSidebar from './AdminSidebar';
 import SectionLoader from '../../shared/components/SectionLoader';
+import NotificationBell from '../../shared/components/NotificationBell';
 import {
   AlertTriangle,
   CheckCircle,
@@ -316,6 +317,8 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <NotificationBell />
+
             <button
               onClick={handleRefreshActive}
               disabled={loading || loadingUsers || loadingProblems}

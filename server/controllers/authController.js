@@ -8,6 +8,7 @@ import {
   generatePasswordResetOtpTemplate,
 } from '../utils/emailTemplates.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
+import { createNotification } from '../utils/notificationService.js';
 
 /**
  * Generate JWT Token helper
@@ -182,6 +183,15 @@ export const verifyOtp = async (req, res) => {
       severity: 'info',
       target: { type: 'user', id: user._id, label: user.email },
       summary: `Candidate account ${user.email} completed email OTP verification`,
+    });
+
+    createNotification({
+      recipient: user._id,
+      recipientEmail: user.email,
+      title: `🎉 Account Verified`,
+      message: `Welcome to HackSphere 2026, ${user.fullName}! Your email has been verified. Explore challenges and register your project team.`,
+      type: 'success',
+      link: '/problems',
     });
 
     return res.status(200).json({

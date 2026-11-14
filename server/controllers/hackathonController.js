@@ -7,6 +7,7 @@ import {
   generateStatusUpdateEmailTemplate,
 } from '../utils/emailTemplates.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
+import { createNotification } from '../utils/notificationService.js';
 
 /**
  * Validate URL helper
@@ -200,6 +201,17 @@ export const registerHackathon = async (req, res) => {
     });
     console.log(`[Registration] Lead email dispatched to ${registration.email}:`, leadMailRes);
 
+    // Create real-time notification for team lead
+    createNotification({
+      recipient: registration.userId,
+      recipientEmail: registration.email,
+      title: `🎉 Registration Confirmed: ${registration.projectName}`,
+      message: `Your project "${registration.projectName}" is officially registered under track "${registration.domain}". Your admission pass is ready to scan.`,
+      type: 'pass',
+      link: '/dashboard',
+      metadata: { registrationId: registration._id, projectName: registration.projectName },
+    });
+
     // Send teammate invitation emails if additional members are present (properly awaited)
     if (Array.isArray(cleanTeamMembers) && cleanTeamMembers.length > 0) {
       const ticketId = `MCAI-2026-${registration._id.toString().slice(-4).toUpperCase()}`;
@@ -207,6 +219,16 @@ export const registerHackathon = async (req, res) => {
         .filter((member) => member && member.email)
         .map(async (member) => {
           try {
+            // Create in-app notification for invited teammate
+            createNotification({
+              recipientEmail: member.email,
+              title: `📩 Team Invitation: ${registration.projectName}`,
+              message: `${registration.fullName} invited you to join team "${registration.projectName}" for HackSphere 2026. Respond to claim your pass.`,
+              type: 'invite',
+              link: '/team-invite',
+              metadata: { registrationId: registration._id, projectName: registration.projectName },
+            });
+
             const inviteEmail = generateTeammateInviteEmailTemplate({
               memberName: member.name,
               memberEmail: member.email,
@@ -655,6 +677,17 @@ export const updateRegistrationStatus = async (req, res) => {
 
       // Dispatch in parallel
       const emailDispatches = recipients.map((r) => {
+        // Create in-app notification
+        createNotification({
+          recipient: r.email === entry.email ? entry.userId : null,
+          recipientEmail: r.email,
+          title: `📢 Status Milestone: ${entry.projectName}`,
+          message: `Project review status was updated to "${status}". Check your dashboard for official milestone details.`,
+          type: status === 'Shortlisted' || status === 'Finalist' ? 'success' : status === 'Rejected' ? 'warning' : 'status',
+          link: '/dashboard',
+          metadata: { status, registrationId: entry._id },
+        });
+
         const milestoneEmail = generateStatusUpdateEmailTemplate({
           participantName: r.name,
           projectName: entry.projectName,
@@ -956,6 +989,28 @@ export const checkInPass = async (req, res) => {
 
     await entry.save();
 
+    // Trigger in-app gate check-in notification
+    if (action === 'admit-all' || action === 'admit-lead' || (action === 'toggle-lead' && entry.leaderIsCheckedIn)) {
+      createNotification({
+        recipient: entry.userId,
+        recipientEmail: entry.email,
+        title: '🎫 Gate Admission Confirmed',
+        message: `Welcome to HackSphere 2026! Pass verified for team "${entry.projectName}" at the main gate.`,
+        type: 'pass',
+        link: '/dashboard',
+        metadata: { registrationId: entry._id },
+      });
+    } else if (action === 'admit-member' || (action === 'toggle-member' && memberEmail)) {
+      createNotification({
+        recipientEmail: memberEmail,
+        title: '🎫 Gate Admission Confirmed',
+        message: `Welcome to HackSphere 2026! Your pass for team "${entry.projectName}" was verified at the entrance gate.`,
+        type: 'pass',
+        link: '/dashboard',
+        metadata: { registrationId: entry._id, memberEmail },
+      });
+    }
+
     const totalMembers = 1 + (entry.teamMembers?.length || 0);
     const admittedMembers = (entry.leaderIsCheckedIn ? 1 : 0) + (entry.teamMembers?.filter((m) => m.isCheckedIn).length || 0);
 
@@ -1125,6 +1180,29 @@ export const respondToInvitation = async (req, res) => {
 
     await entry.save();
 
+    // Notify team lead of invitation response
+    createNotification({
+      recipient: entry.userId,
+      recipientEmail: entry.email,
+      title: newStatus === 'Accepted' ? `🤝 Teammate Joined: ${req.user.fullName || userEmail}` : `⚠️ Invite Response: ${userEmail}`,
+      message: `${req.user.fullName || userEmail} has ${newStatus.toLowerCase()} your team invitation for "${entry.projectName}".`,
+      type: newStatus === 'Accepted' ? 'success' : 'warning',
+      link: '/dashboard',
+      metadata: { memberEmail: userEmail, decision: newStatus, registrationId: entry._id },
+    });
+
+    // Notify the member who responded
+    createNotification({
+      recipient: req.user._id,
+      recipientEmail: userEmail,
+      title: newStatus === 'Accepted' ? `🎉 Joined Team "${entry.projectName}"` : `Invitation Declined`,
+      message: newStatus === 'Accepted'
+        ? `You are now an active member of Team "${entry.projectName}". Your pass is available on your dashboard.`
+        : `You declined the invitation to join Team "${entry.projectName}".`,
+      type: newStatus === 'Accepted' ? 'success' : 'info',
+      link: '/dashboard',
+    });
+
     await recordAuditLog({
       req,
       category: 'submissions',
@@ -1225,6 +1303,17 @@ export const submitEvaluation = async (req, res) => {
     entry.evaluationCount = entry.evaluations.length;
 
     await entry.save();
+
+    // Trigger in-app evaluation notification to project lead
+    createNotification({
+      recipient: entry.userId,
+      recipientEmail: entry.email,
+      title: `⚖️ Project Evaluated: ${entry.projectName}`,
+      message: `A judge has submitted an evaluation for "${entry.projectName}". Your average score is now ${entry.averageScore}/40 across ${entry.evaluationCount} review(s).`,
+      type: 'evaluation',
+      link: '/dashboard',
+      metadata: { registrationId: entry._id, totalScore, averageScore: entry.averageScore },
+    });
 
     await recordAuditLog({
       req,
