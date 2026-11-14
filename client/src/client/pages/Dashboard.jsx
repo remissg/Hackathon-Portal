@@ -4,6 +4,7 @@ import { useAuth } from '../../shared/context/AuthContext';
 import api from '../../shared/services/api';
 import LanyardBadgeModal from '../components/LanyardBadgeModal';
 import CandidateProfileModal from '../components/CandidateProfileModal';
+import VerifiedCertificateModal from '../components/VerifiedCertificateModal';
 import {
   Sparkles,
   User,
@@ -54,8 +55,20 @@ const Dashboard = () => {
   // Modals state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [passModalOpen, setPassModalOpen] = useState(false);
+  const [certModalOpen, setCertModalOpen] = useState(false);
   const [selectedPassAttendee, setSelectedPassAttendee] = useState(null); // null = Team Lead
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [showPitchPrep, setShowPitchPrep] = useState(false);
+  const [pitchChecklist, setPitchChecklist] = useState({
+    pptReady: false,
+    backendLive: false,
+    micTested: false,
+    repoPublic: false,
+  });
+
+  const toggleChecklist = (key) => {
+    setPitchChecklist((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
   
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -437,6 +450,14 @@ const Dashboard = () => {
                   <QrCode className="w-3.5 h-3.5 text-sky-400" />
                   <span>Entry Badge</span>
                 </button>
+                <button
+                  onClick={() => setCertModalOpen(true)}
+                  className="px-3.5 py-2 rounded-xl bg-amber-950/80 hover:bg-amber-900/90 text-amber-300 text-xs font-semibold flex items-center gap-1.5 border border-amber-800/80 transition-colors shadow-sm"
+                  title="View & Download Official Verified Certificate of Participation / Merit"
+                >
+                  <Award className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Certificate</span>
+                </button>
                 {isLead ? (
                   <>
                     <button
@@ -464,47 +485,153 @@ const Dashboard = () => {
 
             {/* Visual Submission Progress Stepper */}
             <div className="px-6 sm:px-8 py-6 bg-slate-950/60 border-b border-slate-800">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-4">
-                Evaluation Stage Progress
-              </span>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Evaluation Stage Progression
+                </span>
+                <span className="text-xs font-semibold text-slate-400">
+                  Current Milestone:{' '}
+                  <span className="text-sky-400 font-bold">{entry.status || 'Submitted'}</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {/* 1. Registration Confirmed */}
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-emerald-900/60">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
                     ✓
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-white">1. Submitted</p>
-                    <p className="text-[10px] text-emerald-400">Verified & Confirmed</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">1. Registered</p>
+                    <p className="text-[10px] text-emerald-400 truncate">Pass Confirmed</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-sky-900/60 animate-pulse">
-                  <div className="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-xs">
-                    2
+                {/* 2. Asset Screening & Eligibility */}
+                <div
+                  className={`flex items-center gap-3 p-3 rounded-xl bg-slate-900 border ${
+                    ['Submitted', 'Under Review', 'Shortlisted', 'Finalist', 'Winner'].includes(entry.status)
+                      ? 'border-emerald-900/60'
+                      : 'border-sky-900/60 animate-pulse'
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                      ['Submitted', 'Under Review', 'Shortlisted', 'Finalist', 'Winner'].includes(entry.status)
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-sky-500/20 text-sky-400'
+                    }`}
+                  >
+                    ✓
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-white">2. Technical Review</p>
-                    <p className="text-[10px] text-sky-400">Under Review</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">2. Screening</p>
+                    <p className="text-[10px] text-emerald-400 truncate">Assets Verified</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-slate-500">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs">
-                    3
+                {/* 3. Judge Evaluation & Rubric */}
+                <div
+                  className={`flex items-center gap-3 p-3 rounded-xl bg-slate-900 border ${
+                    (entry.evaluationCount || 0) > 0
+                      ? 'border-emerald-900/60'
+                      : entry.status === 'Under Review'
+                      ? 'border-sky-900/60 animate-pulse'
+                      : 'border-slate-800 opacity-60'
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                      (entry.evaluationCount || 0) > 0
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : entry.status === 'Under Review'
+                        ? 'bg-sky-500/20 text-sky-400'
+                        : 'bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {(entry.evaluationCount || 0) > 0 ? '✓' : '3'}
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400">3. Mentorship</p>
-                    <p className="text-[10px] text-slate-500">Dec 11 – 20</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">3. Evaluation</p>
+                    <p
+                      className={`text-[10px] truncate ${
+                        (entry.evaluationCount || 0) > 0
+                          ? 'text-emerald-400'
+                          : entry.status === 'Under Review'
+                          ? 'text-sky-400'
+                          : 'text-slate-500'
+                      }`}
+                    >
+                      {(entry.evaluationCount || 0) > 0
+                        ? `${entry.evaluationCount} Score(s) In`
+                        : 'Jury Scoring'}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-900/40 border border-slate-800 text-slate-500">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs">
-                    4
+                {/* 4. Shortlisted / Finalist Deliberation */}
+                <div
+                  className={`flex items-center gap-3 p-3 rounded-xl bg-slate-900 border ${
+                    ['Shortlisted', 'Finalist', 'Winner'].includes(entry.status)
+                      ? 'border-amber-900/60 bg-amber-950/20'
+                      : 'border-slate-800 opacity-60'
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                      ['Shortlisted', 'Finalist', 'Winner'].includes(entry.status)
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : 'bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {['Shortlisted', 'Finalist', 'Winner'].includes(entry.status) ? '★' : '4'}
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400">4. Grand Finale</p>
-                    <p className="text-[10px] text-slate-500">Dec 28, 2026</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">4. Shortlist</p>
+                    <p
+                      className={`text-[10px] truncate ${
+                        ['Shortlisted', 'Finalist', 'Winner'].includes(entry.status)
+                          ? 'text-amber-400 font-bold'
+                          : 'text-slate-500'
+                      }`}
+                    >
+                      {['Shortlisted', 'Finalist', 'Winner'].includes(entry.status)
+                        ? 'Selected Finalist'
+                        : 'Deliberation'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 5. Grand Finale & Awards */}
+                <div
+                  className={`flex items-center gap-3 p-3 rounded-xl bg-slate-900 border ${
+                    entry.status === 'Finalist' || entry.status === 'Winner'
+                      ? 'border-purple-900/60 bg-purple-950/20'
+                      : 'border-slate-800 opacity-60'
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                      entry.status === 'Finalist' || entry.status === 'Winner'
+                        ? 'bg-purple-500/20 text-purple-400'
+                        : 'bg-slate-800 text-slate-500'
+                    }`}
+                  >
+                    {entry.status === 'Finalist' || entry.status === 'Winner' ? '🏆' : '5'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">5. Finale</p>
+                    <p
+                      className={`text-[10px] truncate ${
+                        entry.status === 'Finalist' || entry.status === 'Winner'
+                          ? 'text-purple-300 font-bold'
+                          : 'text-slate-500'
+                      }`}
+                    >
+                      {entry.status === 'Finalist' || entry.status === 'Winner'
+                        ? 'Podium Stage'
+                        : 'Dec 28, 2026'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -611,6 +738,258 @@ const Dashboard = () => {
                 </div>
               </div>
 
+              {/* Grid 2.5: Official Evaluation & Rubric Scores (Stage 4 & 5 Transparency) */}
+              <div>
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                      <Award className="w-3.5 h-3.5" />
+                    </div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Jury Rubric &amp; Evaluation Marks
+                    </h3>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    Official 4-Pillar Competition Matrix (40 Marks Max)
+                  </span>
+                </div>
+
+                {(entry.evaluationCount || 0) > 0 ? (
+                  <div className="p-5 sm:p-6 bg-slate-950/80 border border-amber-500/30 rounded-2xl shadow-lg space-y-5">
+                    {/* Top Score Banner */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 block mb-1">
+                          Consolidated Jury Average
+                        </span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-3xl sm:text-4xl font-extrabold text-white font-mono">
+                            {entry.averageScore ? entry.averageScore.toFixed(1) : '0.0'}
+                          </span>
+                          <span className="text-sm font-semibold text-slate-400">/ 40.0 pts</span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                            {Math.round(((entry.averageScore || 0) / 40) * 100)}% Match
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-left sm:text-right">
+                        <span className="text-[11px] text-slate-400 uppercase font-semibold block">
+                          Evaluation Records
+                        </span>
+                        <p className="text-sm font-bold text-sky-400">
+                          {entry.evaluationCount} {entry.evaluationCount === 1 ? 'Judge Review' : 'Judge Reviews'}{' '}
+                          recorded
+                        </p>
+                        <p className="text-[11px] text-slate-500">Live score reflected on leaderboard</p>
+                      </div>
+                    </div>
+
+                    {/* 4 Pillars Progress Breakdown */}
+                    {(() => {
+                      const len = entry.evaluations?.length || 1;
+                      const avgInnovation = (
+                        (entry.evaluations?.reduce((acc, ev) => acc + (ev.innovation || 0), 0) || 0) / len
+                      ).toFixed(1);
+                      const avgTechnical = (
+                        (entry.evaluations?.reduce((acc, ev) => acc + (ev.technicalExecution || 0), 0) || 0) / len
+                      ).toFixed(1);
+                      const avgImpact = (
+                        (entry.evaluations?.reduce((acc, ev) => acc + (ev.healthcareImpact || 0), 0) || 0) / len
+                      ).toFixed(1);
+                      const avgPresentation = (
+                        (entry.evaluations?.reduce((acc, ev) => acc + (ev.presentation || 0), 0) || 0) / len
+                      ).toFixed(1);
+
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="p-3.5 rounded-xl bg-slate-900 border border-amber-500/20">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="text-slate-400 font-semibold">1. Innovation</span>
+                              <span className="font-mono font-bold text-amber-300">{avgInnovation} / 10</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-amber-400 h-1.5 rounded-full"
+                                style={{ width: `${(avgInnovation / 10) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-slate-900 border border-sky-500/20">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="text-slate-400 font-semibold">2. Execution</span>
+                              <span className="font-mono font-bold text-sky-300">{avgTechnical} / 10</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-sky-400 h-1.5 rounded-full"
+                                style={{ width: `${(avgTechnical / 10) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-slate-900 border border-emerald-500/20">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="text-slate-400 font-semibold">3. Impact</span>
+                              <span className="font-mono font-bold text-emerald-300">{avgImpact} / 10</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-emerald-400 h-1.5 rounded-full"
+                                style={{ width: `${(avgImpact / 10) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-slate-900 border border-indigo-500/20">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="text-slate-400 font-semibold">4. Pitch / Demo</span>
+                              <span className="font-mono font-bold text-indigo-300">{avgPresentation} / 10</span>
+                            </div>
+                            <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-indigo-400 h-1.5 rounded-full"
+                                style={{ width: `${(avgPresentation / 10) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Judge Constructive Feedback Notes */}
+                    {Array.isArray(entry.evaluations) &&
+                      entry.evaluations.some((ev) => ev.feedback || ev.recommendation) && (
+                        <div className="pt-3 border-t border-slate-800 space-y-3">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                            Evaluator Notes &amp; Recommendations
+                          </span>
+                          <div className="space-y-2">
+                            {entry.evaluations.map((ev, idx) => (
+                              <div
+                                key={idx}
+                                className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs flex flex-col sm:flex-row sm:items-start justify-between gap-2"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-white">
+                                      {ev.evaluatorName?.toLowerCase().includes('admin')
+                                        ? 'Executive Jury'
+                                        : `Judge Panel #${idx + 1}`}
+                                    </span>
+                                    {ev.recommendation && (
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-sky-950 text-sky-300 border border-sky-800">
+                                        {ev.recommendation}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {ev.feedback ? (
+                                    <p className="text-slate-300 italic">"{ev.feedback}"</p>
+                                  ) : (
+                                    <p className="text-slate-500 italic">No written commentary provided.</p>
+                                  )}
+                                </div>
+                                <span className="font-mono text-amber-300 font-bold shrink-0">
+                                  {ev.totalScore} / 40 pts
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                ) : (
+                  /* Waiting for Judge Queue State */
+                  <div className="p-5 sm:p-6 bg-slate-950/60 border border-slate-800 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                        <Clock className="w-5 h-5 animate-spin" style={{ animationDuration: '6s' }} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">Judging in Progress / In Review Queue</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Your project assets are queued for the official evaluation panel. Rubric breakdown and marks will appear here automatically once scored.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPitchPrep(!showPitchPrep)}
+                      className="px-3.5 py-2 rounded-xl bg-sky-950/80 hover:bg-sky-900 text-sky-300 text-xs font-semibold border border-sky-800/80 transition flex items-center gap-1.5 shrink-0"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{showPitchPrep ? 'Hide Pitch Checklist' : 'Pitch Readiness Prep'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Pitch Readiness Checklist (Toggleable) */}
+              {showPitchPrep && (
+                <div className="p-5 bg-slate-950/90 border border-sky-800/60 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4" />
+                      Candidate Pitch &amp; Live Demo Self-Test Checklist
+                    </h4>
+                    <span className="text-[11px] text-slate-400">
+                      {Object.values(pitchChecklist).filter(Boolean).length}/4 completed
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-850 transition">
+                      <input
+                        type="checkbox"
+                        checked={pitchChecklist.pptReady}
+                        onChange={() => toggleChecklist('pptReady')}
+                        className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 bg-slate-950 border-slate-700"
+                      />
+                      <span className="text-xs text-slate-300">
+                        <strong>Public Presentation:</strong> Google Drive link permissions set to "Anyone with link"
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-850 transition">
+                      <input
+                        type="checkbox"
+                        checked={pitchChecklist.repoPublic}
+                        onChange={() => toggleChecklist('repoPublic')}
+                        className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 bg-slate-950 border-slate-700"
+                      />
+                      <span className="text-xs text-slate-300">
+                        <strong>Public Repository:</strong> GitHub repo is public with clean README &amp; setup instructions
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-850 transition">
+                      <input
+                        type="checkbox"
+                        checked={pitchChecklist.backendLive}
+                        onChange={() => toggleChecklist('backendLive')}
+                        className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 bg-slate-950 border-slate-700"
+                      />
+                      <span className="text-xs text-slate-300">
+                        <strong>Live Demo Operational:</strong> Backend and frontend running with pre-seeded test data
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer hover:bg-slate-850 transition">
+                      <input
+                        type="checkbox"
+                        checked={pitchChecklist.micTested}
+                        onChange={() => toggleChecklist('micTested')}
+                        className="w-4 h-4 rounded text-sky-500 focus:ring-sky-500 bg-slate-950 border-slate-700"
+                      />
+                      <span className="text-xs text-slate-300">
+                        <strong>Hardware &amp; Timing:</strong> Mic and screen share tested; pitch timed under 3 minutes
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {/* Grid 3: Team Roster */}
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -711,6 +1090,15 @@ const Dashboard = () => {
         selectedPassAttendee={selectedPassAttendee}
         setSelectedPassAttendee={setSelectedPassAttendee}
         onDownloaded={(msg) => setNotification(msg)}
+      />
+
+      {/* MODAL 1.5: Official Verified Certificate of Participation / Merit */}
+      <VerifiedCertificateModal
+        isOpen={certModalOpen}
+        onClose={() => setCertModalOpen(false)}
+        entry={entry}
+        user={user}
+        ticketId={ticketId}
       />
 
       {/* MODAL 2: Comprehensive Candidate Profile Editor */}

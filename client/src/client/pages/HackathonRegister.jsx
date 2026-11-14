@@ -22,6 +22,10 @@ import {
   Plus,
   Target,
   ExternalLink,
+  Award,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 const collegesList = [
@@ -74,6 +78,7 @@ const HackathonRegister = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showRubricGuide, setShowRubricGuide] = useState(true);
 
   const standardBranches = ['CSE', 'IT', 'ECE', 'EE', 'ME', 'CE', 'AIDS', 'AIML'];
   const standardCourses = ['B.Tech', 'M.Tech', 'BCA', 'MCA', 'B.Sc', 'M.Sc'];
@@ -338,6 +343,88 @@ const HackathonRegister = () => {
             <span>{success}</span>
           </div>
         )}
+
+        {/* Official Judging Rubric & Candidate Expectations Guide */}
+        <div className="mb-8 bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-xl transition-all">
+          <button
+            type="button"
+            onClick={() => setShowRubricGuide(!showRubricGuide)}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-850/60 transition bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-b border-slate-800"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <Award className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>Candidate Guide: Official 4-Pillar Judging Rubric</span>
+                  <span className="text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full uppercase">
+                    100% Transparency
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Judges evaluate submissions across 4 pillars (25% each / 10 marks per pillar). Review before submitting.
+                </p>
+              </div>
+            </div>
+            <div className="text-slate-400">
+              {showRubricGuide ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </div>
+          </button>
+
+          {showRubricGuide && (
+            <div className="p-5 sm:p-6 bg-slate-950/60 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-slate-900 border border-amber-500/20">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">1. Innovation (25%)</span>
+                    <span className="text-xs font-mono font-bold text-amber-300">10 pts</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Originality, creative problem solving, and a clear differentiator from off-the-shelf software.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900 border border-sky-500/20">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider">2. Technical Rigor (25%)</span>
+                    <span className="text-xs font-mono font-bold text-sky-300">10 pts</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Code quality, architectural stability, API & database schema design, and working algorithmic logic.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900 border border-emerald-500/20">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">3. Real Impact (25%)</span>
+                    <span className="text-xs font-mono font-bold text-emerald-300">10 pts</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Practical feasibility, market / clinical usability, scalability, and measurable user benefit.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-900 border border-indigo-500/20">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">4. Demo & Pitch (25%)</span>
+                    <span className="text-xs font-mono font-bold text-indigo-300">10 pts</span>
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Working prototype demonstration, public slide deck (PPT), clear live walkthrough without critical crashes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-sky-950/40 border border-sky-800/60 flex items-center gap-2 text-xs text-sky-300">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-sky-400" />
+                <span>
+                  <strong>Tip for Candidate Deliverables:</strong> Set Google Drive links to <em>"Anyone with link can view"</em> and verify GitHub repositories are public before submitting.
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Form Container */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl">
