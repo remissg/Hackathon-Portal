@@ -281,12 +281,6 @@ const JudgeLayout = () => {
         </Suspense>
       </main>
 
-      {/* Subtle Footer */}
-      <footer className="border-t border-slate-800/60 py-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-        <span>HackSphere 2026 Official Judge Evaluation Panel</span>
-      </footer>
-
       {/* Shared Scoring Rubric Modal */}
       <ScoreRubricModal
         activeProject={activeProject}
