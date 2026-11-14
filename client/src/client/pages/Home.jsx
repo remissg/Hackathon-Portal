@@ -67,6 +67,41 @@ const FALLBACK_FEATURED_PROBLEMS = [
   },
 ];
 
+const DEFAULT_TIMELINE_PHASES = [
+  {
+    phase: 'Phase 01',
+    title: 'Registration & Initial Project Submission',
+    date: 'November 06 – November 25, 2026',
+    desc: 'Sign up on the portal, verify via OTP, assemble your team (1-5 members), pick your track, and submit project outline, PPT slide deck, and repository links.',
+    status: 'Active',
+    completed: false,
+  },
+  {
+    phase: 'Phase 02',
+    title: 'Artifact Refinement & Technical Screening',
+    date: 'November 26 – December 10, 2026',
+    desc: 'Candidates polish repository commits, update live demo endpoints, and undergo preliminary code hygiene, security, and architecture screening.',
+    status: 'Upcoming',
+    completed: false,
+  },
+  {
+    phase: 'Phase 03',
+    title: 'Shortlisting & Mentorship Pitch Dry-Runs',
+    date: 'December 11 – December 20, 2026',
+    desc: 'Top shortlisted teams receive 1-on-1 industry mentor feedback, refine pitch decks, and participate in mock Q&A rehearsals.',
+    status: 'Upcoming',
+    completed: false,
+  },
+  {
+    phase: 'Phase 04',
+    title: 'Grand Finale, Live Jury Pitch & Awards',
+    date: 'December 28, 2026',
+    desc: '6-minute live pitch (3m pitch + 2m Q&A + 1m scoring) in the Judge Arena; announcement of winners, internship offers, and certificate releases.',
+    status: 'Upcoming',
+    completed: false,
+  },
+];
+
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
@@ -76,6 +111,9 @@ const Home = () => {
   // Featured Problems State
   const [featuredProblems, setFeaturedProblems] = useState([]);
   const [loadingProblems, setLoadingProblems] = useState(true);
+
+  // Dynamic Event Timeline Milestones
+  const [timeline, setTimeline] = useState(DEFAULT_TIMELINE_PHASES);
 
   // Live countdown to Phase 01 deadline (November 25, 2026 23:59:59)
   const [timeLeft, setTimeLeft] = useState({
@@ -113,16 +151,24 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch featured problem statements from public events endpoint
+  // Fetch featured problem statements and dynamic event timeline
   useEffect(() => {
-    const fetchFeatured = async () => {
+    const fetchEventData = async () => {
       try {
         setLoadingProblems(true);
-        const res = await api.get('/events/problems/all');
-        if (res.data.success && Array.isArray(res.data.problems) && res.data.problems.length > 0) {
-          setFeaturedProblems(res.data.problems.slice(0, 3));
+        const [problemsRes, eventsRes] = await Promise.all([
+          api.get('/events/problems/all'),
+          api.get('/events'),
+        ]);
+
+        if (problemsRes.data?.success && Array.isArray(problemsRes.data.problems) && problemsRes.data.problems.length > 0) {
+          setFeaturedProblems(problemsRes.data.problems.slice(0, 3));
         } else {
           setFeaturedProblems(FALLBACK_FEATURED_PROBLEMS);
+        }
+
+        if (eventsRes.data?.success && Array.isArray(eventsRes.data.events) && eventsRes.data.events[0]?.timeline?.length > 0) {
+          setTimeline(eventsRes.data.events[0].timeline);
         }
       } catch (err) {
         setFeaturedProblems(FALLBACK_FEATURED_PROBLEMS);
@@ -131,7 +177,7 @@ const Home = () => {
       }
     };
 
-    fetchFeatured();
+    fetchEventData();
   }, []);
 
   const tracks = [
@@ -190,37 +236,6 @@ const Home = () => {
       description: 'Develop custom social-impact assistive tech, vernacular speech interfaces, or original innovations.',
       icon: Sparkles,
       color: 'from-amber-400 to-yellow-600',
-    },
-  ];
-
-  const timeline = [
-    {
-      phase: 'Phase 01',
-      title: 'Registration & Team Formation',
-      date: 'November 06 – November 25, 2026',
-      desc: 'Sign up on the portal, verify via OTP, assemble your team (1-5 members), and submit project outlines.',
-      completed: true,
-    },
-    {
-      phase: 'Phase 02',
-      title: 'Prototype Submission & PPT',
-      date: 'November 26 – December 10, 2026',
-      desc: 'Submit your GitHub repo, live demo prototype link, and slide deck presentation.',
-      completed: false,
-    },
-    {
-      phase: 'Phase 03',
-      title: 'Mentorship & Review',
-      date: 'December 11 – December 20, 2026',
-      desc: 'Shortlisted teams undergo technical screening and mentor code reviews by senior engineers.',
-      completed: false,
-    },
-    {
-      phase: 'Phase 04',
-      title: 'Grand Finale & Results',
-      date: 'December 28, 2026',
-      desc: 'Live virtual demo day presentations, winners announcement, and internship offers.',
-      completed: false,
     },
   ];
 
@@ -766,33 +781,52 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-            {timeline.map((item, idx) => (
-              <div
-                key={idx}
-                className="relative bg-slate-900/80 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-bold uppercase px-2.5 py-1 rounded bg-slate-800 text-sky-400">
-                      {item.phase}
-                    </span>
-                    {item.completed ? (
-                      <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Active
+            {timeline.map((item, idx) => {
+              const isActive = item.status === 'Active';
+              const isCompleted = item.status === 'Completed' || item.completed;
+
+              return (
+                <div
+                  key={idx}
+                  className={`relative p-6 rounded-2xl flex flex-col justify-between transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-b from-slate-900 via-sky-950/20 to-slate-900 border-2 border-sky-500/60 shadow-xl shadow-sky-950/30 transform md:-translate-y-1'
+                      : isCompleted
+                      ? 'bg-slate-900/90 border border-slate-700/80'
+                      : 'bg-slate-900/60 border border-slate-800/80'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-bold uppercase px-2.5 py-1 rounded bg-slate-800 text-sky-400">
+                        {item.phase}
                       </span>
-                    ) : (
-                      <span className="text-[11px] text-slate-500 font-medium">Upcoming</span>
-                    )}
+                      {isActive ? (
+                        <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-800/80">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                          <span>Active</span>
+                        </span>
+                      ) : isCompleted ? (
+                        <span className="flex items-center gap-1 text-[11px] text-sky-400 font-medium bg-sky-950/40 px-2 py-0.5 rounded border border-sky-800/50">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Completed</span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-500 font-medium px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
+                          Upcoming
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-bold text-white mb-1.5">{item.title}</h3>
+                    <div className="flex items-center gap-1.5 text-xs text-sky-400 font-medium mb-3">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>{item.date}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed text-slate-400">{item.desc}</p>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-1">{item.title}</h3>
-                  <div className="flex items-center gap-1.5 text-xs text-sky-400 font-medium mb-3">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>{item.date}</span>
-                  </div>
-                  <p className="text-xs leading-relaxed text-slate-400">{item.desc}</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

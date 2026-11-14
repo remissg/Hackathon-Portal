@@ -142,6 +142,41 @@ export const DEFAULT_PROBLEM_STATEMENTS = [
   },
 ];
 
+export const DEFAULT_TIMELINE = [
+  {
+    phase: 'Phase 01',
+    title: 'Registration & Initial Project Submission',
+    date: 'November 06 – November 25, 2026',
+    desc: 'Sign up on the portal, verify via OTP, assemble your team (1-5 members), pick your track, and submit project outline, PPT slide deck, and repository links.',
+    status: 'Active',
+    completed: false,
+  },
+  {
+    phase: 'Phase 02',
+    title: 'Artifact Refinement & Technical Screening',
+    date: 'November 26 – December 10, 2026',
+    desc: 'Candidates polish repository commits, update live demo endpoints, and undergo preliminary code hygiene, security, and architecture screening.',
+    status: 'Upcoming',
+    completed: false,
+  },
+  {
+    phase: 'Phase 03',
+    title: 'Shortlisting & Mentorship Pitch Dry-Runs',
+    date: 'December 11 – December 20, 2026',
+    desc: 'Top shortlisted teams receive 1-on-1 industry mentor feedback, refine pitch decks, and participate in mock Q&A rehearsals.',
+    status: 'Upcoming',
+    completed: false,
+  },
+  {
+    phase: 'Phase 04',
+    title: 'Grand Finale, Live Jury Pitch & Awards',
+    date: 'December 28, 2026',
+    desc: '6-minute live pitch (3m pitch + 2m Q&A + 1m scoring) in the Judge Arena; announcement of winners, internship offers, and certificate releases.',
+    status: 'Upcoming',
+    completed: false,
+  },
+];
+
 /**
  * Seed default hackathon event and curated problem statements if DB is empty or needs refresh
  */
@@ -152,18 +187,31 @@ export const seedDefaultEventIfEmpty = async () => {
     });
 
     if (existing) {
+      let needsSave = false;
+
       // If event exists but has fewer than the full 9 problem statements, upgrade it
       if (!existing.problemStatements || existing.problemStatements.length < DEFAULT_PROBLEM_STATEMENTS.length) {
         console.log(`[HackathonEvent] Upgrading existing HackSphere 2026 challenge library to ${DEFAULT_PROBLEM_STATEMENTS.length} statements...`);
         existing.problemStatements = DEFAULT_PROBLEM_STATEMENTS;
         existing.domains = DEFAULT_DOMAINS;
+        needsSave = true;
+      }
+
+      // If event lacks dynamic timeline milestones, seed default timeline
+      if (!existing.timeline || existing.timeline.length === 0) {
+        console.log('[HackathonEvent] Seeding default milestone timeline into existing HackSphere 2026 event...');
+        existing.timeline = DEFAULT_TIMELINE;
+        needsSave = true;
+      }
+
+      if (needsSave) {
         await existing.save();
-        console.log(`[HackathonEvent] Successfully upgraded HackSphere 2026 problem statements to ${DEFAULT_PROBLEM_STATEMENTS.length} across ${DEFAULT_DOMAINS.length} tracks.`);
+        console.log('[HackathonEvent] Successfully upgraded HackSphere 2026 event data.');
       }
       return;
     }
 
-    console.log('[HackathonEvent] Seeding default HackSphere Hackathon 2026 with 9 Problem Statements across 8+ Tracks...');
+    console.log('[HackathonEvent] Seeding default HackSphere Hackathon 2026 with 9 Problem Statements and 4-Phase Timeline...');
 
     await HackathonEvent.create({
       title: 'HackSphere National Innovation Hackathon 2026',
@@ -177,6 +225,7 @@ export const seedDefaultEventIfEmpty = async () => {
       registrationDeadline: new Date('2026-06-10T23:59:59Z'),
       status: 'Active',
       domains: DEFAULT_DOMAINS,
+      timeline: DEFAULT_TIMELINE,
       problemStatements: DEFAULT_PROBLEM_STATEMENTS,
     });
 
@@ -213,6 +262,7 @@ export const getPublicEvents = async (req, res) => {
         });
         return {
           ...ev,
+          timeline: ev.timeline && ev.timeline.length > 0 ? ev.timeline : DEFAULT_TIMELINE,
           problemStatementCount: ev.problemStatements?.length || 0,
           registrationCount,
         };
@@ -450,6 +500,58 @@ export const updateHackathonEvent = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Failed to update hackathon event',
+    });
+  }
+};
+
+/**
+ * @desc    Admin: Update event timeline milestones
+ * @route   PUT /api/events/:id/timeline
+ * @access  Private / Admin
+ */
+export const updateEventTimeline = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { timeline } = req.body;
+
+    if (!Array.isArray(timeline)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Timeline must be an array of milestone phases',
+      });
+    }
+
+    const event = await HackathonEvent.findById(id);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: 'Hackathon event not found',
+      });
+    }
+
+    event.timeline = timeline;
+    await event.save();
+
+    await recordAuditLog({
+      req,
+      category: 'events',
+      action: 'EVENT_TIMELINE_UPDATED',
+      severity: 'info',
+      target: { type: 'event', id: event._id, label: event.title },
+      summary: `Updated hackathon event timeline milestones (${timeline.length} phases)`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Event timeline updated successfully',
+      timeline: event.timeline,
+      event,
+    });
+  } catch (error) {
+    console.error('[Update Event Timeline Error]:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to update event timeline',
     });
   }
 };

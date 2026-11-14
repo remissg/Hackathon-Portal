@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import api from '../../shared/services/api';
 import ProblemFormModal from '../components/ProblemFormModal';
-import { Edit3, Plus, RefreshCw, Target, Trash2 } from 'lucide-react';
+import AdminTimelineModal from '../components/AdminTimelineModal';
+import { Calendar, Edit3, Plus, RefreshCw, Target, Trash2 } from 'lucide-react';
 
 const AdminProblemsPage = () => {
   const { adminEvents, adminProblems, loadingProblems, fetchAdminProblems, showToast } =
     useOutletContext();
 
   const [problemModalOpen, setProblemModalOpen] = useState(false);
+  const [timelineModalOpen, setTimelineModalOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState(null);
   const [problemForm, setProblemForm] = useState({
     eventId: '',
@@ -126,7 +128,7 @@ const AdminProblemsPage = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={fetchAdminProblems}
@@ -135,6 +137,15 @@ const AdminProblemsPage = () => {
               title="Refresh Challenges"
             >
               <RefreshCw className={`w-4 h-4 ${loadingProblems ? 'animate-spin text-purple-400' : ''}`} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimelineModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs flex items-center gap-2 transition"
+              title="Manage Hackathon Timeline Milestones"
+            >
+              <Calendar className="w-4 h-4 text-purple-400" />
+              <span>Manage Event Timeline</span>
             </button>
             <button
               type="button"
@@ -250,6 +261,14 @@ const AdminProblemsPage = () => {
         setProblemForm={setProblemForm}
         savingProblem={savingProblem}
         onSave={handleSaveProblem}
+      />
+
+      <AdminTimelineModal
+        isOpen={timelineModalOpen}
+        onClose={() => setTimelineModalOpen(false)}
+        event={adminEvents[0]}
+        onUpdated={() => fetchAdminProblems()}
+        showToast={showToast}
       />
     </div>
   );

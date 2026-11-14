@@ -5,6 +5,7 @@ import {
   getAllProblemStatements,
   createHackathonEvent,
   updateHackathonEvent,
+  updateEventTimeline,
   deleteHackathonEvent,
   addProblemStatement,
   updateProblemStatement,
@@ -22,6 +23,7 @@ router.get('/:slugOrId', getEventBySlugOrId);
 // Admin-protected event governance
 router.post('/', protect, adminProtect, createHackathonEvent);
 router.put('/:id', protect, adminProtect, updateHackathonEvent);
+router.put('/:id/timeline', protect, adminProtect, updateEventTimeline);
 router.delete('/:id', protect, adminProtect, deleteHackathonEvent);
 
 // Admin problem statement management

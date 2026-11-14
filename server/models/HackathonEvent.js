@@ -50,6 +50,41 @@ const problemStatementSchema = new mongoose.Schema(
   }
 );
 
+const timelinePhaseSchema = new mongoose.Schema(
+  {
+    phase: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    date: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    desc: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ['Completed', 'Active', 'Upcoming'],
+      default: 'Upcoming',
+    },
+    completed: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: true }
+);
+
 const hackathonEventSchema = new mongoose.Schema(
   {
     title: {
@@ -112,6 +147,7 @@ const hackathonEventSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    timeline: [timelinePhaseSchema],
     problemStatements: [problemStatementSchema],
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
