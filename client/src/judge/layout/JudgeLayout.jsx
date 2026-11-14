@@ -35,6 +35,7 @@ const JudgeLayout = () => {
     presentation: 7,
     recommendation: 'Recommended for Shortlist',
     feedback: '',
+    nominations: [],
   });
   const [submittingScore, setSubmittingScore] = useState(false);
 
@@ -68,6 +69,7 @@ const JudgeLayout = () => {
         presentation: project.myReview.presentation || 7,
         recommendation: project.myReview.recommendation || 'Recommended for Shortlist',
         feedback: project.myReview.feedback || '',
+        nominations: Array.isArray(project.myReview.nominations) ? project.myReview.nominations : [],
       });
     } else {
       setScoringForm({
@@ -77,6 +79,7 @@ const JudgeLayout = () => {
         presentation: 7,
         recommendation: 'Recommended for Shortlist',
         feedback: '',
+        nominations: [],
       });
     }
   };
@@ -95,7 +98,7 @@ const JudgeLayout = () => {
     Number(scoringForm.presentation);
 
   const handleSubmitEvaluation = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!activeProject?._id) return;
 
     setSubmittingScore(true);
@@ -106,6 +109,10 @@ const JudgeLayout = () => {
           `Score for "${activeProject.projectName}" recorded successfully (${currentTotal}/40)!`
         );
         setTimeout(() => setSuccessToast(''), 4500);
+
+        try {
+          localStorage.removeItem(`hs_judge_draft_${activeProject._id}`);
+        } catch (_) {}
 
         setSubmissions((prev) =>
           prev.map((sub) =>
@@ -125,6 +132,50 @@ const JudgeLayout = () => {
     } catch (err) {
       console.error('[Submit Evaluation Error]:', err);
       alert(err.response?.data?.message || 'Failed to submit evaluation score.');
+    } finally {
+      setSubmittingScore(false);
+    }
+  };
+
+  const handleScoreNext = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!activeProject?._id) return;
+
+    setSubmittingScore(true);
+    try {
+      const res = await api.post(`/hackathon/${activeProject._id}/evaluate`, scoringForm);
+      if (res.data.success) {
+        setSuccessToast(`Score for "${activeProject.projectName}" saved! Advancing to next team...`);
+        setTimeout(() => setSuccessToast(''), 4000);
+
+        try {
+          localStorage.removeItem(`hs_judge_draft_${activeProject._id}`);
+        } catch (_) {}
+
+        const updated = submissions.map((sub) =>
+          sub._id === activeProject._id
+            ? {
+                ...sub,
+                hasEvaluated: true,
+                myReview: res.data.evaluation,
+                averageScore: res.data.averageScore,
+                evaluationCount: res.data.evaluationCount,
+              }
+            : sub
+        );
+        setSubmissions(updated);
+
+        // Find next unreviewed project in queue
+        const nextPending = updated.find((s) => !s.hasEvaluated && s._id !== activeProject._id);
+        if (nextPending) {
+          handleOpenScoring(nextPending);
+        } else {
+          setActiveProject(null);
+        }
+      }
+    } catch (err) {
+      console.error('[Submit Next Error]:', err);
+      alert(err.response?.data?.message || 'Failed to submit score.');
     } finally {
       setSubmittingScore(false);
     }
@@ -291,6 +342,8 @@ const JudgeLayout = () => {
         submittingScore={submittingScore}
         onClose={() => setActiveProject(null)}
         onSubmit={handleSubmitEvaluation}
+        onScoreNext={handleScoreNext}
+        remainingPendingCount={pendingCount}
       />
     </div>
   );

@@ -1250,6 +1250,7 @@ export const submitEvaluation = async (req, res) => {
       presentation = 5,
       recommendation = 'Consideration',
       feedback = '',
+      nominations = [],
     } = req.body;
 
     const parseScore = (val) => {
@@ -1288,6 +1289,7 @@ export const submitEvaluation = async (req, res) => {
       totalScore,
       recommendation,
       feedback: (feedback || '').trim(),
+      nominations: Array.isArray(nominations) ? nominations.filter(Boolean) : [],
       evaluatedAt: new Date(),
     };
 

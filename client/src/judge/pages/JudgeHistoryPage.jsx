@@ -125,6 +125,19 @@ const JudgeHistoryPage = () => {
                     </div>
                   )}
 
+                  {Array.isArray(myReview.nominations) && myReview.nominations.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {myReview.nominations.map((nom) => (
+                        <span
+                          key={nom}
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30"
+                        >
+                          ★ {nom}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
                   {myReview.feedback && (
                     <p className="text-xs text-slate-400 italic bg-slate-950/40 px-3 py-2 rounded-xl border border-slate-800/50 break-words">
                       &ldquo;{myReview.feedback}&rdquo;

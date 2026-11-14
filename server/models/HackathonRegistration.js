@@ -98,6 +98,10 @@ const evaluationSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    nominations: {
+      type: [String],
+      default: [],
+    },
     evaluatedAt: {
       type: Date,
       default: Date.now,

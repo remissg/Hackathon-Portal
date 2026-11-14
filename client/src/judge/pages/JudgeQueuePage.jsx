@@ -241,6 +241,20 @@ const JudgeQueuePage = () => {
                         </a>
                       )}
                     </div>
+
+                    {/* Nominations tags if evaluated */}
+                    {Array.isArray(myReview?.nominations) && myReview.nominations.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {myReview.nominations.map((nom) => (
+                          <span
+                            key={nom}
+                            className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30"
+                          >
+                            ★ {nom}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Bottom Action Button */}

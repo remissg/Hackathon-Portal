@@ -205,3 +205,4 @@ const VerifyCertificatePage = () => {
 };
 
 export default VerifyCertificatePage;
+
