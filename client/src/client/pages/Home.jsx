@@ -71,6 +71,7 @@ const Home = () => {
   const { user, isAuthenticated } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
   const [faqSearch, setFaqSearch] = useState('');
+  const [faqCategory, setFaqCategory] = useState('All');
 
   // Featured Problems State
   const [featuredProblems, setFeaturedProblems] = useState([]);
@@ -136,27 +137,59 @@ const Home = () => {
   const tracks = [
     {
       title: 'Artificial Intelligence & ML',
+      domain: 'AI/ML',
       description: 'Build predictive health diagnostics, automated workflows, and generative LLM applications.',
       icon: Cpu,
       color: 'from-purple-500 to-indigo-600',
     },
     {
       title: 'Full Stack Web Development',
+      domain: 'Web Dev',
       description: 'Architect scalable web platforms using MERN stack, microservices, and real-time data pipelines.',
       icon: Globe2,
       color: 'from-sky-500 to-blue-600',
     },
     {
       title: 'IoT & Smart Devices',
+      domain: 'IoT & Robotics',
       description: 'Connect hardware sensors, microcontrollers, and cloud telemetry for connected healthcare.',
       icon: Code2,
       color: 'from-emerald-500 to-teal-600',
     },
     {
       title: 'Cyber Security & Privacy',
+      domain: 'Cyber Security',
       description: 'Design robust zero-trust security layers, encrypted medical storage, and audit systems.',
       icon: ShieldCheck,
       color: 'from-amber-500 to-orange-600',
+    },
+    {
+      title: 'Blockchain & Web3',
+      domain: 'Blockchain & Web3',
+      description: 'Build tamper-evident medical audit trails, decentralized patient consent, and cryptographic proof-of-care.',
+      icon: Layers,
+      color: 'from-cyan-500 to-blue-600',
+    },
+    {
+      title: 'Healthcare & MedTech',
+      domain: 'Healthcare Tech',
+      description: 'Design offline-first mother-care portals, ASHA worker dispatchers, and emergency neonatal alert networks.',
+      icon: Activity,
+      color: 'from-rose-500 to-pink-600',
+    },
+    {
+      title: 'Cloud & DevOps',
+      domain: 'Cloud & DevOps',
+      description: 'Engineer high-availability tele-health microservices, automated failover pipelines, and edge mesh telemetry.',
+      icon: Zap,
+      color: 'from-violet-500 to-purple-600',
+    },
+    {
+      title: 'Open Innovation & Assistive Tech',
+      domain: 'Open Innovation',
+      description: 'Develop custom social-impact assistive tech, vernacular speech interfaces, or original innovations.',
+      icon: Sparkles,
+      color: 'from-amber-400 to-yellow-600',
     },
   ];
 
@@ -257,34 +290,93 @@ const Home = () => {
 
   const faqs = [
     {
-      q: 'What is the required team size?',
-      a: 'Teams can range from 1 to 5 members. Team size = 1 indicates solo participation. For teams of 2 to 5 members, the form dynamically generates entry fields for each member name and email.',
+      category: 'Registration & Team',
+      q: 'What is the required team size? Can I participate solo?',
+      a: 'Teams can range from 1 to 5 members. Team size = 1 indicates solo participation. For teams of 2 to 5 members, the form dynamically provides fields to invite each teammate by email. Cross-college and cross-branch teams are 100% permitted.',
     },
     {
+      category: 'Registration & Team',
+      q: 'Is there any registration fee to participate in HackSphere 2026?',
+      a: 'No. Participation in HackSphere National Innovation Hackathon 2026 is 100% free of charge. There are zero application, evaluation, or hidden certification fees.',
+    },
+    {
+      category: 'Registration & Team',
       q: 'How does the OTP verification process work?',
-      a: 'Upon submitting the registration form, our backend generates a secure 6-digit OTP code and dispatches it via Nodemailer from matrucareai@gmail.com. The OTP code is time-limited (expires in 10 minutes) and is invalidated immediately upon successful verification.',
+      a: 'When you register an account, our backend generates a secure 6-digit OTP code dispatched via email from matrucareai@gmail.com. The OTP code is time-limited (expires in 10 minutes) and is invalidated immediately upon successful verification. If not received within a minute, please check your Spam/Junk folder.',
     },
     {
+      category: 'Registration & Team',
       q: 'Who is eligible to participate?',
-      a: 'Students currently enrolled in B.Tech, M.Tech, BCA, MCA, B.Sc, M.Sc, or related technical degrees across 1st, 2nd, 3rd, and 4th years are eligible. Cross-college teams are fully permitted.',
+      a: 'Students currently enrolled in B.Tech, M.Tech, BCA, MCA, B.Sc, M.Sc, or related technical degrees across 1st, 2nd, 3rd, and 4th years are eligible. Mixed-college and multi-disciplinary teams are fully encouraged.',
     },
     {
-      q: 'What deliverables must be submitted?',
-      a: 'Each team must submit their Project Name, Track/Domain, Presentation slide deck link (Google Drive/OneDrive), and Prototype / Code repository link (GitHub/Figma/Live URL). A demo video link is optional but recommended.',
-    },
-    {
+      category: 'Registration & Team',
       q: 'Can I edit or withdraw my registration after submitting?',
-      a: 'Yes! From your personal Dashboard, you can review your registered team details, update project links or member information, download your lanyard admission pass, or withdraw your entry if needed.',
+      a: 'Yes! From your personal Candidate Dashboard, you can review your registered team details, update project links or member information, download your lanyard admission pass, or withdraw your entry if needed prior to final jury evaluation.',
+    },
+    {
+      category: 'Tracks & Challenges',
+      q: 'Do we have to pick from the 8+ Challenge Problem Statements, or can we do Open Innovation?',
+      a: 'Both options are fully supported! You can choose any curated challenge statement from our 8+ track library (AI/ML, IoT, Web Dev, Cyber Security, Blockchain, Cloud, Healthcare Tech, Open Innovation) to receive starter kits and specific outcome rubrics. Alternatively, you can select "Open Innovation" to build and register your own custom solution.',
+    },
+    {
+      category: 'Tracks & Challenges',
+      q: 'Can a candidate or team submit multiple projects under different tracks?',
+      a: 'Each registered team lead account can submit one primary project entry to ensure thorough mentor review and fair judging. You may update or refine your project links, presentation, and team roster anytime before the Phase 01 submission deadline.',
+    },
+    {
+      category: 'Tracks & Challenges',
+      q: 'Are there any restrictions on the tech stack we use?',
+      a: 'No restrictions! You are free to architect your solution using modern web frameworks (MERN, Next.js, Django), mobile platforms (Flutter, React Native), AI/ML libraries (PyTorch, TensorFlow, LangChain), embedded IoT systems (ESP32, Arduino, Raspberry Pi), or Web3 smart contracts (Solidity).',
+    },
+    {
+      category: 'Pitch & Judging',
+      q: 'What is the 4-Pillar Evaluation Rubric and scoring scale?',
+      a: 'All projects are evaluated across four official pillars, each scored from 1 to 10 points (total 40 points, normalized to 100%): (1) Innovation & Originality (25%), (2) Technical Architecture & Execution (25%), (3) Healthcare & Real-World Impact (25%), and (4) Prototype Demo & Presentation (25%).',
+    },
+    {
+      category: 'Pitch & Judging',
+      q: 'What is the duration and format of the Live Pitch Round?',
+      a: 'Shortlisted teams present live to our executive jury. Each pitch session is strictly timed at 6 minutes total: 3 minutes for uninterrupted live demo and slide presentation, 2 minutes for interactive Jury Q&A, and 1 minute for score finalization. The judge console includes an integrated synchronized chime timer.',
+    },
+    {
+      category: 'Pitch & Judging',
+      q: 'What deliverables must be submitted by the deadline?',
+      a: 'Each team must submit their Project Name, Track/Domain, Presentation slide deck link (Google Drive / OneDrive with "Anyone with link can view" permissions), and Prototype / Code repository link (GitHub / live demo URL). An optional short demo video link is recommended.',
+    },
+    {
+      category: 'Certificates & Passes',
+      q: 'When and how will Certificates of Participation and Merit be issued?',
+      a: 'Official verified digital certificates are released directly on your Candidate Dashboard after the Grand Finale concludes and jury scores are published. Certificates are available in printable A4 landscape format and feature a tamper-proof cryptographic verification QR code.',
+    },
+    {
+      category: 'Certificates & Passes',
+      q: 'How is the Certificate QR code different from the Lanyard Entry Pass QR?',
+      a: 'They serve two completely distinct purposes: The Lanyard Entry Pass QR (HS26-PASS-...) is used by on-site volunteers and security for gate check-in and attendee badge verification. The Certificate QR (HS26-CERT-...) points to our public credential verification portal (/verify-certificate) for recruiters, academic institutions, and LinkedIn verification.',
+    },
+    {
+      category: 'Certificates & Passes',
+      q: 'Do my teammates get individual entry passes and certificates?',
+      a: 'Yes! Once teammates accept their email invitation, the dashboard generates individualized attendee lanyard passes with custom QR badges for each member, as well as personalized certificates bearing their name and team role.',
     },
   ];
 
   const filteredFaqs = useMemo(() => {
-    if (!faqSearch.trim()) return faqs;
-    const term = faqSearch.toLowerCase().trim();
-    return faqs.filter(
-      (f) => f.q.toLowerCase().includes(term) || f.a.toLowerCase().includes(term)
-    );
-  }, [faqSearch, faqs]);
+    let list = faqs;
+    if (faqCategory !== 'All') {
+      list = list.filter((f) => f.category === faqCategory);
+    }
+    if (faqSearch.trim()) {
+      const term = faqSearch.toLowerCase().trim();
+      list = list.filter(
+        (f) =>
+          f.q.toLowerCase().includes(term) ||
+          f.a.toLowerCase().includes(term) ||
+          f.category.toLowerCase().includes(term)
+      );
+    }
+    return list;
+  }, [faqSearch, faqCategory, faqs]);
 
   const toggleFaq = (idx) => {
     setOpenFaq(openFaq === idx ? null : idx);
@@ -559,7 +651,20 @@ const Home = () => {
                     <p className="text-sm text-slate-400 leading-relaxed">{track.description}</p>
                   </div>
                   <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center text-xs font-semibold text-sky-400">
-                    <Link to="/signup" className="flex items-center hover:underline">
+                    <Link
+                      to={
+                        user
+                          ? user.role === 'admin'
+                            ? '/admin'
+                            : user.role === 'evaluator'
+                            ? '/judge'
+                            : user.role === 'volunteer'
+                            ? '/volunteer'
+                            : `/dashboard?track=${encodeURIComponent(track.domain || track.title)}`
+                          : `/signup?track=${encodeURIComponent(track.domain || track.title)}`
+                      }
+                      className="flex items-center hover:underline"
+                    >
                       <span>Register for this Track</span>
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Link>
@@ -817,13 +922,13 @@ const Home = () => {
           </div>
 
           {/* Interactive FAQ Search Bar */}
-          <div className="relative max-w-md mx-auto mb-8">
+          <div className="relative max-w-md mx-auto mb-6">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={faqSearch}
               onChange={(e) => setFaqSearch(e.target.value)}
-              placeholder="Search questions (e.g. team size, presentation, deadline)..."
+              placeholder="Search questions (e.g. certificates, pitch, team size, rubrics)..."
               className="w-full pl-10 pr-10 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500 transition-colors"
             />
             {faqSearch && (
@@ -837,6 +942,27 @@ const Home = () => {
             )}
           </div>
 
+          {/* FAQ Category Filter Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+            {['All', 'Registration & Team', 'Tracks & Challenges', 'Pitch & Judging', 'Certificates & Passes'].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  setFaqCategory(cat);
+                  setOpenFaq(null);
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  faqCategory === cat
+                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/25'
+                    : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700 hover:text-white'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-4">
             {filteredFaqs.map((faq, idx) => {
               const isOpen = openFaq === idx;
@@ -847,11 +973,16 @@ const Home = () => {
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-5 text-left flex items-center justify-between text-base font-semibold text-white hover:text-sky-400 transition-colors"
+                    className="w-full p-5 text-left flex items-start sm:items-center justify-between gap-3 text-base font-semibold text-white hover:text-sky-400 transition-colors"
                   >
-                    <span>{faq.q}</span>
+                    <div className="space-y-1">
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-sky-400 border border-slate-700/80 mr-2">
+                        {faq.category}
+                      </span>
+                      <span className="text-sm sm:text-base font-bold text-white">{faq.q}</span>
+                    </div>
                     <ChevronDown
-                      className={`w-5 h-5 text-slate-400 transition-transform ${
+                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform ${
                         isOpen ? 'rotate-180 text-sky-400' : ''
                       }`}
                     />
@@ -896,10 +1027,20 @@ const Home = () => {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  to="/signup"
+                  to={
+                    user
+                      ? user.role === 'admin'
+                        ? '/admin'
+                        : user.role === 'evaluator'
+                        ? '/judge'
+                        : user.role === 'volunteer'
+                        ? '/volunteer'
+                        : '/dashboard'
+                      : '/signup'
+                  }
                   className="px-8 py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold text-base shadow-lg shadow-sky-500/30 transition-all"
                 >
-                  Create Account &amp; Register
+                  {user ? 'Go to Candidate Dashboard' : 'Create Account & Register'}
                 </Link>
                 <Link
                   to="/contact"

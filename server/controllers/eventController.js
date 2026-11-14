@@ -2,15 +2,168 @@ import HackathonEvent from '../models/HackathonEvent.js';
 import HackathonRegistration from '../models/HackathonRegistration.js';
 import { recordAuditLog } from '../utils/auditLogger.js';
 
+export const DEFAULT_DOMAINS = [
+  'AI/ML',
+  'Healthcare Tech',
+  'IoT & Robotics',
+  'Web Dev',
+  'Cyber Security',
+  'Blockchain & Web3',
+  'Cloud & DevOps',
+  'Open Innovation',
+];
+
+export const DEFAULT_PROBLEM_STATEMENTS = [
+  {
+    psId: 'MCAI-PS-01',
+    title: 'Predictive Maternal Health Analytics & High-Risk Pregnancy Early Warning Engine',
+    category: 'AI/ML',
+    difficulty: 'Advanced',
+    description:
+      'Build an ML model trained on maternal physiological vitals, clinical history, and demographic indicators to predict preeclampsia, gestational diabetes, and fetal distress with explainable risk scores.',
+    expectedOutcomes: [
+      'Trained ML model pipeline (Target AUC > 0.88)',
+      'Interactive doctor risk diagnostic dashboard',
+      'REST API scoring service with real-time inference',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/maternal-risk-dataset-starter',
+  },
+  {
+    psId: 'MCAI-PS-02',
+    title: 'IoT-Connected Smart Wearable Node for Real-Time Maternal & Fetal Telemetry',
+    category: 'IoT & Robotics',
+    difficulty: 'Intermediate',
+    description:
+      'Design an ultra-low-power edge telemetry firmware and simulator that continuously captures maternal SpO2, heart rate, and uterine contraction patterns, auto-dispatching SOS alerts via MQTT.',
+    expectedOutcomes: [
+      'MQTT telemetry simulator or ESP32 embedded sketch',
+      'Emergency trigger webhook with GPS geo-tagging',
+      'Live vitals graph & telemetry visualization UI',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/iot-telemetry-starter',
+  },
+  {
+    psId: 'MCAI-PS-03',
+    title: 'Accessible Multilingual Rural Mother-Care Portal & Emergency ASHA Dispatcher',
+    category: 'Healthcare Tech',
+    difficulty: 'Beginner',
+    description:
+      'Create an offline-first, voice-assisted Progressive Web App (PWA) in regional Indian languages that guides mothers through trimester milestones, nutrition tracking, and 1-tap local ASHA worker SOS.',
+    expectedOutcomes: [
+      'PWA supporting offline ServiceWorker caching',
+      'Voice or regional UI toggle (Hindi, Bengali, Tamil, Telugu)',
+      'Automated ASHA alert routing service with SMS integration',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/rural-health-pwa-starter',
+  },
+  {
+    psId: 'MCAI-PS-04',
+    title: 'Tamper-Proof Decentralized Health Records (EHR) & Immunization Audit Trail',
+    category: 'Blockchain & Web3',
+    difficulty: 'Advanced',
+    description:
+      'Implement a zero-knowledge or cryptographic audit log smart contract securing maternal immunization records, prenatal lab tests, and hospital discharge summaries with patient-controlled access.',
+    expectedOutcomes: [
+      'Solidity or smart contract for verifiable immutability',
+      'Client-side consent and medical record viewer UI',
+      'Fast cryptographic proof-of-authenticity verifier',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/decentralized-ehr-starter',
+  },
+  {
+    psId: 'MCAI-PS-05',
+    title: 'Zero-Trust Clinical Audit, Cryptographic Access Delegation & Medical Vault',
+    category: 'Cyber Security',
+    difficulty: 'Advanced',
+    description:
+      'Design a zero-trust credential-based access control engine for healthcare networks that prevents unauthorized EHR data leaks, signs clinical prescriptions cryptographically, and detects anomalous patient record downloads in real time.',
+    expectedOutcomes: [
+      'Attribute-Based Access Control (ABAC) policy engine',
+      'Cryptographic digital prescription signing & verification',
+      'Real-time anomaly detection for medical record access',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/zero-trust-vault-starter',
+  },
+  {
+    psId: 'MCAI-PS-06',
+    title: 'High-Concurrency Real-Time ICU Bed Allocation & Critical Care Logistics Engine',
+    category: 'Web Dev',
+    difficulty: 'Intermediate',
+    description:
+      'Architect an ultra-fast full-stack web platform using MERN & WebSockets that manages multi-hospital ICU bed occupancy, ventilator availability, oxygen logistics, and automated patient transfer queues during clinical emergencies.',
+    expectedOutcomes: [
+      'Real-time WebSocket multi-facility bed inventory state',
+      'Optimized transfer dispatcher algorithm',
+      'Mobile-responsive hospital command center UI',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/hospital-logistics-starter',
+  },
+  {
+    psId: 'MCAI-PS-07',
+    title: 'Fault-Tolerant Tele-Health Edge Microservices & Automated Clinical Failover',
+    category: 'Cloud & DevOps',
+    difficulty: 'Intermediate',
+    description:
+      'Build a resilient microservice mesh and CI/CD deployment topology for critical telemedicine video and telemetry services, supporting automated health probes, geo-distributed failover, and zero-downtime rolling updates.',
+    expectedOutcomes: [
+      'Containerized microservices orchestration (Docker Compose / K8s manifests)',
+      'Automated health check circuit breaker & failover script',
+      'Prometheus & Grafana telemetry observability dashboard',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/cloud-telehealth-starter',
+  },
+  {
+    psId: 'MCAI-PS-08',
+    title: 'Assistive Computer Vision & Offline Voice Navigator for Rural Diagnostics',
+    category: 'Open Innovation',
+    difficulty: 'Beginner',
+    description:
+      'Develop an offline-capable, assistive computer vision and voice-guided mobile tool that scans physical medical prescription slips, explains dosage schedules in regional dialects, and assists visually impaired patients.',
+    expectedOutcomes: [
+      'On-device OCR and document text parsing',
+      'Text-to-speech audio guidance in vernacular languages',
+      'Intuitive high-contrast accessibility interface',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/assistive-vision-starter',
+  },
+  {
+    psId: 'MCAI-PS-09',
+    title: 'Multi-Modal Pathology & Ultrasound Tele-Screening AI Assistant',
+    category: 'AI/ML',
+    difficulty: 'Advanced',
+    description:
+      'Develop a multi-modal computer vision model that analyzes fetal ultrasound snapshots and prenatal blood histology slides to identify anomalies and generate structured second-opinion diagnostic reports for rural clinics.',
+    expectedOutcomes: [
+      'PyTorch/TensorFlow multi-modal inference pipeline',
+      'Automated clinical structured summary generator',
+      'DICOM & standard image format viewer integration',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/ultrasound-pathology-starter',
+  },
+];
+
 /**
- * Seed default hackathon event and curated problem statements if DB is empty
+ * Seed default hackathon event and curated problem statements if DB is empty or needs refresh
  */
 export const seedDefaultEventIfEmpty = async () => {
   try {
-    const count = await HackathonEvent.countDocuments();
-    if (count > 0) return;
+    const existing = await HackathonEvent.findOne({
+      slug: 'hacksphere-national-hackathon-2026',
+    });
 
-    console.log('[HackathonEvent] Seeding default HackSphere Hackathon 2026 with Problem Statements...');
+    if (existing) {
+      // If event exists but has fewer than the full 9 problem statements, upgrade it
+      if (!existing.problemStatements || existing.problemStatements.length < DEFAULT_PROBLEM_STATEMENTS.length) {
+        console.log(`[HackathonEvent] Upgrading existing HackSphere 2026 challenge library to ${DEFAULT_PROBLEM_STATEMENTS.length} statements...`);
+        existing.problemStatements = DEFAULT_PROBLEM_STATEMENTS;
+        existing.domains = DEFAULT_DOMAINS;
+        await existing.save();
+        console.log(`[HackathonEvent] Successfully upgraded HackSphere 2026 problem statements to ${DEFAULT_PROBLEM_STATEMENTS.length} across ${DEFAULT_DOMAINS.length} tracks.`);
+      }
+      return;
+    }
+
+    console.log('[HackathonEvent] Seeding default HackSphere Hackathon 2026 with 9 Problem Statements across 8+ Tracks...');
 
     await HackathonEvent.create({
       title: 'HackSphere National Innovation Hackathon 2026',
@@ -23,76 +176,11 @@ export const seedDefaultEventIfEmpty = async () => {
       endDate: new Date('2026-06-17T18:00:00Z'),
       registrationDeadline: new Date('2026-06-10T23:59:59Z'),
       status: 'Active',
-      domains: [
-        'AI/ML',
-        'Healthcare Tech',
-        'IoT & Robotics',
-        'Web Dev',
-        'Cyber Security',
-        'Blockchain & Web3',
-        'Cloud & DevOps',
-      ],
-      problemStatements: [
-        {
-          psId: 'MCAI-PS-01',
-          title: 'Predictive Maternal Health Analytics & High-Risk Pregnancy Early Warning Engine',
-          category: 'AI/ML',
-          difficulty: 'Advanced',
-          description:
-            'Build an ML model trained on maternal physiological vitals, clinical history, and demographic indicators to predict preeclampsia, gestational diabetes, and fetal distress with explainable risk scores.',
-          expectedOutcomes: [
-            'Trained ML model pipeline (Target AUC > 0.88)',
-            'Interactive doctor risk diagnostic dashboard',
-            'REST API scoring service with real-time inference',
-          ],
-          starterKitUrl: 'https://github.com/matrucare-ai/maternal-risk-dataset-starter',
-        },
-        {
-          psId: 'MCAI-PS-02',
-          title: 'IoT-Connected Smart Wearable Node for Real-Time Maternal & Fetal Telemetry',
-          category: 'IoT & Robotics',
-          difficulty: 'Intermediate',
-          description:
-            'Design an ultra-low-power edge telemetry firmware and simulator that continuously captures maternal SpO2, heart rate, and uterine contraction patterns, auto-dispatching SOS alerts via MQTT.',
-          expectedOutcomes: [
-            'MQTT telemetry simulator or ESP32 embedded sketch',
-            'Emergency trigger webhook with GPS geo-tagging',
-            'Live vitals graph & telemetry visualization UI',
-          ],
-          starterKitUrl: 'https://github.com/matrucare-ai/iot-telemetry-starter',
-        },
-        {
-          psId: 'MCAI-PS-03',
-          title: 'Accessible Multilingual Rural Mother-Care Portal & Emergency ASHA Dispatcher',
-          category: 'Healthcare Tech',
-          difficulty: 'Beginner',
-          description:
-            'Create an offline-first, voice-assisted Progressive Web App (PWA) in regional Indian languages that guides mothers through trimester milestones, nutrition tracking, and 1-tap local ASHA worker SOS.',
-          expectedOutcomes: [
-            'PWA supporting offline ServiceWorker caching',
-            'Voice or regional UI toggle (Hindi, Bengali, Tamil, Telugu)',
-            'Automated ASHA alert routing service with SMS integration',
-          ],
-          starterKitUrl: 'https://github.com/matrucare-ai/rural-health-pwa-starter',
-        },
-        {
-          psId: 'MCAI-PS-04',
-          title: 'Tamper-Proof Decentralized Health Records (EHR) & Immunization Audit Trail',
-          category: 'Blockchain & Web3',
-          difficulty: 'Advanced',
-          description:
-            'Implement a zero-knowledge or cryptographic audit log smart contract securing maternal immunization records, prenatal lab tests, and hospital discharge summaries with patient-controlled access.',
-          expectedOutcomes: [
-            'Solidity or smart contract for verifiable immutability',
-            'Client-side consent and medical record viewer UI',
-            'Fast cryptographic proof-of-authenticity verifier',
-          ],
-          starterKitUrl: 'https://github.com/matrucare-ai/decentralized-ehr-starter',
-        },
-      ],
+      domains: DEFAULT_DOMAINS,
+      problemStatements: DEFAULT_PROBLEM_STATEMENTS,
     });
 
-    console.log('[HackathonEvent] Successfully seeded default event and 4 problem statements.');
+    console.log(`[HackathonEvent] Successfully seeded default event and ${DEFAULT_PROBLEM_STATEMENTS.length} problem statements.`);
   } catch (error) {
     console.error('[HackathonEvent Seed Error]:', error);
   }
@@ -213,6 +301,17 @@ export const getAllProblemStatements = async (req, res) => {
         });
       });
     });
+
+    // Fallback to official curated library if database has not yet synced problem statements
+    if (allProblems.length === 0) {
+      allProblems = DEFAULT_PROBLEM_STATEMENTS.map((ps) => ({
+        ...ps,
+        hackathonId: 'default-hacksphere-2026',
+        hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+        hackathonSlug: 'hacksphere-national-hackathon-2026',
+        deadline: new Date('2026-06-10T23:59:59Z'),
+      }));
+    }
 
     if (category && category !== 'All') {
       allProblems = allProblems.filter((p) => p.category === category);

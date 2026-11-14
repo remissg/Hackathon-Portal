@@ -170,6 +170,7 @@ const hackathonRegistrationSchema = new mongoose.Schema(
         'Blockchain & Web3',
         'Healthcare Tech',
         'Cloud & DevOps',
+        'Open Innovation',
       ],
       default: 'AI/ML',
     },

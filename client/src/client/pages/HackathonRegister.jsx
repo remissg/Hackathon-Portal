@@ -95,19 +95,19 @@ const HackathonRegister = () => {
       .catch(() => {});
   }, []);
 
-  // Pre-fill problem statement from query parameters (e.g. from /problems page)
+  // Pre-fill problem statement and track domain from query parameters (e.g. from /problems or /dashboard)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const psId = params.get('psId');
-    const track = params.get('track');
+    const track = params.get('track') || params.get('domain');
     const title = params.get('title');
 
-    if (psId) {
+    if (psId || track) {
       setFormData((prev) => ({
         ...prev,
-        problemStatementId: psId,
-        problemStatementTitle: title || '',
-        domain: track || prev.domain,
+        ...(psId ? { problemStatementId: psId } : {}),
+        ...(title ? { problemStatementTitle: title } : {}),
+        ...(track ? { domain: track } : {}),
       }));
     }
   }, [location.search]);
@@ -684,6 +684,7 @@ const HackathonRegister = () => {
                     <option value="Blockchain & Web3">Blockchain & Web3</option>
                     <option value="Healthcare Tech">Healthcare & Diagnostics Tech</option>
                     <option value="Cloud & DevOps">Cloud & DevOps</option>
+                    <option value="Open Innovation">Open Innovation & Assistive Tech</option>
                   </select>
                 </div>
 

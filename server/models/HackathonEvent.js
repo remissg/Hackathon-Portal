@@ -105,6 +105,7 @@ const hackathonEventSchema = new mongoose.Schema(
         'Cyber Security',
         'Blockchain & Web3',
         'Cloud & DevOps',
+        'Open Innovation',
       ],
     },
     bannerUrl: {

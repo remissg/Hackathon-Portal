@@ -26,9 +26,157 @@ const CATEGORIES = [
   'Cyber Security',
   'Blockchain & Web3',
   'Cloud & DevOps',
+  'Open Innovation',
 ];
 
 const DIFFICULTIES = ['All', 'Beginner', 'Intermediate', 'Advanced'];
+
+export const FALLBACK_PROBLEMS = [
+  {
+    _id: 'fb-ps-01',
+    psId: 'MCAI-PS-01',
+    title: 'Predictive Maternal Health Analytics & High-Risk Pregnancy Early Warning Engine',
+    category: 'AI/ML',
+    difficulty: 'Advanced',
+    description:
+      'Build an ML model trained on maternal physiological vitals, clinical history, and demographic indicators to predict preeclampsia, gestational diabetes, and fetal distress with explainable risk scores.',
+    expectedOutcomes: [
+      'Trained ML model pipeline (Target AUC > 0.88)',
+      'Interactive doctor risk diagnostic dashboard',
+      'REST API scoring service with real-time inference',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/maternal-risk-dataset-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-02',
+    psId: 'MCAI-PS-02',
+    title: 'IoT-Connected Smart Wearable Node for Real-Time Maternal & Fetal Telemetry',
+    category: 'IoT & Robotics',
+    difficulty: 'Intermediate',
+    description:
+      'Design an ultra-low-power edge telemetry firmware and simulator that continuously captures maternal SpO2, heart rate, and uterine contraction patterns, auto-dispatching SOS alerts via MQTT.',
+    expectedOutcomes: [
+      'MQTT telemetry simulator or ESP32 embedded sketch',
+      'Emergency trigger webhook with GPS geo-tagging',
+      'Live vitals graph & telemetry visualization UI',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/iot-telemetry-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-03',
+    psId: 'MCAI-PS-03',
+    title: 'Accessible Multilingual Rural Mother-Care Portal & Emergency ASHA Dispatcher',
+    category: 'Healthcare Tech',
+    difficulty: 'Beginner',
+    description:
+      'Create an offline-first, voice-assisted Progressive Web App (PWA) in regional Indian languages that guides mothers through trimester milestones, nutrition tracking, and 1-tap local ASHA worker SOS.',
+    expectedOutcomes: [
+      'PWA supporting offline ServiceWorker caching',
+      'Voice or regional UI toggle (Hindi, Bengali, Tamil, Telugu)',
+      'Automated ASHA alert routing service with SMS integration',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/rural-health-pwa-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-04',
+    psId: 'MCAI-PS-04',
+    title: 'Tamper-Proof Decentralized Health Records (EHR) & Immunization Audit Trail',
+    category: 'Blockchain & Web3',
+    difficulty: 'Advanced',
+    description:
+      'Implement a zero-knowledge or cryptographic audit log smart contract securing maternal immunization records, prenatal lab tests, and hospital discharge summaries with patient-controlled access.',
+    expectedOutcomes: [
+      'Solidity or smart contract for verifiable immutability',
+      'Client-side consent and medical record viewer UI',
+      'Fast cryptographic proof-of-authenticity verifier',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/decentralized-ehr-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-05',
+    psId: 'MCAI-PS-05',
+    title: 'Zero-Trust Clinical Audit, Cryptographic Access Delegation & Medical Vault',
+    category: 'Cyber Security',
+    difficulty: 'Advanced',
+    description:
+      'Design a zero-trust credential-based access control engine for healthcare networks that prevents unauthorized EHR data leaks, signs clinical prescriptions cryptographically, and detects anomalous patient record downloads in real time.',
+    expectedOutcomes: [
+      'Attribute-Based Access Control (ABAC) policy engine',
+      'Cryptographic digital prescription signing & verification',
+      'Real-time anomaly detection for medical record access',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/zero-trust-vault-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-06',
+    psId: 'MCAI-PS-06',
+    title: 'High-Concurrency Real-Time ICU Bed Allocation & Critical Care Logistics Engine',
+    category: 'Web Dev',
+    difficulty: 'Intermediate',
+    description:
+      'Architect an ultra-fast full-stack web platform using MERN & WebSockets that manages multi-hospital ICU bed occupancy, ventilator availability, oxygen logistics, and automated patient transfer queues during clinical emergencies.',
+    expectedOutcomes: [
+      'Real-time WebSocket multi-facility bed inventory state',
+      'Optimized transfer dispatcher algorithm',
+      'Mobile-responsive hospital command center UI',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/hospital-logistics-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-07',
+    psId: 'MCAI-PS-07',
+    title: 'Fault-Tolerant Tele-Health Edge Microservices & Automated Clinical Failover',
+    category: 'Cloud & DevOps',
+    difficulty: 'Intermediate',
+    description:
+      'Build a resilient microservice mesh and CI/CD deployment topology for critical telemedicine video and telemetry services, supporting automated health probes, geo-distributed failover, and zero-downtime rolling updates.',
+    expectedOutcomes: [
+      'Containerized microservices orchestration (Docker Compose / K8s manifests)',
+      'Automated health check circuit breaker & failover script',
+      'Prometheus & Grafana telemetry observability dashboard',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/cloud-telehealth-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-08',
+    psId: 'MCAI-PS-08',
+    title: 'Assistive Computer Vision & Offline Voice Navigator for Rural Diagnostics',
+    category: 'Open Innovation',
+    difficulty: 'Beginner',
+    description:
+      'Develop an offline-capable, assistive computer vision and voice-guided mobile tool that scans physical medical prescription slips, explains dosage schedules in regional dialects, and assists visually impaired patients.',
+    expectedOutcomes: [
+      'On-device OCR and document text parsing',
+      'Text-to-speech audio guidance in vernacular languages',
+      'Intuitive high-contrast accessibility interface',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/assistive-vision-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+  {
+    _id: 'fb-ps-09',
+    psId: 'MCAI-PS-09',
+    title: 'Multi-Modal Pathology & Ultrasound Tele-Screening AI Assistant',
+    category: 'AI/ML',
+    difficulty: 'Advanced',
+    description:
+      'Develop a multi-modal computer vision model that analyzes fetal ultrasound snapshots and prenatal blood histology slides to identify anomalies and generate structured second-opinion diagnostic reports for rural clinics.',
+    expectedOutcomes: [
+      'PyTorch/TensorFlow multi-modal inference pipeline',
+      'Automated clinical structured summary generator',
+      'DICOM & standard image format viewer integration',
+    ],
+    starterKitUrl: 'https://github.com/matrucare-ai/ultrasound-pathology-starter',
+    hackathonTitle: 'HackSphere National Innovation Hackathon 2026',
+  },
+];
 
 const ProblemStatements = () => {
   const [problems, setProblems] = useState([]);
@@ -44,6 +192,27 @@ const ProblemStatements = () => {
     fetchProblems();
   }, [selectedCategory, selectedDifficulty]);
 
+  const applyLocalFilters = () => {
+    let result = [...FALLBACK_PROBLEMS];
+    if (selectedCategory !== 'All') {
+      result = result.filter((p) => p.category === selectedCategory);
+    }
+    if (selectedDifficulty !== 'All') {
+      result = result.filter((p) => p.difficulty === selectedDifficulty);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) ||
+          p.psId.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  };
+
   const fetchProblems = async () => {
     try {
       setLoading(true);
@@ -53,11 +222,14 @@ const ProblemStatements = () => {
       if (searchQuery.trim()) params.append('search', searchQuery.trim());
 
       const res = await api.get(`/events/problems/all?${params.toString()}`);
-      if (res.data.success) {
-        setProblems(res.data.problems || []);
+      if (res.data.success && Array.isArray(res.data.problems) && res.data.problems.length > 0) {
+        setProblems(res.data.problems);
+      } else {
+        setProblems(applyLocalFilters());
       }
     } catch (err) {
       console.error('[Problems Fetch Error]:', err);
+      setProblems(applyLocalFilters());
     } finally {
       setLoading(false);
     }

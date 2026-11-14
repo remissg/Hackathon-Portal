@@ -45,6 +45,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isJustRegistered = searchParams.get('registered') === 'true';
+  const requestedTrack = searchParams.get('track');
 
   const [entry, setEntry] = useState(null);
   const [isLeadRole, setIsLeadRole] = useState(true);
@@ -210,6 +211,31 @@ const Dashboard = () => {
             >
               Dismiss
             </button>
+          </div>
+        )}
+
+        {/* Track Selected Callout Banner */}
+        {requestedTrack && !entry && !loading && (
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-sky-950/90 via-indigo-950/80 to-slate-900 border border-sky-500/40 text-sky-100 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 shrink-0 shadow-inner">
+                <Sparkles className="w-5 h-5 text-sky-400" />
+              </div>
+              <div>
+                <p className="font-bold text-white text-base">
+                  Selected Track: <span className="text-sky-300">{requestedTrack}</span>
+                </p>
+                <p className="text-slate-300 text-xs sm:text-sm">
+                  Ready to register your hackathon project? Complete your project and team submission to secure your evaluation spot.
+                </p>
+              </div>
+            </div>
+            <Link
+              to={`/register-hackathon?track=${encodeURIComponent(requestedTrack)}`}
+              className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm whitespace-nowrap transition shadow-lg shadow-sky-500/25 flex items-center gap-2 shrink-0"
+            >
+              <span>Register for this Track →</span>
+            </Link>
           </div>
         )}
 
