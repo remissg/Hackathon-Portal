@@ -62,16 +62,19 @@ const Footer = () => {
                 <Link to="/" className="hover:text-sky-400 transition-colors">Home Landing</Link>
               </li>
               <li>
-                <a href="/#highlights" className="hover:text-sky-400 transition-colors">Competition Tracks</a>
+                <Link to="/problems" className="hover:text-sky-400 transition-colors">Problem Statements Library</Link>
               </li>
               <li>
-                <a href="/#timeline" className="hover:text-sky-400 transition-colors">Event Schedule & Milestones</a>
+                <Link to="/leaderboard" className="hover:text-sky-400 transition-colors">Live Leaderboard</Link>
               </li>
               <li>
-                <a href="/#prizes" className="hover:text-sky-400 transition-colors">Prize Pool & Awards</a>
+                <Link to="/faq" className="hover:text-sky-400 transition-colors">Frequently Asked Questions (FAQ)</Link>
               </li>
               <li>
-                <Link to="/contact" className="hover:text-sky-400 transition-colors">Support & Contact</Link>
+                <a href="/#timeline" className="hover:text-sky-400 transition-colors">Event Schedule &amp; Milestones</a>
+              </li>
+              <li>
+                <Link to="/contact" className="hover:text-sky-400 transition-colors">Support &amp; Contact</Link>
               </li>
             </ul>
           </div>

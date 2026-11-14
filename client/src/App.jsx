@@ -22,6 +22,7 @@ const TeamInviteAcceptance = lazy(() => import('./client/pages/TeamInviteAccepta
 const Dashboard = lazy(() => import('./client/pages/Dashboard'));
 const HackathonRegister = lazy(() => import('./client/pages/HackathonRegister'));
 const VerifyCertificatePage = lazy(() => import('./client/pages/VerifyCertificatePage'));
+const FaqPage = lazy(() => import('./client/pages/FaqPage'));
 
 // Judge Portal Pages
 const JudgeQueuePage = lazy(() => import('./judge/pages/JudgeQueuePage'));
@@ -59,6 +60,7 @@ function App() {
               <Route path="/problems" element={<ProblemStatements />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/faq" element={<FaqPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/verify-otp" element={<VerifyOtp />} />

@@ -128,6 +128,14 @@ const Navbar = () => {
               Prizes
             </a>
             <Link
+              to="/faq"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/faq') ? 'text-sky-400 bg-sky-950/40' : 'text-slate-300 hover:text-white hover:bg-slate-800/40'
+              }`}
+            >
+              FAQ
+            </Link>
+            <Link
               to="/contact"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/contact') ? 'text-sky-400 bg-sky-950/40' : 'text-slate-300 hover:text-white hover:bg-slate-800/40'
@@ -419,13 +427,13 @@ const Navbar = () => {
           >
             Timeline & Prizes
           </a>
-          <a
-            href="/#faq"
+          <Link
+            to="/faq"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800"
           >
             FAQ
-          </a>
+          </Link>
           <Link
             to="/contact"
             onClick={() => setMobileMenuOpen(false)}
