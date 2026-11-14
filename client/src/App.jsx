@@ -21,6 +21,7 @@ const VerifyOtp = lazy(() => import('./client/pages/VerifyOtp'));
 const TeamInviteAcceptance = lazy(() => import('./client/pages/TeamInviteAcceptance'));
 const Dashboard = lazy(() => import('./client/pages/Dashboard'));
 const HackathonRegister = lazy(() => import('./client/pages/HackathonRegister'));
+const VerifyCertificatePage = lazy(() => import('./client/pages/VerifyCertificatePage'));
 
 // Judge Portal Pages
 const JudgeQueuePage = lazy(() => import('./judge/pages/JudgeQueuePage'));
@@ -65,6 +66,9 @@ function App() {
 
               {/* Public/Badge QR Scan Verification Route (preserves printed Lanyard QR URLs) */}
               <Route path="/verify-pass" element={<GateScannerPage />} />
+
+              {/* Public Certificate Credential Verification Route */}
+              <Route path="/verify-certificate" element={<VerifyCertificatePage />} />
 
               {/* Candidate Authenticated Routes */}
               <Route

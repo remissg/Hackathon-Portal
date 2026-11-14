@@ -455,8 +455,16 @@ const Dashboard = () => {
                   className="px-3.5 py-2 rounded-xl bg-amber-950/80 hover:bg-amber-900/90 text-amber-300 text-xs font-semibold flex items-center gap-1.5 border border-amber-800/80 transition-colors shadow-sm"
                   title="View & Download Official Verified Certificate of Participation / Merit"
                 >
-                  <Award className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Certificate</span>
+                  {['Finalist', 'Winner', 'Completed', 'Shortlisted'].includes(entry.status) ? (
+                    <Award className="w-3.5 h-3.5 text-amber-400" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+                  )}
+                  <span>
+                    {['Finalist', 'Winner', 'Completed', 'Shortlisted'].includes(entry.status)
+                      ? 'Certificate'
+                      : 'Certificate'}
+                  </span>
                 </button>
                 {isLead ? (
                   <>
