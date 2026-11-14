@@ -363,6 +363,20 @@ export const getAllProblemStatements = async (req, res) => {
       }));
     }
 
+    // Deduplicate by psId so that problem statements are never presented more than once
+    const seenPsIds = new Set();
+    const uniqueProblems = [];
+    allProblems.forEach((p) => {
+      const key = (p.psId || '').trim().toUpperCase();
+      if (key && !seenPsIds.has(key)) {
+        seenPsIds.add(key);
+        uniqueProblems.push(p);
+      } else if (!key) {
+        uniqueProblems.push(p);
+      }
+    });
+    allProblems = uniqueProblems;
+
     if (category && category !== 'All') {
       allProblems = allProblems.filter((p) => p.category === category);
     }

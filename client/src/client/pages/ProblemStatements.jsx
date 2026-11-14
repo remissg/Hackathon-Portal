@@ -192,8 +192,18 @@ const ProblemStatements = () => {
     fetchProblems();
   }, [selectedCategory, selectedDifficulty]);
 
+  const dedupeByPsId = (list) => {
+    const seen = new Set();
+    return (list || []).filter((p) => {
+      const key = (p.psId || p._id || p.title || '').trim().toUpperCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
   const applyLocalFilters = () => {
-    let result = [...FALLBACK_PROBLEMS];
+    let result = dedupeByPsId(FALLBACK_PROBLEMS);
     if (selectedCategory !== 'All') {
       result = result.filter((p) => p.category === selectedCategory);
     }
@@ -223,7 +233,7 @@ const ProblemStatements = () => {
 
       const res = await api.get(`/events/problems/all?${params.toString()}`);
       if (res.data.success && Array.isArray(res.data.problems) && res.data.problems.length > 0) {
-        setProblems(res.data.problems);
+        setProblems(dedupeByPsId(res.data.problems));
       } else {
         setProblems(applyLocalFilters());
       }
