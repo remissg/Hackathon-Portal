@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './shared/context/AuthContext';
 import ProtectedRoute from './shared/components/ProtectedRoute';
 import RoleRoute from './shared/components/RoleRoute';
+import ScrollToTop from './shared/components/ScrollToTop';
 
 // Portal Layouts
 import ClientLayout from './client/layout/ClientLayout';
@@ -52,6 +53,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* 1. CLIENT ROOT: Public Website & Candidate Portal */}

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   HelpCircle,
   Search,
@@ -119,9 +119,27 @@ const FAQS_KNOWLEDGE_BASE = [
 ];
 
 const FaqPage = () => {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    if (!categoryParam) return 'All';
+    const match = FAQ_CATEGORIES.find((c) =>
+      c.toLowerCase().includes(categoryParam.toLowerCase())
+    );
+    return match || 'All';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaq, setOpenFaq] = useState(null);
+
+  useEffect(() => {
+    if (categoryParam) {
+      const match = FAQ_CATEGORIES.find((c) =>
+        c.toLowerCase().includes(categoryParam.toLowerCase())
+      );
+      if (match) setSelectedCategory(match);
+    }
+  }, [categoryParam]);
 
   const filteredFaqs = useMemo(() => {
     let list = FAQS_KNOWLEDGE_BASE;
@@ -320,3 +338,4 @@ const FaqPage = () => {
 };
 
 export default FaqPage;
+

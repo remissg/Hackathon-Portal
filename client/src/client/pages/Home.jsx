@@ -104,9 +104,6 @@ const DEFAULT_TIMELINE_PHASES = [
 
 const Home = () => {
   const { user, isAuthenticated } = useAuth();
-  const [openFaq, setOpenFaq] = useState(null);
-  const [faqSearch, setFaqSearch] = useState('');
-  const [faqCategory, setFaqCategory] = useState('All');
 
   // Featured Problems State
   const [featuredProblems, setFeaturedProblems] = useState([]);
@@ -302,100 +299,6 @@ const Home = () => {
       color: 'from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30',
     },
   ];
-
-  const faqs = [
-    {
-      category: 'Registration & Team',
-      q: 'What is the required team size? Can I participate solo?',
-      a: 'Teams can range from 1 to 5 members. Team size = 1 indicates solo participation. For teams of 2 to 5 members, the form dynamically provides fields to invite each teammate by email. Cross-college and cross-branch teams are 100% permitted.',
-    },
-    {
-      category: 'Registration & Team',
-      q: 'Is there any registration fee to participate in HackSphere 2026?',
-      a: 'No. Participation in HackSphere National Innovation Hackathon 2026 is 100% free of charge. There are zero application, evaluation, or hidden certification fees.',
-    },
-    {
-      category: 'Registration & Team',
-      q: 'How does the OTP verification process work?',
-      a: 'When you register an account, our backend generates a secure 6-digit OTP code dispatched via email from matrucareai@gmail.com. The OTP code is time-limited (expires in 10 minutes) and is invalidated immediately upon successful verification. If not received within a minute, please check your Spam/Junk folder.',
-    },
-    {
-      category: 'Registration & Team',
-      q: 'Who is eligible to participate?',
-      a: 'Students currently enrolled in B.Tech, M.Tech, BCA, MCA, B.Sc, M.Sc, or related technical degrees across 1st, 2nd, 3rd, and 4th years are eligible. Mixed-college and multi-disciplinary teams are fully encouraged.',
-    },
-    {
-      category: 'Registration & Team',
-      q: 'Can I edit or withdraw my registration after submitting?',
-      a: 'Yes! From your personal Candidate Dashboard, you can review your registered team details, update project links or member information, download your lanyard admission pass, or withdraw your entry if needed prior to final jury evaluation.',
-    },
-    {
-      category: 'Tracks & Challenges',
-      q: 'Do we have to pick from the 8+ Challenge Problem Statements, or can we do Open Innovation?',
-      a: 'Both options are fully supported! You can choose any curated challenge statement from our 8+ track library (AI/ML, IoT, Web Dev, Cyber Security, Blockchain, Cloud, Healthcare Tech, Open Innovation) to receive starter kits and specific outcome rubrics. Alternatively, you can select "Open Innovation" to build and register your own custom solution.',
-    },
-    {
-      category: 'Tracks & Challenges',
-      q: 'Can a candidate or team submit multiple projects under different tracks?',
-      a: 'Each registered team lead account can submit one primary project entry to ensure thorough mentor review and fair judging. You may update or refine your project links, presentation, and team roster anytime before the Phase 01 submission deadline.',
-    },
-    {
-      category: 'Tracks & Challenges',
-      q: 'Are there any restrictions on the tech stack we use?',
-      a: 'No restrictions! You are free to architect your solution using modern web frameworks (MERN, Next.js, Django), mobile platforms (Flutter, React Native), AI/ML libraries (PyTorch, TensorFlow, LangChain), embedded IoT systems (ESP32, Arduino, Raspberry Pi), or Web3 smart contracts (Solidity).',
-    },
-    {
-      category: 'Pitch & Judging',
-      q: 'What is the 4-Pillar Evaluation Rubric and scoring scale?',
-      a: 'All projects are evaluated across four official pillars, each scored from 1 to 10 points (total 40 points, normalized to 100%): (1) Innovation & Originality (25%), (2) Technical Architecture & Execution (25%), (3) Healthcare & Real-World Impact (25%), and (4) Prototype Demo & Presentation (25%).',
-    },
-    {
-      category: 'Pitch & Judging',
-      q: 'What is the duration and format of the Live Pitch Round?',
-      a: 'Shortlisted teams present live to our executive jury. Each pitch session is strictly timed at 6 minutes total: 3 minutes for uninterrupted live demo and slide presentation, 2 minutes for interactive Jury Q&A, and 1 minute for score finalization. The judge console includes an integrated synchronized chime timer.',
-    },
-    {
-      category: 'Pitch & Judging',
-      q: 'What deliverables must be submitted by the deadline?',
-      a: 'Each team must submit their Project Name, Track/Domain, Presentation slide deck link (Google Drive / OneDrive with "Anyone with link can view" permissions), and Prototype / Code repository link (GitHub / live demo URL). An optional short demo video link is recommended.',
-    },
-    {
-      category: 'Certificates & Passes',
-      q: 'When and how will Certificates of Participation and Merit be issued?',
-      a: 'Official verified digital certificates are released directly on your Candidate Dashboard after the Grand Finale concludes and jury scores are published. Certificates are available in printable A4 landscape format and feature a tamper-proof cryptographic verification QR code.',
-    },
-    {
-      category: 'Certificates & Passes',
-      q: 'How is the Certificate QR code different from the Lanyard Entry Pass QR?',
-      a: 'They serve two completely distinct purposes: The Lanyard Entry Pass QR (HS26-PASS-...) is used by on-site volunteers and security for gate check-in and attendee badge verification. The Certificate QR (HS26-CERT-...) points to our public credential verification portal (/verify-certificate) for recruiters, academic institutions, and LinkedIn verification.',
-    },
-    {
-      category: 'Certificates & Passes',
-      q: 'Do my teammates get individual entry passes and certificates?',
-      a: 'Yes! Once teammates accept their email invitation, the dashboard generates individualized attendee lanyard passes with custom QR badges for each member, as well as personalized certificates bearing their name and team role.',
-    },
-  ];
-
-  const filteredFaqs = useMemo(() => {
-    let list = faqs;
-    if (faqCategory !== 'All') {
-      list = list.filter((f) => f.category === faqCategory);
-    }
-    if (faqSearch.trim()) {
-      const term = faqSearch.toLowerCase().trim();
-      list = list.filter(
-        (f) =>
-          f.q.toLowerCase().includes(term) ||
-          f.a.toLowerCase().includes(term) ||
-          f.category.toLowerCase().includes(term)
-      );
-    }
-    return list;
-  }, [faqSearch, faqCategory, faqs]);
-
-  const toggleFaq = (idx) => {
-    setOpenFaq(openFaq === idx ? null : idx);
-  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -942,117 +845,123 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Frequently Asked Questions (FAQ) Accordion */}
-      <section id="faq" className="py-20 bg-slate-900/60 border-y border-slate-800/80">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Questions &amp; Answers</h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Frequently Asked Questions
-            </p>
-            <p className="mt-3 text-slate-400 text-base">
-              Everything you need to know about the registration, team management, and presentation guidelines.
-            </p>
-          </div>
+      {/* Help Center & FAQ Hub Showcase */}
+      <section id="faq" className="py-20 bg-slate-900/60 border-y border-slate-800/80 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-sky-500/10 blur-[130px] rounded-full pointer-events-none" />
 
-          {/* Interactive FAQ Search Bar */}
-          <div className="relative max-w-md mx-auto mb-6">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={faqSearch}
-              onChange={(e) => setFaqSearch(e.target.value)}
-              placeholder="Search questions (e.g. certificates, pitch, team size, rubrics)..."
-              className="w-full pl-10 pr-10 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sky-500 transition-colors"
-            />
-            {faqSearch && (
-              <button
-                onClick={() => setFaqSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                title="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* FAQ Category Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-            {['All', 'Registration & Team', 'Tracks & Challenges', 'Pitch & Judging', 'Certificates & Passes'].map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => {
-                  setFaqCategory(cat);
-                  setOpenFaq(null);
-                }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  faqCategory === cat
-                    ? 'bg-sky-500 text-slate-950 font-bold shadow-md shadow-sky-500/25'
-                    : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700 hover:text-white'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <div className="space-y-4">
-            {filteredFaqs.map((faq, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden transition-all"
-                >
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full p-5 text-left flex items-start sm:items-center justify-between gap-3 text-base font-semibold text-white hover:text-sky-400 transition-colors"
-                  >
-                    <div className="space-y-1">
-                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-sky-400 border border-slate-700/80 mr-2">
-                        {faq.category}
-                      </span>
-                      <span className="text-sm sm:text-base font-bold text-white">{faq.q}</span>
-                    </div>
-                    <ChevronDown
-                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform ${
-                        isOpen ? 'rotate-180 text-sky-400' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-5 pb-5 text-sm text-slate-300 leading-relaxed border-t border-slate-800/60 pt-4">
-                      {faq.a}
-                    </div>
-                  )}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="rounded-3xl bg-slate-900/90 border border-slate-800 p-8 sm:p-12 relative overflow-hidden shadow-2xl">
+            {/* Top Badge & Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 pb-8 border-b border-slate-800/80">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-3">
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  <span>Knowledge Base &amp; Support</span>
                 </div>
-              );
-            })}
-
-            {filteredFaqs.length === 0 && (
-              <div className="text-center py-8 text-slate-400 text-sm bg-slate-900/40 rounded-2xl border border-slate-800/60">
-                No questions found matching "{faqSearch}". Try searching for keywords like "team", "eligibility", or "OTP".
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  Frequently Asked Questions
+                </h2>
+                <p className="mt-2 text-sm sm:text-base text-slate-400 max-w-xl">
+                  Have questions about registration deadlines, team formation, problem statements, submission rubrics, or digital certificates? Our Help Center covers everything.
+                </p>
               </div>
-            )}
-          </div>
 
-          <div className="mt-10 text-center space-y-3">
-            <div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                <Link
+                  to="/faq"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/25 transition-all"
+                >
+                  <span>Explore Help Center</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-semibold text-sm transition-all"
+                >
+                  <Mail className="w-4 h-4 text-sky-400" />
+                  <span>Contact Committee</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Quick Topic Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <Link
-                to="/faq"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-sky-500/50 text-xs font-semibold text-slate-200 hover:text-white transition shadow-sm"
+                to="/faq?category=Registration"
+                className="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-sky-500/40 hover:bg-slate-950 transition-all block"
               >
-                <span>Explore Complete FAQ Knowledge Base</span>
-                <ChevronRight className="w-4 h-4 text-sky-400" />
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-3 group-hover:scale-110 transition-transform">
+                  <Users className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                  Registration &amp; Team
+                </h3>
+                <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+                  Team size (1-5 members), eligibility across branches, and OTP verification guide.
+                </p>
+                <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-sky-400">
+                  <span>Read answers</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              <Link
+                to="/faq?category=Tracks"
+                className="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-950 transition-all block"
+              >
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-3 group-hover:scale-110 transition-transform">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
+                  Tracks &amp; Challenges
+                </h3>
+                <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+                  Choosing from the 8+ tracks vs Open Innovation, tech stacks, and problem briefs.
+                </p>
+                <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-indigo-400">
+                  <span>Read answers</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              <Link
+                to="/faq?category=Pitch"
+                className="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-emerald-500/40 hover:bg-slate-950 transition-all block"
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
+                  Judging &amp; Rubrics
+                </h3>
+                <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+                  4-pillar scoring matrix, required deliverables, and 6-minute live pitch structure.
+                </p>
+                <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-emerald-400">
+                  <span>Read answers</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              <Link
+                to="/faq?category=Certificates"
+                className="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 hover:border-amber-500/40 hover:bg-slate-950 transition-all block"
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-3 group-hover:scale-110 transition-transform">
+                  <Award className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                  Passes &amp; Certificates
+                </h3>
+                <p className="mt-1 text-xs text-slate-400 leading-relaxed">
+                  Lanyard entry badge QR vs tamper-proof certificate verification QR codes.
+                </p>
+                <div className="mt-3 flex items-center gap-1 text-[11px] font-semibold text-amber-400">
+                  <span>Read answers</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </div>
               </Link>
             </div>
-            <p className="text-sm text-slate-400">
-              Have another question not covered here?{' '}
-              <Link to="/contact" className="text-sky-400 hover:underline font-semibold">
-                Contact our organizing team directly
-              </Link>
-            </p>
           </div>
         </div>
       </section>

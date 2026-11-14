@@ -115,18 +115,18 @@ const Navbar = () => {
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
               Leaderboard
             </Link>
-            <a
-              href="/#highlights"
+            <Link
+              to="/#highlights"
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/40 transition-colors"
             >
               Tracks
-            </a>
-            <a
-              href="/#timeline"
+            </Link>
+            <Link
+              to="/#timeline"
               className="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800/40 transition-colors"
             >
-              Prizes
-            </a>
+              Timeline
+            </Link>
             <Link
               to="/faq"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -413,20 +413,20 @@ const Navbar = () => {
             <Trophy className="w-4 h-4 text-amber-400" />
             Live Leaderboard
           </Link>
-          <a
-            href="/#highlights"
+          <Link
+            to="/#highlights"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800"
           >
             Event Tracks
-          </a>
-          <a
-            href="/#timeline"
+          </Link>
+          <Link
+            to="/#timeline"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800"
           >
-            Timeline & Prizes
-          </a>
+            Timeline &amp; Prizes
+          </Link>
           <Link
             to="/faq"
             onClick={() => setMobileMenuOpen(false)}

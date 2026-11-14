@@ -71,7 +71,7 @@ const Footer = () => {
                 <Link to="/faq" className="hover:text-sky-400 transition-colors">Frequently Asked Questions (FAQ)</Link>
               </li>
               <li>
-                <a href="/#timeline" className="hover:text-sky-400 transition-colors">Event Schedule &amp; Milestones</a>
+                <Link to="/#timeline" className="hover:text-sky-400 transition-colors">Event Schedule &amp; Milestones</Link>
               </li>
               <li>
                 <Link to="/contact" className="hover:text-sky-400 transition-colors">Support &amp; Contact</Link>
