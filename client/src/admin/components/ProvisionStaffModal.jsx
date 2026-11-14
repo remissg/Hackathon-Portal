@@ -84,7 +84,7 @@ const ProvisionStaffModal = ({
                       <button
                         type="button"
                         onClick={() => {
-                          const txt = `HackSphere 2026 Staff Login\nName: ${provisionSuccessData.fullName}\nRole: ${provisionSuccessData.role}\nEmail: ${provisionSuccessData.email}\nStarting Password: ${provisionSuccessData.startingPassword}\nPortal: https://client-seven-gold-99.vercel.app/login`;
+                          const txt = `HackSphere 2026 Staff Login\nName: ${provisionSuccessData.fullName}\nRole: ${provisionSuccessData.role}\nEmail: ${provisionSuccessData.email}\nStarting Password: ${provisionSuccessData.startingPassword}\nPortal: https://hacksphere-remissg.vercel.app/login`;
                           navigator.clipboard.writeText(txt);
                           setCopiedCreds(true);
                           setTimeout(() => setCopiedCreds(false), 2500);

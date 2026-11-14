@@ -399,7 +399,8 @@ export const provisionStaff = async (req, res) => {
     let emailDispatched = false;
     if (sendEmail) {
       try {
-        const portalUrl = process.env.CLIENT_URL || 'https://client-seven-gold-99.vercel.app';
+        // Direct login link and portal URL for staff appointment is strictly bound to production
+        const portalUrl = 'https://hacksphere-remissg.vercel.app';
         const mailContent = generateStaffOnboardingEmailTemplate({
           fullName: provisionedUser.fullName,
           email: provisionedUser.email,

@@ -105,8 +105,8 @@ const LanyardBadgeModal = ({
           ? !!entry.leaderIsCheckedIn
           : !!selectedPassAttendee.isCheckedIn;
         const activeQrUrl = isLeadAttendee
-          ? `https://client-seven-gold-99.vercel.app/verify-pass?ticketId=${ticketId}`
-          : `https://client-seven-gold-99.vercel.app/verify-pass?ticketId=${ticketId}&member=${encodeURIComponent(currentAttendeeEmail)}`;
+          ? `https://hacksphere-remissg.vercel.app/verify-pass?ticketId=${ticketId}`
+          : `https://hacksphere-remissg.vercel.app/verify-pass?ticketId=${ticketId}&member=${encodeURIComponent(currentAttendeeEmail)}`;
 
         return (
           <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static">

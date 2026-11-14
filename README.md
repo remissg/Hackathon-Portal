@@ -5,7 +5,7 @@
 [![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Nodemailer](https://img.shields.io/badge/Email-Nodemailer%20SMTP-007ACC?logo=gmail&logoColor=white)](https://nodemailer.com/)
-[![Vercel](https://img.shields.io/badge/Deployment-Vercel%20Live-black?logo=vercel&logoColor=white)](https://client-seven-gold-99.vercel.app)
+[![Vercel](https://img.shields.io/badge/Deployment-Vercel%20Live-black?logo=vercel&logoColor=white)](https://hacksphere-remissg.vercel.app)
 [![Railway](https://img.shields.io/badge/Deployment-Railway%20Cloud-0B0D0E?logo=railway&logoColor=white)](https://hackathon-portal-production-9f3f.up.railway.app)
 [![License](https://img.shields.io/badge/Internship-MatruCare%20AI-0284C7)](mailto:matrucareai@gmail.com)
 
@@ -13,7 +13,7 @@
 > **Platform Name:** **HackSphere 2026** (National Hackathon & Innovation Portal)  
 > **Role:** Full Stack Developer Intern | **Stack:** MERN + Nodemailer | **Level:** Intermediate  
 > **Official Sender Email:** `matrucareai@gmail.com`  
-> **Live Web App:** [https://client-seven-gold-99.vercel.app](https://client-seven-gold-99.vercel.app)  
+> **Live Web App:** [https://hacksphere-remissg.vercel.app](https://hacksphere-remissg.vercel.app)  
 > **Live API Server:** [https://hackathon-portal-production-9f3f.up.railway.app](https://hackathon-portal-production-9f3f.up.railway.app)  
 > **GitHub Repository:** [https://github.com/remissg/Hackathon-Portal.git](https://github.com/remissg/Hackathon-Portal.git)
 
@@ -23,7 +23,7 @@
 
 | Service | Hosting Platform | Live URL | Status |
 | :--- | :--- | :--- | :--- |
-| **Frontend Web App** | **Vercel** | [https://client-seven-gold-99.vercel.app](https://client-seven-gold-99.vercel.app) | ![Vercel](https://img.shields.io/badge/Status-Online-success) |
+| **Frontend Web App** | **Vercel** | [https://hacksphere-remissg.vercel.app](https://hacksphere-remissg.vercel.app) | ![Vercel](https://img.shields.io/badge/Status-Online-success) |
 | **Backend REST API** | **Railway Cloud** | [https://hackathon-portal-production-9f3f.up.railway.app](https://hackathon-portal-production-9f3f.up.railway.app) | ![Railway](https://img.shields.io/badge/Status-Healthy-success) |
 | **Source Code** | **GitHub** | [https://github.com/remissg/Hackathon-Portal](https://github.com/remissg/Hackathon-Portal) | ![GitHub](https://img.shields.io/badge/Branch-main-blue) |
 
@@ -255,7 +255,7 @@ cd "Hackathon Portal"
    NODE_ENV=development
    MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/hackathon_portal?retryWrites=true&w=majority
    JWT_SECRET=your_super_secret_jwt_key_2026
-   CLIENT_URL=http://localhost:5173
+   CLIENT_URL=https://hacksphere-remissg.vercel.app
 
    # Nodemailer SMTP Configuration
    EMAIL_USER=your_gmail_address@gmail.com

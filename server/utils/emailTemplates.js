@@ -4,6 +4,25 @@
  * Complies with strict guidelines: Sender is 'HackSphere' <matrucareai@gmail.com>
  */
 
+export const PRODUCTION_CLIENT_URL = 'https://hacksphere-remissg.vercel.app';
+
+/**
+ * Resolves safe client portal URL, always falling back to the official production URL
+ * if empty or if pointing to localhost/outdated preview domains.
+ */
+export const resolvePortalUrl = (url) => {
+  if (
+    !url ||
+    typeof url !== 'string' ||
+    url.includes('localhost') ||
+    url.includes('127.0.0.1') ||
+    url.includes('client-seven-gold-99.vercel.app')
+  ) {
+    return PRODUCTION_CLIENT_URL;
+  }
+  return url.replace(/\/$/, '');
+};
+
 /**
  * Account Verification OTP Template
  */
@@ -62,7 +81,9 @@ export const generateRegistrationEmailTemplate = ({
   pptLink,
   prototypeLink,
   demoVideoLink,
+  portalUrl = PRODUCTION_CLIENT_URL,
 }) => {
+  const safePortalUrl = resolvePortalUrl(portalUrl);
   const memberTextList =
     teamMembers && teamMembers.length > 0
       ? teamMembers.map((m, i) => `  ${i + 1}. ${m.name} (${m.email})`).join('\n')
@@ -84,7 +105,7 @@ ${memberTextList}
 - Prototype Link: ${prototypeLink}
 ${demoVideoLink ? `- Demo Video: ${demoVideoLink}\n` : ''}
 You can log in to your dashboard to review evaluation updates and manage your submission:
-https://client-seven-gold-99.vercel.app/dashboard
+${safePortalUrl}/dashboard
 
 Best regards,
 HackSphere Organizing Committee
@@ -132,7 +153,7 @@ matrucareai@gmail.com`;
       <p style="font-size: 14px; line-height: 1.5; color: #475569; margin: 0 0 16px 0;">
         View your submission status and event pass on your personal dashboard:
         <br/>
-        <a href="https://client-seven-gold-99.vercel.app/dashboard" style="color: #0284c7; font-weight: 600; text-decoration: none;">Open Dashboard →</a>
+        <a href="${safePortalUrl}/dashboard" style="color: #0284c7; font-weight: 600; text-decoration: none;">Open Dashboard →</a>
       </p>
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
@@ -157,9 +178,10 @@ export const generateTeammateInviteEmailTemplate = ({
   domain,
   projectName,
   ticketId,
-  portalUrl = 'https://client-seven-gold-99.vercel.app',
+  portalUrl = PRODUCTION_CLIENT_URL,
 }) => {
-  const inviteUrl = `${portalUrl}/team-invite?passId=${ticketId}${memberEmail ? `&email=${encodeURIComponent(memberEmail)}` : ''}`;
+  const safePortalUrl = resolvePortalUrl(portalUrl);
+  const inviteUrl = `${safePortalUrl}/team-invite?passId=${ticketId}${memberEmail ? `&email=${encodeURIComponent(memberEmail)}` : ''}`;
 
   const text = `HackSphere Hackathon — Team Invitation
 
@@ -235,8 +257,9 @@ export const generateStatusUpdateEmailTemplate = ({
   status,
   domain,
   ticketId,
-  portalUrl = 'https://client-seven-gold-99.vercel.app',
+  portalUrl = PRODUCTION_CLIENT_URL,
 }) => {
+  const safePortalUrl = resolvePortalUrl(portalUrl);
   let statusMessage = '';
   let badgeColor = '#0284c7';
 
@@ -279,7 +302,7 @@ Pass ID: ${ticketId}
 ${statusMessage}
 
 You can log in to your dashboard to review evaluation updates:
-${portalUrl}/dashboard
+${safePortalUrl}/dashboard
 
 Best regards,
 HackSphere Organizing Committee
@@ -314,7 +337,7 @@ matrucareai@gmail.com`;
       </p>
 
       <div style="margin: 20px 0;">
-        <a href="${portalUrl}/dashboard" style="background-color: #0284c7; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
+        <a href="${safePortalUrl}/dashboard" style="background-color: #0284c7; color: #ffffff; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block;">
           Open Dashboard to View Details →
         </a>
       </div>
@@ -337,8 +360,12 @@ export const generateStaffOnboardingEmailTemplate = ({
   email,
   role,
   startingPassword,
-  portalUrl = 'https://client-seven-gold-99.vercel.app',
+  portalUrl = PRODUCTION_CLIENT_URL,
 }) => {
+  const safePortalUrl = resolvePortalUrl(portalUrl);
+  // Direct Login Link is always guaranteed to point to production
+  const directLoginUrl = `${PRODUCTION_CLIENT_URL}/login`;
+
   const roleDisplayNames = {
     evaluator: 'Official Evaluator & Judge',
     volunteer: 'Gate Attendance Volunteer',
@@ -347,11 +374,11 @@ export const generateStaffOnboardingEmailTemplate = ({
   const roleName = roleDisplayNames[role] || 'Event Staff';
 
   const roleUrls = {
-    evaluator: `${portalUrl}/judge`,
-    volunteer: `${portalUrl}/verify-pass`,
-    admin: `${portalUrl}/admin`,
+    evaluator: `${safePortalUrl}/judge`,
+    volunteer: `${safePortalUrl}/volunteer`,
+    admin: `${safePortalUrl}/admin`,
   };
-  const destinationUrl = roleUrls[role] || `${portalUrl}/login`;
+  const destinationUrl = roleUrls[role] || directLoginUrl;
 
   const text = `
 HackSphere 2026 — Official Staff Appointment
@@ -364,7 +391,8 @@ Your Official Staff Credentials:
 - Assigned Role: ${roleName}
 - Login Email: ${email}
 - Starting Password: ${startingPassword}
-- Direct Portal Link: ${destinationUrl}
+- Direct Login Link: ${directLoginUrl}
+- Staff Console Link: ${destinationUrl}
 
 For security, please log in and change your starting password from your profile settings.
 
@@ -405,7 +433,7 @@ matrucareai@gmail.com
 
       <p style="font-size: 12px; color: #64748b; margin: 16px 0 0 0;">
         Direct Login Link: <br/>
-        <a href="${portalUrl}/login" style="color: #0284c7; word-break: break-all;">${portalUrl}/login</a>
+        <a href="${directLoginUrl}" style="color: #0284c7; word-break: break-all;">${directLoginUrl}</a>
       </p>
 
       <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
