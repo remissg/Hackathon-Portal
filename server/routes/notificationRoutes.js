@@ -19,3 +19,4 @@ router.delete('/clear-all', clearAllNotifications);
 router.delete('/:id', deleteNotification);
 
 export default router;
+

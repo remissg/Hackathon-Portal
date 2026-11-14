@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../../shared/services/api';
 import { useAuth } from '../../shared/context/AuthContext';
 import {
   Sparkles,
@@ -25,12 +26,55 @@ import {
   AlertTriangle,
   Search,
   X,
+  Target,
+  LayoutDashboard,
+  PlusCircle,
+  ShieldAlert,
+  QrCode,
+  ExternalLink,
+  Star,
+  Activity,
+  Zap,
 } from 'lucide-react';
 
+const FALLBACK_FEATURED_PROBLEMS = [
+  {
+    _id: 'fb-1',
+    psId: 'MCAI-PS-01',
+    title: 'AI-Powered Early Maternal Health Risk Predictor',
+    category: 'AI/ML',
+    difficulty: 'Intermediate',
+    description:
+      'Architect an end-to-end predictive diagnostic system for maternal vital telemetries and prenatal complications using deep learning models.',
+  },
+  {
+    _id: 'fb-2',
+    psId: 'MCAI-PS-02',
+    title: 'Zero-Trust Electronic Health Records Management',
+    category: 'Cyber Security',
+    difficulty: 'Advanced',
+    description:
+      'Design a privacy-preserving clinical records ledger with immutable audit logs, tamper-evident document hashing, and granular access controls.',
+  },
+  {
+    _id: 'fb-3',
+    psId: 'MCAI-PS-03',
+    title: 'Smart ICU Telemetry & Real-Time Alert Engine',
+    category: 'IoT & Embedded',
+    difficulty: 'Intermediate',
+    description:
+      'Construct a real-time WebSocket sensor ingestion pipeline that monitors patient biometric signals and triggers automated distress alarms.',
+  },
+];
+
 const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
   const [faqSearch, setFaqSearch] = useState('');
+
+  // Featured Problems State
+  const [featuredProblems, setFeaturedProblems] = useState([]);
+  const [loadingProblems, setLoadingProblems] = useState(true);
 
   // Live countdown to Phase 01 deadline (November 25, 2026 23:59:59)
   const [timeLeft, setTimeLeft] = useState({
@@ -39,6 +83,12 @@ const Home = () => {
     minutes: 0,
     seconds: 0,
   });
+
+  const isAdmin =
+    user?.role === 'admin' ||
+    user?.email?.trim().toLowerCase() === 'matrucareai@gmail.com';
+  const isJudge = user?.role === 'evaluator';
+  const isVolunteer = user?.role === 'volunteer';
 
   useEffect(() => {
     const targetDate = new Date('2026-11-25T23:59:59').getTime();
@@ -60,6 +110,27 @@ const Home = () => {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch featured problem statements from public events endpoint
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        setLoadingProblems(true);
+        const res = await api.get('/events/problems/all');
+        if (res.data.success && Array.isArray(res.data.problems) && res.data.problems.length > 0) {
+          setFeaturedProblems(res.data.problems.slice(0, 3));
+        } else {
+          setFeaturedProblems(FALLBACK_FEATURED_PROBLEMS);
+        }
+      } catch (err) {
+        setFeaturedProblems(FALLBACK_FEATURED_PROBLEMS);
+      } finally {
+        setLoadingProblems(false);
+      }
+    };
+
+    fetchFeatured();
   }, []);
 
   const tracks = [
@@ -144,42 +215,43 @@ const Home = () => {
     },
   ];
 
+  // Official HackSphere 4-Pillar Judging Matrix (100 Marks / 100%)
   const evaluationCriteria = [
     {
-      title: 'Functional Completeness',
-      marks: 30,
-      desc: 'All flows working end-to-end: Signup → OTP generation & delivery → Verification → Login → Protected Dashboard → Dynamic Registration (Solo/Team) → Confirmation Mail.',
-      badge: '30 Marks',
+      pillar: '01',
+      title: 'Innovation & Originality',
+      weight: '25 Marks',
+      desc: 'Novelty of approach, creative problem solving, unique value proposition, and differentiation from existing marketplace solutions.',
+      badge: '25% Weight',
+      icon: Sparkles,
+      color: 'from-purple-500/20 to-indigo-500/20 text-purple-400 border-purple-500/30',
     },
     {
-      title: 'Code Quality & Architecture',
-      marks: 20,
-      desc: 'Clean MVC structure, well-commented ES modules, consistent camelCase naming, secure error handlers, and modular components.',
-      badge: '20 Marks',
+      pillar: '02',
+      title: 'Technical Execution & Architecture',
+      weight: '25 Marks',
+      desc: 'Full-stack MERN robustness, clean modular ES code, resilient database schema design, fast query indexing, and secure API error handling.',
+      badge: '25% Weight',
+      icon: Code2,
+      color: 'from-sky-500/20 to-blue-500/20 text-sky-400 border-sky-500/30',
     },
     {
-      title: 'UI/UX Design & Responsiveness',
-      marks: 20,
-      desc: 'Tested on mobile, tablet, and desktop viewports. Modern dark glassmorphism, responsive navigation drawer, and clear user validation.',
-      badge: '20 Marks',
+      pillar: '03',
+      title: 'Healthcare & Real-World Impact',
+      weight: '25 Marks',
+      desc: 'Tangible clinical utility, patient accessibility, addressing critical diagnostic pain points, and practical scalability for healthcare institutions.',
+      badge: '25% Weight',
+      icon: ShieldCheck,
+      color: 'from-emerald-500/20 to-teal-500/20 text-emerald-400 border-emerald-500/30',
     },
     {
-      title: 'Authentication & Security',
-      marks: 15,
-      desc: 'JWT route guards, bcrypt password hashing (10 salt rounds), 10-minute OTP expiration, single-use invalidation, and input sanitization.',
-      badge: '15 Marks',
-    },
-    {
-      title: 'Nodemailer Integration',
-      marks: 10,
-      desc: 'Automatic email dispatch with sender HackSphere (matrucareai@gmail.com). Clean HTML templates for OTP and Hackathon confirmation.',
-      badge: '10 Marks',
-    },
-    {
-      title: 'README & Deployment Readiness',
-      marks: 5,
-      desc: 'Comprehensive project documentation, API docs, .env.example guides, and deployment readiness on Render/Railway and Vercel.',
-      badge: '5 Marks',
+      pillar: '04',
+      title: 'Prototype Demo & Presentation',
+      weight: '25 Marks',
+      desc: 'Functioning interactive prototype, intuitive responsive UI/UX, clarity of pitch presentation deck, and concise demo walkthrough.',
+      badge: '25% Weight',
+      icon: Trophy,
+      color: 'from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30',
     },
   ];
 
@@ -194,7 +266,7 @@ const Home = () => {
     },
     {
       q: 'Who is eligible to participate?',
-      a: 'Students currently enrolled in B.Tech, M.Tech, BCA, MCA, B.Sc, M.Sc, or related technical degrees across 1st, 2nd, 3rd, and 4th years are eligible.',
+      a: 'Students currently enrolled in B.Tech, M.Tech, BCA, MCA, B.Sc, M.Sc, or related technical degrees across 1st, 2nd, 3rd, and 4th years are eligible. Cross-college teams are fully permitted.',
     },
     {
       q: 'What deliverables must be submitted?',
@@ -202,7 +274,7 @@ const Home = () => {
     },
     {
       q: 'Can I edit or withdraw my registration after submitting?',
-      a: 'Yes! From your personal Dashboard, you can review your registered team details, update project links or member information, or withdraw your entry if needed.',
+      a: 'Yes! From your personal Dashboard, you can review your registered team details, update project links or member information, download your lanyard admission pass, or withdraw your entry if needed.',
     },
   ];
 
@@ -223,14 +295,14 @@ const Home = () => {
       
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-sky-500/15 blur-[120px] rounded-full pointer-events-none"></div>
-        <div className="absolute top-1/3 right-10 w-[350px] h-[300px] bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-sky-500/15 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/3 right-10 w-[350px] h-[300px] bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto">
             
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-950/70 border border-sky-800/80 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-8 shadow-inner">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-950/70 border border-sky-800/80 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-6 shadow-inner">
               <Sparkles className="w-3.5 h-3.5" />
               <span>HackSphere Innovation Arena • 2026 Edition</span>
             </div>
@@ -244,9 +316,20 @@ const Home = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-6 text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
+            <p className="mt-5 text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal">
               Join the official HackSphere National Innovation Hackathon. Showcase your technical chops across AI/ML, MERN stack, and Cloud engineering. Verify identity via OTP, form your team, and submit your breakthrough solution.
             </p>
+
+            {/* Tech Stack Pills */}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono text-slate-400">
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">React 18</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">Node.js</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">Express</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">MongoDB</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">Tailwind CSS</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">JWT &amp; RBAC</span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-cyan-400">Live Audit Logs</span>
+            </div>
 
             {/* Live Registration Countdown */}
             <div className="mt-8 max-w-lg mx-auto bg-slate-900/90 border border-sky-900/60 rounded-2xl p-4 shadow-xl">
@@ -274,18 +357,106 @@ const Home = () => {
               </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* Role-Aware Intelligent CTA Actions */}
+            <div className="mt-10 max-w-xl mx-auto">
               {isAuthenticated ? (
-                <Link
-                  to="/dashboard"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold text-base shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-0.5"
-                >
-                  <span>Go to My Dashboard</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+                  <div className="flex items-center justify-between mb-3 text-xs">
+                    <span className="text-slate-400">
+                      Signed in as: <strong className="text-white">{user?.fullName || 'Operator'}</strong>
+                    </span>
+                    {isAdmin ? (
+                      <span className="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 font-semibold text-[10px] uppercase">
+                        Super Admin
+                      </span>
+                    ) : isJudge ? (
+                      <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 font-semibold text-[10px] uppercase">
+                        Judge
+                      </span>
+                    ) : isVolunteer ? (
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-[10px] uppercase">
+                        Gate Volunteer
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-400 font-semibold text-[10px] uppercase">
+                        Candidate
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    {isAdmin ? (
+                      <>
+                        <Link
+                          to="/admin"
+                          className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-semibold text-sm shadow-md shadow-rose-600/25 transition"
+                        >
+                          <ShieldAlert className="w-4 h-4" />
+                          <span>Admin Console</span>
+                        </Link>
+                        <Link
+                          to="/judge"
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
+                        >
+                          <Award className="w-4 h-4 text-amber-400" />
+                          <span>Judge Queue</span>
+                        </Link>
+                        <Link
+                          to="/volunteer"
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
+                        >
+                          <QrCode className="w-4 h-4 text-emerald-400" />
+                          <span>Pass Scanner</span>
+                        </Link>
+                      </>
+                    ) : isJudge ? (
+                      <>
+                        <Link
+                          to="/judge"
+                          className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-sm shadow-md shadow-amber-500/25 transition"
+                        >
+                          <Award className="w-4 h-4" />
+                          <span>Enter Judge Workspace</span>
+                        </Link>
+                        <Link
+                          to="/judge/completed"
+                          className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
+                        >
+                          <span>Review History</span>
+                        </Link>
+                      </>
+                    ) : isVolunteer ? (
+                      <>
+                        <Link
+                          to="/volunteer"
+                          className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-sm shadow-md shadow-cyan-500/25 transition"
+                        >
+                          <QrCode className="w-4 h-4" />
+                          <span>Open Gate Pass Scanner</span>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/dashboard"
+                          className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold text-sm shadow-md shadow-sky-500/30 transition"
+                        >
+                          <LayoutDashboard className="w-4 h-4" />
+                          <span>My Candidate Dashboard</span>
+                        </Link>
+                        <Link
+                          to="/register-hackathon"
+                          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition"
+                        >
+                          <PlusCircle className="w-4 h-4 text-sky-400" />
+                          <span>Register Project</span>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
               ) : (
-                <>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   <Link
                     to="/signup"
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-semibold text-base shadow-lg shadow-sky-500/30 transition-all transform hover:-translate-y-0.5"
@@ -299,11 +470,18 @@ const Home = () => {
                   >
                     Participant Login
                   </Link>
-                </>
+                  <Link
+                    to="/problems"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3.5 rounded-xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 text-sky-400 text-sm font-semibold transition"
+                  >
+                    <Target className="w-4 h-4" />
+                    <span>Challenges</span>
+                  </Link>
+                </div>
               )}
             </div>
 
-            {/* Quick stats banner */}
+            {/* Quick Stats Banner */}
             <div className="mt-14 pt-10 border-t border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
                 <p className="text-2xl sm:text-3xl font-extrabold text-white">₹1,00,000+</p>
@@ -323,6 +501,31 @@ const Home = () => {
               </div>
             </div>
 
+            {/* Live Leaderboard Callout Banner */}
+            <div className="mt-8 max-w-2xl mx-auto">
+              <div className="rounded-2xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-indigo-950/40 border border-amber-500/30 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                <div className="flex items-center gap-3.5 text-left">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+                    <Trophy className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">Live Scoring Arena</span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    </div>
+                    <p className="text-sm font-semibold text-white">Explore Ranked Teams &amp; Real-Time Judge Evaluations</p>
+                  </div>
+                </div>
+                <Link
+                  to="/leaderboard"
+                  className="shrink-0 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all hover:scale-105"
+                >
+                  <span>View Leaderboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -336,7 +539,7 @@ const Home = () => {
               Choose Your Hackathon Domain
             </p>
             <p className="mt-3 text-slate-400 text-base">
-              Choose the domain that matches your team’s passion. Every track will be judged by industry mentors on creativity, technical depth, and execution.
+              Choose the domain that matches your team’s passion. Every track is evaluated by industry mentors on innovation, technical architecture, and impact.
             </p>
           </div>
 
@@ -368,13 +571,89 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Featured Problem Statements / Challenges Section */}
+      <section id="challenges" className="py-20 bg-slate-950 border-b border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-sky-400 mb-2">
+                <Target className="w-3.5 h-3.5" />
+                <span>Smart India Hackathon Challenge Matrix</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                Featured Problem Statements
+              </h2>
+              <p className="mt-2 text-slate-400 text-sm max-w-xl">
+                Tackle curated industry and healthcare problem statements equipped with starter kits, outcome rubrics, and technical briefs.
+              </p>
+            </div>
+            <Link
+              to="/problems"
+              className="inline-flex items-center gap-2 text-xs font-bold text-sky-400 hover:text-sky-300 transition shrink-0"
+            >
+              <span>Explore All Challenge Statements</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {featuredProblems.map((prob) => (
+              <div
+                key={prob._id || prob.psId}
+                className="rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 p-6 flex flex-col justify-between transition-all hover:shadow-xl hover:shadow-sky-950/20 group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2.5 py-1 rounded-md text-[11px] font-mono font-bold bg-sky-950 text-sky-400 border border-sky-800/60">
+                      {prob.psId}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                      {prob.category}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-2 line-clamp-2 group-hover:text-sky-300 transition-colors">
+                    {prob.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 mb-4">
+                    {prob.description}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    Difficulty: <strong className="text-slate-300">{prob.difficulty || 'Intermediate'}</strong>
+                  </span>
+                  <Link
+                    to="/problems"
+                    className="inline-flex items-center gap-1 font-semibold text-sky-400 hover:text-sky-300 transition"
+                  >
+                    <span>View Brief</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link
+              to="/problems"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-sky-500/50 text-xs font-semibold text-slate-300 hover:text-white transition"
+            >
+              <span>View Full Problem Statements Library (8+ Tracks)</span>
+              <ChevronRight className="w-4 h-4 text-sky-400" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Timeline Section */}
       <section id="timeline" className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Roadmap</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Event Timeline & Milestones
+              Event Timeline &amp; Milestones
             </p>
             <p className="mt-3 text-slate-400 text-base">
               Mark your calendar with the key event milestones from registration to grand finale.
@@ -419,7 +698,7 @@ const Home = () => {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Rewards</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Prizes & Internship Opportunities
+              Prizes &amp; Internship Opportunities
             </p>
             <p className="mt-3 text-slate-400 text-base">
               Win cash awards, verified certificates, and top-tier full stack developer internship positions.
@@ -477,48 +756,58 @@ const Home = () => {
         </div>
       </section>
 
-      {/* NEW: Evaluation Criteria Section (Directly from Assignment Brief) */}
+      {/* Official 4-Pillar Judging Matrix (100 Marks / 100%) */}
       <section id="evaluation" className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Judging Rubric</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-              Evaluation Criteria (100 Marks)
+              Official Evaluation Matrix (100 Marks)
             </p>
             <p className="mt-3 text-slate-400 text-base">
-              Submissions are evaluated by the HackSphere Technical Committee using the official evaluation matrix.
+              Submissions are evaluated in real time by appointed industry judges across four balanced technical pillars.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {evaluationCriteria.map((item, idx) => (
-              <div
-                key={idx}
-                className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-all flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="w-8 h-8 rounded-lg bg-sky-950 border border-sky-800 text-sky-400 font-bold text-sm flex items-center justify-center">
-                      0{idx + 1}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {evaluationCriteria.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 font-bold text-sm">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 font-mono">
+                        {item.weight}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block mb-1">
+                      Pillar {item.pillar}
                     </span>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                      {item.badge}
-                    </span>
+                    <h3 className="text-base font-bold text-white mb-2">{item.title}</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+                  <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+                    <span>Scoring Scale: 1–10</span>
+                    <span className="text-sky-400 font-semibold">{item.badge}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* NEW: Frequently Asked Questions (FAQ) Accordion */}
+      {/* Frequently Asked Questions (FAQ) Accordion */}
       <section id="faq" className="py-20 bg-slate-900/60 border-y border-slate-800/80">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Questions & Answers</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-sky-400">Questions &amp; Answers</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Frequently Asked Questions
             </p>
@@ -597,7 +886,7 @@ const Home = () => {
       {/* CTA Footer Banner */}
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-gradient-to-r from-sky-900/40 via-blue-900/30 to-indigo-900/40 border border-sky-800/40 p-10 md:p-14 text-center relative overflow-hidden">
+          <div className="rounded-3xl bg-gradient-to-r from-sky-900/40 via-blue-900/30 to-indigo-900/40 border border-sky-800/40 p-10 md:p-14 text-center relative overflow-hidden shadow-2xl">
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                 Ready to showcase your skills?
@@ -610,7 +899,7 @@ const Home = () => {
                   to="/signup"
                   className="px-8 py-3.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white font-semibold text-base shadow-lg shadow-sky-500/30 transition-all"
                 >
-                  Create Account & Register
+                  Create Account &amp; Register
                 </Link>
                 <Link
                   to="/contact"

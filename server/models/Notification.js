@@ -72,3 +72,4 @@ notificationSchema.index({ recipientEmail: 1, isRead: 1 });
 const Notification = mongoose.model('Notification', notificationSchema);
 
 export default Notification;
+

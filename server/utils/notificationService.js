@@ -83,3 +83,4 @@ export const seedWelcomeNotificationIfEmpty = async (user) => {
     console.error('[Seed Welcome Notification Error]:', err.message);
   }
 };
+
